@@ -1,3 +1,4 @@
+#TODO: update function defitions
 """
 Handler for saving and loading data from HDF5 database
 
@@ -26,32 +27,21 @@ class DataHandler():
       intervals
     - a test_name is the user specified name of the test being run, which is
       made up of sessions that consist of several runs
-    - by default the test_name data is saved in the abr_control .cache folder.
+    - by default the test_name data is saved in the abr_analyze database_dir.
       This folder can be found in abr_control/utils/paths.py. However, the user
       can prevent prepending the test_name folder with the abr_cache by setting
-      use_cache to false
     """
 
-    def __init__(self, use_cache=True, db_name=None):
+    def __init__(self, db_name=None):
         """
-        use_cache: Boolean, Optional (Default:True)
-            True to prepend the abr_control cache folder to the directory
-            provided. This location is specified in abr_control/utils/paths.py
-            False to use the directory pass in as is
         db_name: string, Optional (Default: abr_control_db if left as None)
             name of the database being used
         """
         # create our database if it does not exist
-        self.use_cache = use_cache
         if db_name is None:
-            db_name = 'abr_control_db'
-        if self.use_cache:
-            if not os.path.exists(database_dir):
-                os.makedirs(database_dir)
+            db_name = 'abr_analyze_db'
 
-            self.db_loc = '%s/%s.h5'%(database_dir, db_name)
-        else:
-            self.db_loc = '%s.h5'%db_name
+        self.db_loc = '%s/%s.h5'%(database_dir, db_name)
 
         db = h5py.File(self.db_loc, 'a')
         db.close()

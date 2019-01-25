@@ -21,32 +21,34 @@ from abr_control.controllers import path_planners
 class DataProcessor():
     def __init__(self):
         """
-
-        Parameters
-        ----------
-        use_cache: Boolean, Optional (Default:True)
-            True to prepend the abr_control cache folder to the directory
-            provided for saving. This location is specified in
-            abr_control/utils/paths.py
-            False to use the directory passed in as is
         """
         pass
 
-    def get_mean_and_ci(self, raw_data, n_runs):
+    def get_mean_and_ci(self, raw_data):
+        '''
+        gets the mean and 95% confidence intervals of data *see Note
+
+        NOTE: data has to be grouped along rows, for example: having 5 sets of
+        100 data points would be a list of shape (5,100)
+        '''
         sample = []
         upper_bound = []
         lower_bound = []
-
-        for i in range(n_runs):
-            #TODO: should be able to remove n_runs and use the length of the
-            #data
+        sets = np.array(raw_data).shape[0]
+        data_pts = np.array(raw_data).shape[1]
+        print('Mean and CI calculation found %i sets of %i data points'
+                %(sets, data_pts))
+        raw_data = np.array(raw_data)
+        for i in range(data_pts):
             data = raw_data[:,i]
             ci = self.bootstrapci(data, np.mean)
             sample.append(np.mean(data))
             lower_bound.append(ci[0])
             upper_bound.append(ci[1])
 
-        return [sample, lower_bound, upper_bound]
+        data = {'mean': sample, 'lower_bound': lower_bound, 'upper_bound':
+                upper_bound}
+        return data
 
     def bootstrapci(self, data, func, n=3000, p=0.95):
         index=int(n*(1-p)/2)
@@ -54,6 +56,15 @@ class DataProcessor():
         r = [func(s) for s in samples]
         r.sort()
         return r[index], r[-index]
+
+    def list_to_function(self, data, time_intervals):
+        time_intervals = np.cumsum(time_intervals)
+        functions = []
+        for kk in range(data.shape[1]):
+            interp = scipy.interpolate.interp1d(time_intervals, data[:, kk])
+            functions.append(interp)
+
+        return functions
 
     def interpolate_data(self, data, time_intervals, n_points):
         run_time = sum(time_intervals)
@@ -94,96 +105,96 @@ class DataProcessor():
 
         return scaled_data
 
-    def generate_ideal_path(self, reaching_time, target_xyz, start_xyz, vmax=1,
-            kp=20, kv=8, dt=0.005):
+    # def generate_ideal_path(self, reaching_time, target_xyz, start_xyz, vmax=1,
+    #         kp=20, kv=8, dt=0.005):
 
-        #TODO: add a check to make sure that target is passed in as a list of
-        #lists, even if one target is passed it should be [[x,y,z]] or else it
-        #doesn't generate correctly
-        if target_xyz is None:
-            print('ERROR: Must provide target(s)')
-        x_track = []
-        u_track = []
-        # create our point mass system dynamics dx = Ax + Bu
-        x = np.hstack([start_xyz, np.zeros(3)])  # [x, y, z, dx, dy, dz]
-        A = np.array([
-            [0, 0, 0, 1, 0, 0],
-            [0, 0, 0, 0, 1, 0],
-            [0, 0, 0, 0, 0, 1],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0]])
-        u = np.array([0, 0, 0])  # [u_x, u_y, u_z]
-        B = np.array([
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1]])
+    #     #TODO: add a check to make sure that target is passed in as a list of
+    #     #lists, even if one target is passed it should be [[x,y,z]] or else it
+    #     #doesn't generate correctly
+    #     if target_xyz is None:
+    #         print('ERROR: Must provide target(s)')
+    #     x_track = []
+    #     u_track = []
+    #     # create our point mass system dynamics dx = Ax + Bu
+    #     x = np.hstack([start_xyz, np.zeros(3)])  # [x, y, z, dx, dy, dz]
+    #     A = np.array([
+    #         [0, 0, 0, 1, 0, 0],
+    #         [0, 0, 0, 0, 1, 0],
+    #         [0, 0, 0, 0, 0, 1],
+    #         [0, 0, 0, 0, 0, 0],
+    #         [0, 0, 0, 0, 0, 0],
+    #         [0, 0, 0, 0, 0, 0]])
+    #     u = np.array([0, 0, 0])  # [u_x, u_y, u_z]
+    #     B = np.array([
+    #         [0, 0, 0],
+    #         [0, 0, 0],
+    #         [0, 0, 0],
+    #         [1, 0, 0],
+    #         [0, 1, 0],
+    #         [0, 0, 1]])
 
-        # interpolation sampling rate
-        timesteps = int(reaching_time / dt)
-        # print('time steps: ', timesteps)
+    #     # interpolation sampling rate
+    #     timesteps = int(reaching_time / dt)
+    #     # print('time steps: ', timesteps)
 
-        lamb = kp / kv
+    #     lamb = kp / kv
 
-        path = path_planners.SecondOrder(
-                None, w=1e4, zeta=3, threshold=0.05)
+    #     path = path_planners.SecondOrder(
+    #             None, w=1e4, zeta=3, threshold=0.05)
 
-        for ii, target in enumerate(target_xyz):
-            u = np.zeros(3)
-            # print('II: ', ii)
+    #     for ii, target in enumerate(target_xyz):
+    #         u = np.zeros(3)
+    #         # print('II: ', ii)
 
-            state=np.hstack((target, np.zeros(3)))
-            for t in range(timesteps):
-                # track trajectory
-                x_track.append(np.copy(x))
-                u_track.append(np.copy(u))
+    #         state=np.hstack((target, np.zeros(3)))
+    #         for t in range(timesteps):
+    #             # track trajectory
+    #             x_track.append(np.copy(x))
+    #             u_track.append(np.copy(u))
 
-                # print('target: ', np.hstack((target,np.zeros(3))))
-                # print('target pos: ', target)
-                # print('dt: ', dt)
-                temp_target = path.step(
-                    state=state,
-                    target_pos=target, dt=dt)
+    #             # print('target: ', np.hstack((target,np.zeros(3))))
+    #             # print('target pos: ', target)
+    #             # print('dt: ', dt)
+    #             temp_target = path.step(
+    #                 state=state,
+    #                 target_pos=target, dt=dt)
 
-                # calculate the position error
-                x_tilde = np.array(x[:3] - temp_target[:3])
+    #             # calculate the position error
+    #             x_tilde = np.array(x[:3] - temp_target[:3])
 
-                # implement velocity limiting
-                sat = vmax / (lamb * np.abs(x_tilde))
-                if np.any(sat < 1):
-                    index = np.argmin(sat)
-                    unclipped = kp * x_tilde[index]
-                    clipped = kv * vmax * np.sign(x_tilde[index])
-                    scale = np.ones(3, dtype='float32') * clipped / unclipped
-                    scale[index] = 1
-                else:
-                    scale = np.ones(3, dtype='float32')
+    #             # implement velocity limiting
+    #             sat = vmax / (lamb * np.abs(x_tilde))
+    #             if np.any(sat < 1):
+    #                 index = np.argmin(sat)
+    #                 unclipped = kp * x_tilde[index]
+    #                 clipped = kv * vmax * np.sign(x_tilde[index])
+    #                 scale = np.ones(3, dtype='float32') * clipped / unclipped
+    #                 scale[index] = 1
+    #             else:
+    #                 scale = np.ones(3, dtype='float32')
 
-                u = -kv * (x[3:] - temp_target[3:] -
-                                    np.clip(sat / scale, 0, 1) *
-                                    -lamb * scale * x_tilde)
+    #             u = -kv * (x[3:] - temp_target[3:] -
+    #                                 np.clip(sat / scale, 0, 1) *
+    #                                 -lamb * scale * x_tilde)
 
-                # move simulation one time step forward
-                dx = np.dot(A, x) + np.dot(B, u)
-                x += dx * dt
+    #             # move simulation one time step forward
+    #             dx = np.dot(A, x) + np.dot(B, u)
+    #             x += dx * dt
 
-        u_track = np.array(u_track)
-        x_track = np.array(x_track)
-        runtime = reaching_time * len(target_xyz)
-        n_points = len(x_track)
-        #print('N POINTS',n_points)
-        t_track = np.ones(n_points) * runtime/n_points
+    #     u_track = np.array(u_track)
+    #     x_track = np.array(x_track)
+    #     runtime = reaching_time * len(target_xyz)
+    #     n_points = len(x_track)
+    #     #print('N POINTS',n_points)
+    #     t_track = np.ones(n_points) * runtime/n_points
 
-        # import matplotlib
-        # matplotlib.use("TkAgg")
-        # import matplotlib.pyplot as plt
-        # plt.figure()
-        # plt.plot(x_track[:,3:])
-        # plt.show()
-        return [t_track, x_track]
+    #     # import matplotlib
+    #     # matplotlib.use("TkAgg")
+    #     # import matplotlib.pyplot as plt
+    #     # plt.figure()
+    #     # plt.plot(x_track[:,3:])
+    #     # plt.show()
+    #     return [t_track, x_track]
 
     def filter_data(self, data, alpha=0.2):
         data_filtered = []
@@ -198,36 +209,29 @@ class DataProcessor():
 
         return data_filtered
 
-    def calc_path_error_to_ideal(self, ideal_path, recorded_path, order_of_error,
-            dt, normalization=None, alpha=0.2):
-        """
-        Function for passing already interpolated data in to compare to an
-        ideal path (of the same interpolation)
+    # def two_norm_error(self, baseline_traj, traj):
+    #     """
+    #     accepts two nx3 arrays of xyz cartesian coordinates and returns the
+    #     2norm error of traj to baseline_traj
 
-        Parameters
-        ----------
-        order_of_error: int, Optional (Default: 0)
-            the order of error to calculate
-            0 == position error
-            1 == velocity error
-            2 == acceleration error
-            3 == jerk error
+    #     Parameters
+    #     ----------
+    #     baseline_traj: nx3 array
+    #         coordinates of ideal trajectory over time
+    #     traj: nx3 array
+    #         coordinates of trajectory to compare to baseline
+    #     order_of_error: int, Optional (Default: 0)
+    #         the order of error to calculate
+    #         0 == position error
+    #         1 == velocity error
+    #         2 == acceleration error
+    #         3 == jerk error
 
-        """
-        # ----- APPLY FILTERS -----
-        # if we're using acceleration or jerk, add a filter to
-        # clean up the signal
-        if normalization is None:
-            normalization = 1.0
-        if order_of_error > 1:
-            recorded_path = self.filter_data(data=recorded_path,
-                    alpha=alpha)
-            ideal_path = self.filter_data(data=ideal_path,
-                    alpha=alpha)
+    #     """
+    #     # error relative to ideal path
+    #     error = (np.sum(np.sqrt(np.sum(
+    #         (ideal_path - recorded_path)**2,
+    #         axis=1)))) #*dt
+    #     #TODO: confirm whether or not we should be multiplying by dt
 
-        # error relative to ideal path
-        error_to_ideal = (np.sum(np.sqrt(np.sum(
-            (ideal_path - recorded_path)**2,
-            axis=1))))*dt / normalization
-
-        return error_to_ideal
+    #     return error

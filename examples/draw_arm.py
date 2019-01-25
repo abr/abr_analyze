@@ -1,5 +1,9 @@
+#TODO: make this plot only a single ax object with parameters to either pass an
+# ax object, if not one is created since we only want the one frame, otherwise
+# get the grid layout done in a higher level script
 import abr_jaco2
 from abr_analyze.utils import DrawArmProc, DrawArmVis, MakeGif
+from abr_analyze.utils.paths import figures_dir
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
@@ -15,8 +19,8 @@ if animate:
     gif = MakeGif()
     # get the save location for the figures saved over time, and clear it of
     # any previously saved figures.
-    save_loc = gif.prep_fig_cache(use_cache=True)
-    gif_save_name = 'draw-arm-test'
+    fig_cache = gif.prep_fig_cache()
+save_name = 'draw-arm-test'
 
 # set the number of samples to take from the data
 interpolated_samples = 100
@@ -93,14 +97,14 @@ for step in steps:
         baselineVis.plot_trajectory(ax=axis, data=baseline['ee_xyz'][:step])
         drawVis.plot_trajectory(ax=axis, data=data[ii]['ee_xyz'][:step])
     if animate:
-        plt.savefig('%s/%05d.png'%(save_loc, step))
+        plt.savefig('%s/%05d.png'%(fig_cache, step))
     else:
-        plt.savefig('%s/%05d.png'%(save_loc, 0))
+        plt.savefig('%s/%s.png'%(figures_dir, save_name))
 
 if animate:
-    gif.create(fig_loc=save_loc,
-               save_loc='%s/../%s/draw_arm'%(save_loc, db_name),
-               save_name=gif_save_name,
+    gif.create(fig_loc=fig_cache,
+               save_loc='%s/%s/draw_arm'%(figures_dir, db_name),
+               save_name=save_name,
                delay=5, res=[1920,1080])
 else:
     plt.show()

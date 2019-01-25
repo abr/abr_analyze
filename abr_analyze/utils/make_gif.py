@@ -1,32 +1,27 @@
 import subprocess
 import os
+from abr_analyze.utils.paths import figures_dir, cache_dir
+
 class MakeGif():
     def __init__(self):
         pass
-    def prep_fig_cache(self, use_cache=True):
+    def prep_fig_cache(self):
         # set up save location for figures
-        if use_cache:
-            from abr_analyze.utils.paths import figures_dir
-            save_loc = figures_dir
-        else:
-            save_loc = 'figures'
-        # create save location if it does not exist
-        if not os.path.exists(save_loc):
-            os.makedirs(save_loc)
+        fig_cache = '%s/gif_fig_cache'%(cache_dir)
 
-        if not os.path.exists('%s/gif_fig_cache'%save_loc):
-            os.makedirs('%s/gif_fig_cache'%save_loc)
+        if not os.path.exists(fig_cache):
+            os.makedirs(fig_cache)
 
         # delete old files if they exist in the figure cache. These are used to
         # create a gif and need to be deleted to avoid the issue where the
         # current test has fewer images than what is already in the cache, this
         # would lead to the old images being appended to the end of the gif
-        files = [f for f in os.listdir('%s/gif_fig_cache'%save_loc) if f.endswith(".png") ]
+        files = [f for f in os.listdir('%s'%fig_cache) if f.endswith(".png") ]
         for ii, f in enumerate(files):
             if ii == 0:
                 print('Deleting old temporary figures for gif creation...')
-            os.remove(os.path.join('%s/gif_fig_cache'%save_loc, f))
-        return '%s/gif_fig_cache'%save_loc
+            os.remove(os.path.join('%s'%fig_cache, f))
+        return fig_cache
 
     def create(self, fig_loc, save_loc, save_name, delay=5, res=[1200,2000]):
         """

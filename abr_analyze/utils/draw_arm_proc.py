@@ -16,16 +16,12 @@ class DrawArmProc():
     * to draw an arm on a 3D plot you will also need...
     'q': list of n x N_JOINTS joint angles
     """
-    def __init__(self, use_cache=True, db_name=None, robot_config=None):
+    def __init__(self, db_name, robot_config=None):
         """
         instantiate the required modules
 
         PARAMETERS
         ----------
-        use_cache: boolean, Optional (Default:True)
-            True to prepend the abr_control cache folder to the directory
-            provided. This location is specified in abr_control/utils/paths.py
-            False to use the directory pass in as is
         db_name: string
             name of the hdf5 database to load data from
         robot_config: instantiated abr_control robot config
@@ -35,11 +31,11 @@ class DrawArmProc():
         # instantiate our data processor
         self.proc = DataProcessor()
         # instantiate our database object
-        self.dat = DataHandler(use_cache=use_cache, db_name=db_name)
+        self.dat = DataHandler(db_name=db_name)
         # generate any config functions that have not been generated and saved
         self.robot_config = robot_config
 
-    def load_data(self, save_location, show_arm=True, interpolated_samples=100):
+    def load_and_process(self, save_location, show_arm=True, interpolated_samples=100):
         """
         Loads the relevant data for 3d arm plotting from the save_location,
         returns a dictionary of the interpolated and sampled data
@@ -81,15 +77,16 @@ class DrawArmProc():
 
         # interpolate for even sampling and save to our dictionary
         if interpolated_samples is not None:
-            for param in params:
-                if param != 'time':
-                    data[param] = self.proc.interpolate_data(data=data[param],
+            for key in data:
+                if key != 'time':
+                    data[key] = self.proc.interpolate_data(data=data[key],
                             time_intervals=data['time'],
                             n_points=interpolated_samples)
             # since we are interpolating over time, we are not interpolating
             # the time data, instead evenly sample interpolated_samples from
             # 0 to the sum(time)
-            data['time'] = np.linspace(0,interpolated_samples, sum(data['time']))
+            data['time'] = np.linspace(0, sum(data['time']),
+                    interpolated_samples)
 
         data['read_location'] = save_location
         return data
@@ -148,7 +145,7 @@ class DrawArmProc():
         """
         Loads the relevant test data and calculates the required information
         for plotting a virtual arm, saving all to a dictionary of interpolated
-        data for even sampling between tests. Returns a dic of the data *see
+        data for even sampling between tests. Returns a dict of the data *see
         note*
 
         data = {
@@ -198,7 +195,7 @@ class DrawArmProc():
 
         # create a dictionary with our test data interpolated to the same
         # number of steps
-        data = self.load_data(save_location=save_location, show_arm=show_arm,
+        data = self.load_and_process(save_location=save_location, show_arm=show_arm,
                 interpolated_samples=interpolated_samples)
 
         if self.robot_config is not None:
