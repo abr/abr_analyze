@@ -103,3 +103,16 @@ class DrawArmVis():
         ax.plot(data[:, 0], data[:,1], data[:,2],
                 color=c, linestyle=linestyle)
         return ax
+
+    def cell_to_subplots(cell, rows, cols):
+        # #inner_cell = outer_grid[row_in_outer,col_in_outer]
+        # inner_cell = outer_grid[:2, 2]
+        inner_grid = gridspec.GridSpecFromSubplotSpec(rows, cols, cell)
+        ax = []
+        for row in range(0, rows):
+            for col in range(0, cols):
+                ax.append(plt.subplot(inner_grid[row,col]))
+        return ax
+
+    def plot_as_sub(cell, rows, cols, data):
+        pass

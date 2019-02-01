@@ -26,6 +26,7 @@ total_steps = len(test_list) * sessions * runs
 plt.figure()
 ax = plt.subplot(111)
 colors = ['r', 'b', 'g', 'y']
+
 # loop through our test list
 for ii, test in enumerate(test_list):
     # loop through each session

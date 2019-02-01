@@ -35,7 +35,7 @@ class DrawArmProc():
         # generate any config functions that have not been generated and saved
         self.robot_config = robot_config
 
-    def load_and_process(self, save_location, show_arm=True, interpolated_samples=100):
+    def load_and_process(self, save_location, interpolated_samples=100):
         """
         Loads the relevant data for 3d arm plotting from the save_location,
         returns a dictionary of the interpolated and sampled data
@@ -47,16 +47,11 @@ class DrawArmProc():
         ----------
         save_location: string
             points to the location in the hdf5 database to read from
-        show_arm: boolean
-            changes what parameters are loaded, as more are required if
-            a virtual arm is to be plotted
         interpolated_samples: positive int, Optional (Default=100)
             the number of samples to take (evenly) from the interpolated data
             if set to None, no interpolated or sampling will be done, the raw
             data will be returned
         """
-        assert isinstance(show_arm, bool), ('TYPE ERROR: show_arm must be a boolean'
-                + ': received %s'%type(show_arm))
         assert ((isinstance(interpolated_samples, int)
                  and interpolated_samples>0),
                 ('TYPE ERROR: interpolated_samples must be a positive integer'
@@ -68,7 +63,7 @@ class DrawArmProc():
         # end-effector trajectory
         params = ['ee_xyz', 'target', 'time', 'filter']
 
-        if show_arm:
+        if self.robot_config is not None:
             params.append('q')
 
         # load data from hdf5 database
@@ -186,16 +181,9 @@ class DrawArmProc():
             False: leave the database, dataprocessor, and robot_config objects
             in case they need to be referenced.
         """
-        # determine whether the user wants to plot an arm by the robot_config
-        # passed in
-        if self.robot_config is not None:
-            show_arm = True
-        else:
-            show_arm = False
-
         # create a dictionary with our test data interpolated to the same
         # number of steps
-        data = self.load_and_process(save_location=save_location, show_arm=show_arm,
+        data = self.load_and_process(save_location=save_location,
                 interpolated_samples=interpolated_samples)
 
         if self.robot_config is not None:
