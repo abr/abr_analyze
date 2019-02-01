@@ -72,6 +72,10 @@ class DataProcessor():
         dt = (run_time-time_intervals[0])/n_points
         # interpolate to even samples out
         data_interp = []
+        # if our array is one dimensional, make sure to add a second dimension
+        # to avoid errors in our loop
+        if data.ndim == 1:
+            data = data.reshape(len(data), 1)
         for kk in range(data.shape[1]):
             interp = scipy.interpolate.interp1d(time_intervals, data[:, kk])
             data_interp.append(np.array([
@@ -105,97 +109,6 @@ class DataProcessor():
 
         return scaled_data
 
-    # def generate_ideal_path(self, reaching_time, target_xyz, start_xyz, vmax=1,
-    #         kp=20, kv=8, dt=0.005):
-
-    #     #TODO: add a check to make sure that target is passed in as a list of
-    #     #lists, even if one target is passed it should be [[x,y,z]] or else it
-    #     #doesn't generate correctly
-    #     if target_xyz is None:
-    #         print('ERROR: Must provide target(s)')
-    #     x_track = []
-    #     u_track = []
-    #     # create our point mass system dynamics dx = Ax + Bu
-    #     x = np.hstack([start_xyz, np.zeros(3)])  # [x, y, z, dx, dy, dz]
-    #     A = np.array([
-    #         [0, 0, 0, 1, 0, 0],
-    #         [0, 0, 0, 0, 1, 0],
-    #         [0, 0, 0, 0, 0, 1],
-    #         [0, 0, 0, 0, 0, 0],
-    #         [0, 0, 0, 0, 0, 0],
-    #         [0, 0, 0, 0, 0, 0]])
-    #     u = np.array([0, 0, 0])  # [u_x, u_y, u_z]
-    #     B = np.array([
-    #         [0, 0, 0],
-    #         [0, 0, 0],
-    #         [0, 0, 0],
-    #         [1, 0, 0],
-    #         [0, 1, 0],
-    #         [0, 0, 1]])
-
-    #     # interpolation sampling rate
-    #     timesteps = int(reaching_time / dt)
-    #     # print('time steps: ', timesteps)
-
-    #     lamb = kp / kv
-
-    #     path = path_planners.SecondOrder(
-    #             None, w=1e4, zeta=3, threshold=0.05)
-
-    #     for ii, target in enumerate(target_xyz):
-    #         u = np.zeros(3)
-    #         # print('II: ', ii)
-
-    #         state=np.hstack((target, np.zeros(3)))
-    #         for t in range(timesteps):
-    #             # track trajectory
-    #             x_track.append(np.copy(x))
-    #             u_track.append(np.copy(u))
-
-    #             # print('target: ', np.hstack((target,np.zeros(3))))
-    #             # print('target pos: ', target)
-    #             # print('dt: ', dt)
-    #             temp_target = path.step(
-    #                 state=state,
-    #                 target_pos=target, dt=dt)
-
-    #             # calculate the position error
-    #             x_tilde = np.array(x[:3] - temp_target[:3])
-
-    #             # implement velocity limiting
-    #             sat = vmax / (lamb * np.abs(x_tilde))
-    #             if np.any(sat < 1):
-    #                 index = np.argmin(sat)
-    #                 unclipped = kp * x_tilde[index]
-    #                 clipped = kv * vmax * np.sign(x_tilde[index])
-    #                 scale = np.ones(3, dtype='float32') * clipped / unclipped
-    #                 scale[index] = 1
-    #             else:
-    #                 scale = np.ones(3, dtype='float32')
-
-    #             u = -kv * (x[3:] - temp_target[3:] -
-    #                                 np.clip(sat / scale, 0, 1) *
-    #                                 -lamb * scale * x_tilde)
-
-    #             # move simulation one time step forward
-    #             dx = np.dot(A, x) + np.dot(B, u)
-    #             x += dx * dt
-
-    #     u_track = np.array(u_track)
-    #     x_track = np.array(x_track)
-    #     runtime = reaching_time * len(target_xyz)
-    #     n_points = len(x_track)
-    #     #print('N POINTS',n_points)
-    #     t_track = np.ones(n_points) * runtime/n_points
-
-    #     # import matplotlib
-    #     # matplotlib.use("TkAgg")
-    #     # import matplotlib.pyplot as plt
-    #     # plt.figure()
-    #     # plt.plot(x_track[:,3:])
-    #     # plt.show()
-    #     return [t_track, x_track]
-
     def filter_data(self, data, alpha=0.2):
         data_filtered = []
         for nn in range(0,len(data)):
@@ -209,29 +122,62 @@ class DataProcessor():
 
         return data_filtered
 
-    # def two_norm_error(self, baseline_traj, traj):
-    #     """
-    #     accepts two nx3 arrays of xyz cartesian coordinates and returns the
-    #     2norm error of traj to baseline_traj
+    def load_and_process(self, db_name, save_location, params,
+            interpolated_samples=100):
+        """
+        Loads the relevant data for 3d arm plotting from the save_location,
+        returns a dictionary of the interpolated and sampled data
 
-    #     Parameters
-    #     ----------
-    #     baseline_traj: nx3 array
-    #         coordinates of ideal trajectory over time
-    #     traj: nx3 array
-    #         coordinates of trajectory to compare to baseline
-    #     order_of_error: int, Optional (Default: 0)
-    #         the order of error to calculate
-    #         0 == position error
-    #         1 == velocity error
-    #         2 == acceleration error
-    #         3 == jerk error
+        NOTE: if interpolated_samples is set to None, the raw data will be return without
+        interpolation and sampling
 
-    #     """
-    #     # error relative to ideal path
-    #     error = (np.sum(np.sqrt(np.sum(
-    #         (ideal_path - recorded_path)**2,
-    #         axis=1)))) #*dt
-    #     #TODO: confirm whether or not we should be multiplying by dt
+        PARAMETERS
+        ----------
+        save_location: string
+            points to the location in the hdf5 database to read from
+        interpolated_samples: positive int, Optional (Default=100)
+            the number of samples to take (evenly) from the interpolated data
+            if set to None, no interpolated or sampling will be done, the raw
+            data will be returned
+        """
+        assert ((isinstance(interpolated_samples, int)
+                 and interpolated_samples>0),
+                ('TYPE ERROR: interpolated_samples must be a positive integer'
+                    + ': received: sign(%i), type(%s)'%
+                    (np.sign(interpolated_samples),
+                        type(interpolated_samples))))
 
-    #     return error
+        # load data from hdf5 database
+        dat = DataHandler(db_name=db_name)
+        data = dat.load(params=params,
+                save_location=save_location)
+
+        if 'time' not in params:
+            try:
+                data['time'] = dat.load(params=['time'],
+                        save_location=save_location)['time']
+                print('Found time data in %s, using for interpolation'
+                        %save_location)
+            except:
+                print('\n\n****WARNING****\n')
+                print('Could not find time data in %s, using range(len(data))'
+                        %save_location)
+                print('NOTE: this may cause misalignment to animated figures\n')
+                data['time']=range(0,len(data[params[0]]))
+        dat = []
+
+        # interpolate for even sampling and save to our dictionary
+        for key in data:
+            if key != 'time':
+
+                data[key] = self.interpolate_data(data=data[key],
+                        time_intervals=data['time'],
+                        n_points=interpolated_samples)
+        # since we are interpolating over time, we are not interpolating
+        # the time data, instead evenly sample interpolated_samples from
+        # 0 to the sum(time)
+        data['time'] = np.linspace(0, sum(data['time']),
+                interpolated_samples)
+
+        data['read_location'] = save_location
+        return data

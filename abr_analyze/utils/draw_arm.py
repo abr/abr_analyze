@@ -4,7 +4,6 @@
 import abr_jaco2
 from abr_analyze.utils.data_visualizer import DataVisualizer
 from abr_analyze.utils.draw_arm_proc import DrawArmProc
-from abr_analyze.utils.draw_arm_vis import DrawArmVis
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -28,10 +27,10 @@ class DrawArm():
         self.data = {}
         # instantiate our process and visualize modules
         self.drawProc = DrawArmProc(db_name=db_name, robot_config=robot_config)
-        self.drawVis = DrawArmVis(traj_color='b', link_color='y', joint_color='k', arm_color='k')
         self.vis = DataVisualizer()
 
-    def plot(self, ax, save_location, step, show_filter=True, show_trajectory=True):
+    def plot(self, ax, save_location, step, show_filter=True,
+            show_trajectory=True, c='b', linestyle=None):
         '''
 
         '''
@@ -42,14 +41,16 @@ class DrawArm():
         data = self.data[save_location]
 
         # plot our arm figure
-        self.drawVis.plot_arm(ax=ax, joints_xyz=data['joints_xyz'][step],
+        self.vis.plot_arm(ax=ax, joints_xyz=data['joints_xyz'][step],
                 links_xyz=data['links_xyz'][step], ee_xyz=data['ee_xyz'][step])
         # plot the filtered target trajectory
         if show_filter:
-            self.vis.plot_trajectory(ax=ax, data=data['filter'][:step], c='g')
+            self.vis.plot_trajectory(ax=ax, data=data['filter'][:step], c='g',
+                    linestyle='-')
         # plot the ee trajectory
         if show_trajectory:
-            self.vis.plot_trajectory(ax=ax, data=data['ee_xyz'][:step])
+            self.vis.plot_trajectory(ax=ax, data=data['ee_xyz'][:step], c=c,
+                    linestyle=linestyle)
 
         ax.set_title(save_location)
         ax.set_xlim3d(-0.5,0.5)

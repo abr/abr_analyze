@@ -3,11 +3,13 @@ from .data_processor import DataProcessor
 from .data_visualizer import DataVisualizer
 
 from .draw_arm_proc import DrawArmProc
-from .draw_arm_vis import DrawArmVis
 from .draw_arm import DrawArm
 
 from .trajectory_error_proc import TrajectoryErrorProc
 from .trajectory_error_vis import TrajectoryErrorVis
+
+from .draw_trajectory import DrawTrajectory
+from .draw_data import DrawData
 
 # from .target import Target
 # from .proc_error_to_ideal import PathErrorToIdeal

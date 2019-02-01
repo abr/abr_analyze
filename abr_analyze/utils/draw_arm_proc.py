@@ -28,63 +28,11 @@ class DrawArmProc():
             This is required to transform joint angles to cartesian coordinates
             if None only the trajectory of the end-effector will be processed
         """
+        self.db_name = db_name
         # instantiate our data processor
         self.proc = DataProcessor()
-        # instantiate our database object
-        self.dat = DataHandler(db_name=db_name)
         # generate any config functions that have not been generated and saved
         self.robot_config = robot_config
-
-    def load_and_process(self, save_location, interpolated_samples=100):
-        """
-        Loads the relevant data for 3d arm plotting from the save_location,
-        returns a dictionary of the interpolated and sampled data
-
-        NOTE: if interpolated_samples is set to None, the raw data will be return without
-        interpolation and sampling
-
-        PARAMETERS
-        ----------
-        save_location: string
-            points to the location in the hdf5 database to read from
-        interpolated_samples: positive int, Optional (Default=100)
-            the number of samples to take (evenly) from the interpolated data
-            if set to None, no interpolated or sampling will be done, the raw
-            data will be returned
-        """
-        assert ((isinstance(interpolated_samples, int)
-                 and interpolated_samples>0),
-                ('TYPE ERROR: interpolated_samples must be a positive integer'
-                    + ': received: sign(%i), type(%s)'%
-                    (np.sign(interpolated_samples),
-                        type(interpolated_samples))))
-
-        # set params depending on whether a 3d arm will be plotted, or just the
-        # end-effector trajectory
-        params = ['ee_xyz', 'target', 'time', 'filter']
-
-        if self.robot_config is not None:
-            params.append('q')
-
-        # load data from hdf5 database
-        data = self.dat.load(params=params,
-                save_location=save_location)
-
-        # interpolate for even sampling and save to our dictionary
-        if interpolated_samples is not None:
-            for key in data:
-                if key != 'time':
-                    data[key] = self.proc.interpolate_data(data=data[key],
-                            time_intervals=data['time'],
-                            n_points=interpolated_samples)
-            # since we are interpolating over time, we are not interpolating
-            # the time data, instead evenly sample interpolated_samples from
-            # 0 to the sum(time)
-            data['time'] = np.linspace(0, sum(data['time']),
-                    interpolated_samples)
-
-        data['read_location'] = save_location
-        return data
 
     def calc_cartesian_points(self, robot_config, q):
         """
@@ -183,8 +131,10 @@ class DrawArmProc():
         """
         # create a dictionary with our test data interpolated to the same
         # number of steps
-        data = self.load_and_process(save_location=save_location,
-                interpolated_samples=interpolated_samples)
+        data = self.proc.load_and_process(db_name=self.db_name,
+                save_location=save_location,
+                interpolated_samples=interpolated_samples,
+                params=['ee_xyz', 'target', 'time', 'filter', 'q'])
 
         if self.robot_config is not None:
             # get the cartesian coordinates of the virtual arm joints and links
@@ -198,7 +148,6 @@ class DrawArmProc():
 
         if clear_memory:
             self.robot_config = None
-            self.dat = None
             self.proc = None
 
         return data
