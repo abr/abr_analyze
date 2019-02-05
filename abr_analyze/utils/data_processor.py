@@ -181,3 +181,44 @@ class DataProcessor():
 
         data['read_location'] = save_location
         return data
+
+    def calc_cartesian_points(self, robot_config, q):
+        """
+        Takes in a robot_config and a list of joint angles and returns the
+        cartesian coordinates of the robots joints and link COM's
+
+        PARAMETERS
+        ----------
+        robot_config: instantiated abr_control robot config
+            This is required to transform joint angles to cartesian coordinates
+        q: list of joint angles (n_timesteps, n_joints)
+            The list of recorded joint angles used to transform link centers of
+            mass and joint positions to cartesian coordinates
+        """
+        assert robot_config is not None, 'robot_config must be provided'
+
+        joints_xyz = []
+        links_xyz = []
+
+        # loop through our arm joints over time
+        for q_t in q:
+            joints_t_xyz= []
+            links_t_xyz = []
+
+            # loop through the kinematic chain of joints
+            for ii in range(0, robot_config.N_JOINTS):
+                joints_t_xyz.append(robot_config.Tx('joint%i'%ii, q=q_t,
+                        x=robot_config.OFFSET))
+            joints_t_xyz.append(robot_config.Tx('EE', q=q_t,
+                x=robot_config.OFFSET))
+
+            # loop through the kinematic chain of links
+            for ii in range(0, robot_config.N_LINKS):
+                links_t_xyz.append(robot_config.Tx('link%i'%ii, q=q_t,
+                        x=robot_config.OFFSET))
+
+            # append the cartesian coordinates of this time step to our list
+            joints_xyz.append(joints_t_xyz)
+            links_xyz.append(links_t_xyz)
+
+        return [np.array(joints_xyz), np.array(links_xyz)]
