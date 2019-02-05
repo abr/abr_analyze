@@ -2,7 +2,7 @@
 # ax object, if not one is created since we only want the one frame, otherwise
 # get the grid layout done in a higher level script
 import abr_jaco2
-from abr_analyze.utils import DrawArm, MakeGif, DataVisualizer, DrawTrajectory
+from abr_analyze.utils import DrawArm, MakeGif, DataVisualizer, Draw3dData
 from abr_analyze.utils.paths import figures_dir
 import numpy as np
 import matplotlib
@@ -13,7 +13,7 @@ import os
 """
 """
 interpolated_samples=100
-animate=True
+animate=False
 if animate:
     gif = MakeGif()
     fig_cache = gif.prep_fig_cache()
@@ -31,7 +31,7 @@ draw_arm = DrawArm(db_name=db_name, robot_config=robot_config,
         interpolated_samples=interpolated_samples)
 
 # instantiate our generic trajectory drawing module
-draw_traj = DrawTrajectory(db_name=db_name,
+draw_3d = Draw3dData(db_name=db_name,
         interpolated_samples=interpolated_samples)
 
 # Instantiate our general dataVisualizer
@@ -49,9 +49,10 @@ for step in steps:
     ax.clear()
     if animate:
         print('%.2f%% complete'%(step/interpolated_samples*100), end='\r')
-    draw_traj.plot(
+    draw_3d.plot(
             ax=ax,
-            save_location='%s/session000/run000'%baseline,
+            save_location=['%s/session000/run000'%baseline,
+                           '%s/session000/run044'%baseline],
             param='ee_xyz',
             step=step)
 

@@ -8,8 +8,8 @@ from .draw_arm import DrawArm
 from .trajectory_error_proc import TrajectoryErrorProc
 from .trajectory_error_vis import TrajectoryErrorVis
 
-from .draw_trajectory import DrawTrajectory
-from .draw_data import DrawData
+from .draw_2d_data import Draw2dData
+from .draw_3d_data import Draw3dData
 
 # from .target import Target
 # from .proc_error_to_ideal import PathErrorToIdeal

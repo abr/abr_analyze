@@ -2,7 +2,7 @@
 # ax object, if not one is created since we only want the one frame, otherwise
 # get the grid layout done in a higher level script
 import abr_jaco2
-from abr_analyze.utils import DrawData, MakeGif, DataVisualizer, DrawTrajectory
+from abr_analyze.utils import Draw2dData, MakeGif, DataVisualizer
 from abr_analyze.utils.paths import figures_dir
 import numpy as np
 import matplotlib
@@ -13,7 +13,7 @@ import os
 """
 """
 interpolated_samples=100
-animate=False
+animate=True
 if animate:
     gif = MakeGif()
     fig_cache = gif.prep_fig_cache()
@@ -24,7 +24,7 @@ test = 'friction_post_tuning/nengo_loihi_friction_9_0'
 baseline = 'friction_post_tuning/pd_friction_9_0'
 
 # Instantiate our arm drawing module
-draw_data = DrawData(db_name=db_name,
+draw_2d = Draw2dData(db_name=db_name,
         interpolated_samples=interpolated_samples)
 
 # Instantiate our general dataVisualizer
@@ -43,11 +43,11 @@ for step in steps:
     if animate:
         print('%.2f%% complete'%(step/interpolated_samples*100), end='\r')
 
-    draw_data.plot(
+    draw_2d.plot(
             ax=ax,
             save_location=['%s/session000/run000'%test,
                            '%s/session000/run000'%baseline],
-            param='error',
+            param='u_base',
             step=step)
 
     if animate:

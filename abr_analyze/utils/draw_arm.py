@@ -29,8 +29,8 @@ class DrawArm():
         self.drawProc = DrawArmProc(db_name=db_name, robot_config=robot_config)
         self.vis = DataVisualizer()
 
-    def plot(self, ax, save_location, step, show_filter=True,
-            show_trajectory=True, c='b', linestyle=None):
+    def plot(self, ax, save_location, step, c='b', linestyle=None,
+            show_filter=True, show_trajectory=True):
         '''
 
         '''
