@@ -11,16 +11,6 @@ class DataVisualizer():
     def __init__(self):
         pass
 
-    # def clear_ax(self):
-    #     '''
-    #     clears all of the ax objects that have been passed in, this is useful
-    #     when animating figures into a gif. Clearing the ax between frames
-    #     greatly reduces the load and speeds up the processing
-    #     '''
-    #     for ax in self.master_ax:
-    #         ax.clear()
-    #     self.master_ax = []
-
     def cell_to_subplot(cell, n_rows, n_cols):
         '''
         Accepts a gridspec.Gridspec(n,m)[x,y] cell, and breaks that location
@@ -34,27 +24,112 @@ class DataVisualizer():
         ax[1].plot(data1)
         ax[2].plot(data2)
         plt.show()
+
+        PARAMETERS
+        ----------
+        cell: gridspec.GridSpec(n,m)[x,y] object
+        n_rows: int
+            the number of rows to break the cell into
+        n_cols: int
+            the number of columns to break the cell into
         '''
         inner_grid = gridspec.GridSpecFromSubplotSpec(rows, cols, cell)
         ax = []
         for row in range(0, rows):
             for col in range(0, cols):
                 ax.append(plt.subplot(inner_grid[row,col]))
-                # self.master_ax.append(plt.subplot(inner_grid[row,col]))
         return ax
 
-    # def align_yaxis(ax1, v1, ax2, v2):
-    #     """adjust ax2 ylimit so that v2 in ax2 is aligned to v1 in ax1"""
-    #     _, y1 = ax1.transData.transform((0, v1))
-    #     _, y2 = ax2.transData.transform((0, v2))
-    #     inv = ax2.transData.inverted()
-    #     _, dy = inv.transform((0, 0)) - inv.transform((0, y1-y2))
-    #     miny, maxy = ax2.get_ylim()
-    #     ax2.set_ylim(miny+dy, maxy+dy)
-
-    def plot_trajectory(self, ax, data, c=None, linestyle=None):
+    def plot_arm(self, ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
+            joint_color='k', arm_color='k'):
         '''
-        accepts an n x 3 aray to plot a 3d trajectory
+        accepts joint, end-effector, and link COM cartesian locations, and an
+        ax object, returns a stick arm with points at the joints and link COM's
+        plotted on the ax
+
+        PARAMETERS
+        ----------
+        ax: ax object for plotting
+        ee_xyz: np.array([x,y,z])
+            cartesian coordinates of the end-effector
+        joints_xyz: np.array() (n_joints, 3 cartesian coordinates)
+            cartesian coordinates of the joints
+        links_xyz: np.array() (n_links, 3 cartesian coordinates)
+            cartesian coordinates of the link COM's
+        link_color: matplotlib compatible color, Optional (Default: 'y')
+            the color for the link center of mass points
+        joint_color: matplotlib compatible color, Optional (Default: 'k')
+            the color for the joint points
+        arm_color: matplotlib compatible color, Optional (Default: 'k')
+            the color for the links joining the joints
+        '''
+
+        if isinstance(ax, list):
+            if len(ax) > 1:
+                raise Exception("multi axis plotting is currently not availabe"
+                        +" for 3d plots")
+            else:
+                ax = ax[0]
+
+        for xyz in joints_xyz:
+            # plot joint location
+            ax.scatter(xyz[0], xyz[1], xyz[2], c=joint_color)#, marker=marker, s=s,
+
+        for xyz in links_xyz:
+            # plot joint location
+            ax.scatter(xyz[0], xyz[1], xyz[2], c=link_color)#, marker=marker, s=s,
+
+        origin = [0,0,0]
+        joints_xyz = np.vstack((origin, joints_xyz))
+
+        ax.plot(joints_xyz.T[0], joints_xyz.T[1], joints_xyz.T[2],
+                c=arm_color)
+
+        return ax
+
+    def plot_data(self, ax, y, x=None, c='r', linestyle='-'):
+        '''
+        Accepts a list of data to plot onto a 2d ax and returns the ax object
+
+        NOTE: if y is multidimensional, and a list of ax objects is passed in,
+        each dimension will be plotted onto it's respective ax object. If one
+        ax object is passed in, all dimensions will be plotted on it
+
+        PARAMETERS
+        ----------
+        ax: ax object for plotting
+        y: list of data to plot
+        x: list of time points to plot along y
+        c: matplotlib compatible color to use in plotting
+        linestyle: matplotlib compatible linestyle to use
+        '''
+        #TODO: should c and linestyle be accepted as lists?
+        #TODO: check if x and y are supposed to be lists or arrays
+        # turn the ax object into a list if it is not already one
+        ax = self.make_list(ax)
+        # if we received one ax object, plot everything on it
+        if len(ax) == 1:
+            if x is None:
+                ax[0].plot(y)
+            else:
+                ax[0].plot(x,y)
+            ax = ax[0]
+        # if a list of ax objects is passed in, plot each dimension onto its
+        # own ax
+        #TODO: need to check that ax and y dims match
+        else:
+            for ii, a in enumerate(ax):
+                if x is None:
+                    a.plot(y[:, ii])
+                else:
+                    a.plot(x,y[:,ii])
+
+        return ax
+
+    def plot_trajectory(self, ax, data, c='tab:purple', linestyle='-'):
+        '''
+        accepts an ax object and an n x 3 aray to plot a 3d trajectory and
+        returns the data plotted on the ax
 
         PARAMETERS
         ----------
@@ -72,60 +147,25 @@ class DataVisualizer():
             same instantiated DrawArmVis object is used for multiple trajectory
             plots
         '''
-        if c is None:
-            c = 'tab:purple'
-        if linestyle is None:
-            linestyle = '-'
+        if isinstance(ax, list):
+            if len(ax) > 1:
+                raise Exception("multi axis plotting is currently not availabe"
+                        +" for 3d plots")
+            else:
+                ax = ax[0]
 
         ax.plot(data[:, 0], data[:,1], data[:,2],
                 color=c, linestyle=linestyle)
-        # self.master_ax.append(ax)
         return ax
 
-    def plot_arm(self, ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
-            joint_color='k', arm_color='k'):
+    def make_list(self, param):
         '''
-        accepts joint, end-effector, and link COM cartesian locations for one
-        point in time and plots them on the provided 3D ax object
-
-        returns the ax object
+        converts param into a list if it is not already one
 
         PARAMETERS
         ----------
-        'ee_xyz': np.array([x,y,z])
-            cartesian coordinates of the end-effector
-        'joints_xyz': np.array() (n_joints, 3 cartesian coordinates)
-            cartesian coordinates of the joints
-        'links_xyz': np.array() (n_links, 3 cartesian coordinates)
-            cartesian coordinates of the link COM's
-
-        EX: j for joint, t for time
-            np.array([j0x_t0, j0y_t0, j0z_t0]),...,np.array(jNx_t0,
-            jNy_t0, jNz_t0)]
+        param: any parameter to be converted into a list
         '''
-        for xyz in joints_xyz:
-            # plot joint location
-            ax.scatter(xyz[0], xyz[1], xyz[2], c=joint_color)#, marker=marker, s=s,
-
-        for xyz in links_xyz:
-            # plot joint location
-            ax.scatter(xyz[0], xyz[1], xyz[2], c=link_color)#, marker=marker, s=s,
-
-        origin = [0,0,0]
-        joints_xyz = np.vstack((origin, joints_xyz))
-
-        ax.plot(joints_xyz.T[0], joints_xyz.T[1], joints_xyz.T[2],
-                c=arm_color)
-        # self.master_ax.append(ax)
-        return ax
-
-    def plot_data(self, ax, y, x=None, c=None, linestyle=None):
-        if c is None:
-            c = 'r'
-        if linestyle is None:
-            linestyle = '-'
-        if x is None:
-            ax.plot(y)
-        else:
-            ax.plot(x,y)
-        return ax
+        if not isinstance(param, list):
+            param = [param]
+        return param

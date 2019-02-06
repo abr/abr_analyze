@@ -1,30 +1,37 @@
-#TODO: make this plot only a single ax object with parameters to either pass an
-# ax object, if not one is created since we only want the one frame, otherwise
-# get the grid layout done in a higher level script
-import abr_jaco2
 from abr_analyze.utils.data_visualizer import DataVisualizer
 from abr_analyze.utils.data_processor import DataProcessor
 from .draw_data import DrawData
-
-import matplotlib
-matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from mpl_toolkits.mplot3d import Axes3D
-import os
 """
 """
 class DrawArm(DrawData):
     '''
-
+        A class for plotting a stick arm onto a 3d ax object
     '''
-    def __init__(self, db_name, robot_config=None, interpolated_samples=100,
+    def __init__(self, db_name, robot_config, interpolated_samples=100,
             show_filter=True, show_trajectory=True):
         '''
+            PARAMETERS
+            ----------
+            db_name: string
+                the name of the database to load
+            robot_config: object
+                an instantiated abr_control arm config
+            interpolated_samples: positive int, Optional (Default=100)
+                the number of samples to take (evenly) from the interpolated data
+                if set to None, no interpolated or sampling will be done, the raw
+                data will be returned, Use None for no interpolation
+            show_filter: boolean, Optional (Default: True)
+                True to show the path planner outline, must be saved under the
+                key 'filter'
+            show_trajectory: boolean, Optional (Default: True)
+                True to show the end-effector outline
 
         '''
         super(DrawArm, self).__init__()
 
+        self.projection='3d'
         self.db_name = db_name
         self.robot_config = robot_config
         self.interpolated_samples = interpolated_samples
@@ -36,8 +43,26 @@ class DrawArm(DrawData):
         self.vis = DataVisualizer()
         self.proc = DataProcessor()
 
-    def plot(self, ax, save_location, step, param=None, c='b', linestyle=None):
+    def plot(self, ax, save_location, step=-1, parameters=None, c='b', linestyle=None):
         '''
+            Plots the parameters from save_location on the ax object
+            Returns the ax object and the current max x, y and z limits
+
+            PARAMETERS
+            ----------
+            ax: ax object for plotting
+            save_location: string or list of strings
+                points to the location in the hdf5 database to read from
+            parameters: None
+                This is not used in this function, but has been keep consistent
+                with the class
+            step: int, Optional (Default: -1)
+                the position in the data list to plot to, when -1 is used the
+                entire dataset will be plotted
+            c: string, Optional (Default: None)
+                matplotlib compatible color to be used when plotting data
+            linestyle: string, Optional (Default: None)
+                matplotlib compatible linestyle to be used when plotting data
 
         '''
         if not isinstance(save_location, list):
@@ -51,13 +76,15 @@ class DrawArm(DrawData):
                 self.data[save_name] = self.proc.load_and_process(db_name=self.db_name,
                         save_location=location,
                         interpolated_samples=self.interpolated_samples,
-                        params=['ee_xyz', 'target', 'time', 'filter', 'q'])
+                        parameters=['time', 'filter', 'q'])
                 # get our joint and link positions
-                [joints, links] = self.proc.calc_cartesian_points(
+                [joints, links, ee_xyz] = self.proc.calc_cartesian_points(
                         robot_config=self.robot_config,
                         q=self.data[save_name]['q'])
                 self.data[save_name]['joints_xyz'] = joints
                 self.data[save_name]['links_xyz'] = links
+                self.data[save_name]['ee_xyz'] = ee_xyz
+                print(ee_xyz.shape)
 
             data = self.data[save_name]
 
@@ -75,10 +102,10 @@ class DrawArm(DrawData):
                 self.vis.plot_trajectory(ax=ax, data=data['ee_xyz'][:step], c=c,
                         linestyle=linestyle)
 
-        ax.set_title(save_location)
-        ax.set_xlim3d(-0.5,0.5)
-        ax.set_ylim3d(-0.5,0.5)
-        ax.set_zlim3d(0,1)
-        ax.set_aspect(1)
+        # ax.set_title(save_location)
+        # ax.set_xlim3d(-0.5,0.5)
+        # ax.set_ylim3d(-0.5,0.5)
+        # ax.set_zlim3d(0,1)
+        # ax.set_aspect(1)
 
-        return ax
+        return [ax, [self.xlimit, self.ylimit, self.zlimit]]

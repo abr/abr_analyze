@@ -1,4 +1,3 @@
-#TODO: update function defitions
 """
 Handler for saving and loading data from HDF5 database
 
@@ -6,10 +5,8 @@ Handler for saving and loading data from HDF5 database
 import numpy as np
 import os
 from abr_analyze.utils.paths import database_dir
-try:
-    import h5py
-except ImportError:
-    print("You must install h5py to use the database utilities")
+import h5py
+import time
 
 class DataHandler():
     """
@@ -32,23 +29,182 @@ class DataHandler():
       can prevent prepending the test_name folder with the abr_cache by setting
     """
 
-    def __init__(self, db_name=None):
+    def __init__(self, db_name='abr_analyze'):
         """
-        db_name: string, Optional (Default: abr_control_db if left as None)
+        Saves the path to the databse to use in this instanitated object
+
+        PARAMETERS
+        ----------
+        db_name: string, Optional (Default: abr_analyze)
             name of the database being used
         """
-        # create our database if it does not exist
-        if db_name is None:
-            db_name = 'abr_analyze_db'
-
+        self.ERRORS = []
         self.db_loc = '%s/%s.h5'%(database_dir, db_name)
+        # Instantiate the database object with the provided path so that it
+        # gets created if it does not yet exist
+        db = h5py.File(self.db_loc, 'a')
+        # close the databse after each function
+        db.close()
+
+    def save(self, data, save_location, overwrite=False, create=True,
+            timestamp=True):
+        """
+        Saves the data dict passed in to the save_location specified in the
+        instantiated database
+
+        Parameters
+        ----------
+        data: dictionary of lists to save
+            instantiate as
+                data = {'data1': [], 'data2': []}
+            append as
+                data['data1'].append(np.copy(data_to_save))
+                data['data2'].append(np.copy(other_data_to_save))
+        save_location: string, Optional (Default: 'test')
+            the group that all of the data will be saved to
+        overwrite: boolean, Optional (Default: False)
+            determines whether or not to overwrite data if a group / dataset
+            already exists
+        create: boolean, Optional (Default: True)
+            determines whether to create the group provided if it does not
+            exist, or to warn to the user that it does not
+        timestamp: boolean, Optional (Default: True)
+            whether to save timestamp with data
+        """
+
+        if not isinstance(data, dict):
+            raise TypeError('ERROR: data must be a dict, received ',
+                    type(data))
 
         db = h5py.File(self.db_loc, 'a')
+        if not self.check_group_exists(save_location):
+            db.create_group(save_location)
+
+        if timestamp:
+            data['timestamp'] = time.strftime("%H:%M:%S")
+            data['datestamp'] = time.strftime("%Y/%m/%d")
+
+        for key in data:
+            if key is not None:
+                if data[key] is None:
+                    data[key] = 'None'
+                try:
+                    try:
+                        db[save_location].create_dataset('%s'%key, data=data[key])
+
+                    except RuntimeError as e:
+                        if overwrite:
+                            # if dataset already exists, then overwrite the data
+                            del db[save_location+'/%s'%key]
+                            db[save_location].create_dataset('%s'%key, data=data[key])
+                        else:
+                            print(e)
+                            raise Exception('Dataset %s already exists in %s'
+                                    %(save_location, key)
+                                    + ': set overwrite=True to overwrite')
+                except TypeError as type_error:
+                    print('\n\n*****WARNING: SOME DATA DID NOT SAVE*****')
+                    print('Trying to save %s to %s'%(key, save_location))
+                    print('Received error: %s' %type_error)
+                    print('NOTE: HDF5 has no None type and this dataHandler'
+                        + ' currently does not test all arrays for None entries')
+                    print('\n\n')
+
         db.close()
+
+    def load(self, parameters, save_location):
+        """
+        Accepts a list of parameters and their path to where they are saved in
+        the instantiated db, and returns a dictionary of the parameters and their
+        values
+
+        The path to the group is used as 'test_group/test_name/session/run'
+
+        PARAMETERS
+        ----------
+        parameters: list of strings
+            ex: ['q', 'dq', 'u', 'adapt']
+            if you are unsure about what the keys are for the data saved, you
+            can use the get_keys() function to list the keys in a provided
+            group path
+        save_location: string
+            the location to look for data
+            EX: 'test_group/test_name/session_num/run_num'
+        """
+        # check if the group exists
+        exists = self.check_group_exists(location=save_location, create=False)
+
+        # if group path does not exist, raise an exception to alert the
+        # user
+        if exists is False:
+            raise ValueError('The path %s does not exist'%(save_location))
+        # otherwise load the keys
+        else:
+            db = h5py.File(self.db_loc, 'a')
+            saved_data = {}
+            # print(save_location)
+            # print(parameters)
+            for key in parameters:
+                saved_data[key] = np.array(db.get('%s/%s'%(save_location,key)))
+
+            db.close()
+        return saved_data
+
+    def delete(self, save_location):
+        '''
+        Deletes the save_location and all of its contents from the instantiated databse
+
+        PARAMETERS
+        ----------
+        save_location: string
+            location in the instantiated database to delete
+        '''
+        #TODO: incoporate KBHit to get user to verify deleting location and the
+        # print the keys so they are aware of what will be deleted
+        db = h5py.File(self.db_loc, 'a')
+        del db[save_location]
+
+    def rename(self, old_save_location, new_save_location, delete_old=True):
+        '''
+        Renames a group of dataset
+
+        PARAMETERS
+        ----------
+        old_save_location: string
+            save_location to dataset or group to be renamed
+        new_save_location: string
+            the new save_location to rename old_save_location as
+        delete_old: Boolean, Optional(Default:True)
+            True to delete old_save_location after renaming
+            False to keep both the old and new save_locations
+        '''
+        db = h5py.File(self.db_loc, 'a')
+        db[new_save_location] = db[old_save_location]
+        if delete_old:
+            del db[old_save_location]
+
+    def get_keys(self, save_location):
+        """
+        Takes a path to an hdf5 dataset in the instantiated database and
+        returns the keys at that location
+
+        save_location: string
+            save_location of the group that you want the keys from
+            ex: 'my_feature_test/sub_test_group/session000/run003'
+        """
+        db = h5py.File(self.db_loc, 'a')
+        if isinstance(db[save_location], h5py.Dataset):
+            keys = [None]
+        else:
+            keys = list(db[save_location].keys())
+        db.close()
+        return keys
 
     def check_group_exists(self, location, create=False):
         """
-        Checks if the provided group exists in the database.
+        Accepts a location in the instantiated database and returns a boolean
+        whether it exists. Additionally, the boolean create can be passed in
+        that will create the group if it does not exist
 
         Parameters
         ----------
@@ -60,26 +216,34 @@ class DataHandler():
         """
         #TODO: should we add check if location is a dataset?
         db = h5py.File(self.db_loc, 'a')
-        #try:
-            #exists = isinstance(db([location], h5py.Group))
         exists = location in db
 
-        #except KeyError:
         if exists is False:
             if create:
-                #print('Creating new group %s...'%location)
                 db.create_group(location)
                 exists = True
             else:
-                #print('%s group does not exist, to create it set create=True'%location)
                 exists = False
-
         db.close()
+
         return exists
+
+    #TODO: make this function
+    def sample_data():
+        '''
+        saves every nth data value to save on storage space
+        '''
+        raise Exception('This function is currently not supported')
+
+    #NOTE: these are very control specific, should they be subclassed?
+    #TODO: the following functions can probably be cleaned up and shortened
 
     def last_save_location(self, session=None, run=None, test_name='test',
             test_group='test_group', create=True):
-        """ Search for latest run in provided test
+        """
+        Following the naming structure of save_name/session(int)/run(int) for
+        groups, the highest numbered run and session are returned (if not
+        specified, otherwise the specified ones are checked)
 
         If the user sets session or run to None, the function searches the
         specified test_name for the highest numbered run in the
@@ -224,93 +388,8 @@ class DataHandler():
         self.db.close()
         return [run, session, location]
 
-    def save(self, data, save_location='test', overwrite=False, create=True,
-            timestamp=True):
-        """ Saves data to a dataset in the provided group
 
-        Parameters
-        ----------
-        data: dictionary of lists to save
-            instantiate as
-                data = {'data1': [], 'data2': []}
-            append as
-                data['data1'].append(np.copy(data_to_save))
-                data['data2'].append(np.copy(other_data_to_save))
-        save_location: string, Optional (Default: 'test')
-            the group that all of the data will be saved to
-        overwrite: boolean, Optional (Default: False)
-            determines whether or not to overwrite data if a group / dataset
-            already exists
-        create: boolean, Optional (Default: True)
-            determines whether to create the group provided if it does not
-            exist, or to warn to the user that it does not
-        timestamp: boolean, Optional (Default: True)
-            whether to save timestamp with data
-        """
-
-        db = h5py.File(self.db_loc, 'a')
-
-        # try to create the group, if it exists a ValueError will be raised. If
-        # the user wished to overwrite the dataset that already exists then
-        # continue, otherwise raise the ValueError and alert the user to set
-        # the overwrite parameter to true
-        try:
-            db.create_group(save_location)
-        except ValueError:
-            pass
-            #TODO: this should not need an overwrite, could be saving several
-            #datasets to the same location, in which case you shouldn't be
-            #overwriting. Can't currently think of a time when you would want to
-            #overwrite the group itself, just the data
-            # if overwrite:
-            #     # pass, do not delete and write again incase their is data in
-            #     # this group that is not being overwritten
-            #     pass
-            # else:
-            #     raise ValueError('The group %s already exists. If you wish to'
-            #                      % save_location
-            #                      + ' overwrite the dataset set overwrite=True')
-
-        # print('Saving data to %s'%save_location)
-
-        if timestamp:
-            import time
-            data['timestamp'] = time.strftime("%H:%M:%S")
-            data['datestamp'] = time.strftime("%Y/%m/%d")
-
-        for key in data:
-            #print('key:%s | data:'%(key), data[key])
-            # to avoid errors, if no data is passed in with the key, set the
-            # value to 'no data'
-            if data[key] is None:
-                data[key] = 'no data'
-                #print('key: %s has no data, setting to \'no_data\'' % key)
-            try:
-                db[save_location].create_dataset('%s'%key, data=data[key])
-            except RuntimeError as e:
-                if overwrite:
-                    # if dataset already exists, then overwrite the data
-                    del db[save_location+'/%s'%key]
-                    db[save_location].create_dataset('%s'%key, data=data[key])
-                else:
-                    print(e)
-                    raise RuntimeError('Dataset %s already exists in %s, set'
-                            %(save_location, key)
-                    + ' overwrite=True to overwrite')
-                    print('Dataset %s already exists in %s'
-                            %(save_location, key)
-                            + ' \n Skipping dataset...')
-                    print('If you wish to overwrite the old data, set '
-                          + 'overwrite to True')
-            except TypeError as e:
-                print(e)
-                print('Trying to save %s to %s'%(key, save_location))
-
-        # print('Data saved.')
-        db.close()
-
-
-    def save_data(self, tracked_data, session=None, run=None,
+    def save_run_data(self, tracked_data, session=None, run=None,
             test_name='test', test_group='test_group', overwrite=False,
             create=True, timestamp=True):
         #TODO: currently module does not check whether a lower run or session
@@ -378,52 +457,16 @@ class DataHandler():
         self.save(data=tracked_data, save_location=group_path,
                 overwrite=overwrite, create=create, timestamp=timestamp)
 
-    def load(self, params, save_location):
-        """
-        Loads the data listed in params from the group provided
-
-        The path to the group is used as 'test_group/test_name/session/run'
-        Note that session and run are ints that from the user end, and are
-        later used in the group path as ('run%i'%run) and ('session%i'%session)
-
-        params: list of strings
-            ex: ['q', 'dq', 'u', 'adapt']
-            if you are unsure about what the keys are for the data saved, you
-            can use the get_keys() function to list the keys in a provided
-            group path
-        save_location: string
-            the location to look for data
-            for trial data it is in the form of
-            'test_group/test_name/session_num/run_num'
-        """
-        # check if the group exists
-        exists = self.check_group_exists(location=save_location, create=False)
-
-        # if group path does not exist, raise an exception to alert the
-        # user
-        if exists is False:
-            raise ValueError('The path %s does not exist'%(save_location))
-        # otherwise load the keys
-        else:
-            db = h5py.File(self.db_loc, 'a')
-            saved_data = {}
-            for key in params:
-                saved_data[key] = np.array(db.get('%s/%s'%(save_location,key)))
-
-            db.close()
-        return saved_data
-
-
-    def load_data(self, params, session=None, run=None,
+    def load_run_data(self, parameters, session=None, run=None,
             test_name='test', test_group='test_group', create=False):
         """
-        Loads the data listed in params from the group provided
+        Loads the data listed in parameters from the group provided
 
         The path to the group is used as 'test_group/test_name/session/run'
         Note that session and run are ints that from the user end, and are
         later used in the group path as ('run%i'%run) and ('session%i'%session)
 
-        params: list of strings
+        parameters: list of strings
             ex: ['q', 'dq', 'u', 'adapt']
             if you are unsure about what the keys are for the data saved, you
             can use the get_keys() function to list the keys in a provided
@@ -476,39 +519,6 @@ class DataHandler():
         else:
             group_path = '%s/%s/%s/%s'%(test_group, test_name, session, run)
 
-            saved_data = self.load(params=params, save_location=group_path)
+            saved_data = self.load(parameters=parameters, save_location=group_path)
 
         return saved_data
-
-    def get_keys(self, group_path):
-        """
-        Returns a list of keys from the group path provided
-
-        group_path: string
-            path to the group that you want the keys from
-            ex: 'my_feature_test/sub_test_group/session000/run003'
-        returns a list of keys from group_list
-        """
-        db = h5py.File(self.db_loc, 'a')
-        if isinstance(db[group_path], h5py.Dataset):
-            # print('The provided path points to a dataset, please provide'
-            #         + ' a group to obtain keys')
-            keys = None
-        else:
-            #print('looking for keys in %s' % group_path)
-            keys = list(db[group_path].keys())
-        db.close()
-        return keys
-
-    def delete(self, path):
-        #TODO: this needs a lot of work, add checks to see if path exists, some
-        # feature to double check user is sure, maybe a backup function?
-        #TODO: Add something like a recycling bin so you can undo a delete
-        db = h5py.File(self.db_loc, 'a')
-        del db[path]
-
-    def rename(self, old, new, delete_old=True):
-        db = h5py.File(self.db_loc, 'a')
-        db[new] = db[old]
-        if delete_old:
-            del db[old]

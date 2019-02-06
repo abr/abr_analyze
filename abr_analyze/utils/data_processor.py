@@ -66,21 +66,24 @@ class DataProcessor():
 
         return functions
 
-    def interpolate_data(self, data, time_intervals, n_points):
-        run_time = sum(time_intervals)
-        time_intervals = np.cumsum(time_intervals)
-        dt = (run_time-time_intervals[0])/n_points
-        # interpolate to even samples out
-        data_interp = []
-        # if our array is one dimensional, make sure to add a second dimension
-        # to avoid errors in our loop
-        if data.ndim == 1:
-            data = data.reshape(len(data), 1)
-        for kk in range(data.shape[1]):
-            interp = scipy.interpolate.interp1d(time_intervals, data[:, kk])
-            data_interp.append(np.array([
-                interp(t) for t in np.arange(time_intervals[0], run_time, dt)]))
-        data_interp = np.array(data_interp).T
+    def interpolate_data(self, data, time_intervals, interpolated_samples):
+        if interpolated_samples is not None:
+            run_time = sum(time_intervals)
+            time_intervals = np.cumsum(time_intervals)
+            # interpolate to even samples out
+            data_interp = []
+            # if our array is one dimensional, make sure to add a second dimension
+            # to avoid errors in our loop
+            if data.ndim == 1:
+                data = data.reshape(len(data), 1)
+            for kk in range(data.shape[1]):
+                interp = scipy.interpolate.interp1d(time_intervals, data[:, kk])
+                data_interp.append(np.array([
+                    interp(t) for t in np.linspace(time_intervals[0], run_time,
+                        interpolated_samples)]))
+            data_interp = np.array(data_interp).T
+        else:
+            data_interp = data
 
         return data_interp
 
@@ -122,7 +125,7 @@ class DataProcessor():
 
         return data_filtered
 
-    def load_and_process(self, db_name, save_location, params,
+    def load_and_process(self, db_name, save_location, parameters,
             interpolated_samples=100):
         """
         Loads the relevant data for 3d arm plotting from the save_location,
@@ -140,21 +143,14 @@ class DataProcessor():
             if set to None, no interpolated or sampling will be done, the raw
             data will be returned
         """
-        assert ((isinstance(interpolated_samples, int)
-                 and interpolated_samples>0),
-                ('TYPE ERROR: interpolated_samples must be a positive integer'
-                    + ': received: sign(%i), type(%s)'%
-                    (np.sign(interpolated_samples),
-                        type(interpolated_samples))))
-
         # load data from hdf5 database
         dat = DataHandler(db_name=db_name)
-        data = dat.load(params=params,
+        data = dat.load(parameters=parameters,
                 save_location=save_location)
 
-        if 'time' not in params:
+        if 'time' not in parameters:
             try:
-                data['time'] = dat.load(params=['time'],
+                data['time'] = dat.load(parameters=['time'],
                         save_location=save_location)['time']
                 print('Found time data in %s, using for interpolation'
                         %save_location)
@@ -163,16 +159,17 @@ class DataProcessor():
                 print('Could not find time data in %s, using range(len(data))'
                         %save_location)
                 print('NOTE: this may cause misalignment to animated figures\n')
-                data['time']=range(0,len(data[params[0]]))
+                data['time']=range(0,len(data[parameters[0]]))
         dat = []
 
         # interpolate for even sampling and save to our dictionary
         for key in data:
             if key != 'time':
-
+                if interpolated_samples is None:
+                    interpolated_samples = len(data[key])
                 data[key] = self.interpolate_data(data=data[key],
                         time_intervals=data['time'],
-                        n_points=interpolated_samples)
+                        interpolated_samples=interpolated_samples)
         # since we are interpolating over time, we are not interpolating
         # the time data, instead evenly sample interpolated_samples from
         # 0 to the sum(time)
@@ -199,17 +196,21 @@ class DataProcessor():
 
         joints_xyz = []
         links_xyz = []
+        ee_xyz = []
 
         # loop through our arm joints over time
         for q_t in q:
             joints_t_xyz= []
             links_t_xyz = []
+            ee_t_xyz = []
 
             # loop through the kinematic chain of joints
             for ii in range(0, robot_config.N_JOINTS):
                 joints_t_xyz.append(robot_config.Tx('joint%i'%ii, q=q_t,
                         x=robot_config.OFFSET))
             joints_t_xyz.append(robot_config.Tx('EE', q=q_t,
+                x=robot_config.OFFSET))
+            ee_t_xyz.append(robot_config.Tx('EE', q=q_t,
                 x=robot_config.OFFSET))
 
             # loop through the kinematic chain of links
@@ -220,5 +221,6 @@ class DataProcessor():
             # append the cartesian coordinates of this time step to our list
             joints_xyz.append(joints_t_xyz)
             links_xyz.append(links_t_xyz)
+            ee_xyz.append(ee_t_xyz)
 
-        return [np.array(joints_xyz), np.array(links_xyz)]
+        return [np.array(joints_xyz), np.array(links_xyz), np.squeeze(ee_xyz)]
