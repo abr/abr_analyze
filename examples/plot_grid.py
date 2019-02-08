@@ -46,37 +46,42 @@ cell5 = outer_grid[2:4, 2:4]
 cells.add_cell(
         cell=cell1,
         function=draw_arm,
-        save_locations=['%s/run%03d'%(test,0)]
+        save_location='%s/run%03d'%(test,0)
         )
 # the same cell can be passed in multiple times if you would like to use
 # different modules on the same cell (draw_arm and draw_3d here)
 cells.add_cell(
         cell=cell1,
         function=draw_3d,
-        save_locations=['%s/run%03d'%(baseline,0)],
+        save_location='%s/run%03d'%(baseline,0),
         parameters=['ee_xyz']
         )
 cells.add_cell(
         cell=cell2,
         function=draw_arm,
-        save_locations=['%s/run%03d'%(test,9)]
+        save_location='%s/run%03d'%(test,9)
         )
 cells.add_cell(
         cell=cell2,
         function=draw_3d,
-        save_locations=['%s/run%03d'%(baseline,9)],
+        save_location='%s/run%03d'%(baseline,9),
         parameters=['ee_xyz']
         )
-# if the same parameters are to be plotted from the same database, the save
-# locations and parameters can be passed in as lists to be plotted on the same
-# ax. Alternatively, they can be passed in individually as the above examples
+# Each save location gets its own call, however the parameters to plot can be
+# passed in as a list if multiple are to be plotted in the same location
 cells.add_cell(
         cell=cell3,
         function=draw_2d,
-        save_locations=[
-            '%s/run%03d'%(test,0),
-            '%s/run%03d'%(test,9)
-            ],
+        save_location='%s/run%03d'%(test,0),
+        parameters=['q'],
+        n_rows=3,
+        n_cols=2
+        )
+
+cells.add_cell(
+        cell=cell3,
+        function=draw_2d,
+        save_location='%s/run%03d'%(test,9),
         parameters=['q'],
         n_rows=3,
         n_cols=2
@@ -87,21 +92,34 @@ cells.add_cell(
 cells.add_cell(
         cell=cell4,
         function=draw_2d,
-        save_locations=[
-            '%s/run%03d'%(test,0),
-            '%s/run%03d'%(baseline,0)
-            ],
+        save_location='%s/run%03d'%(test,0),
         parameters=['u_base'],
         n_rows=6,
         n_cols=1
         )
+# however, if you try to change the number or rows and columns on a cell that
+# has already been passed in, only the initial set values will be used
+cells.add_cell(
+        cell=cell4,
+        function=draw_2d,
+        save_location='%s/run%03d'%(baseline,0),
+        parameters=['u_base'],
+        n_rows=3,
+        n_cols=2
+        )
+# if no rows or columns are specified, then everything will be plotted on 1 ax
 cells.add_cell(
         cell=cell5,
         function=draw_2d,
-        save_locations=[
-            '%s/run%03d'%(test,9),
-            '%s/run%03d'%(baseline,9)
-            ],
+        save_location='%s/run%03d'%(test,9),
+        parameters=['u_base'],
+        )
+
+
+cells.add_cell(
+        cell=cell5,
+        function=draw_2d,
+        save_location='%s/run%03d'%(baseline,9),
         parameters=['u_base'],
         )
 

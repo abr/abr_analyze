@@ -87,7 +87,7 @@ class DataVisualizer():
 
         return ax
 
-    def plot_data(self, ax, y, x=None, c='r', linestyle='-'):
+    def plot_2d_data(self, ax, y, x=None, c='r', linestyle='-'):
         '''
         Accepts a list of data to plot onto a 2d ax and returns the ax object
 
@@ -126,7 +126,7 @@ class DataVisualizer():
 
         return ax
 
-    def plot_trajectory(self, ax, data, c='tab:purple', linestyle='-'):
+    def plot_3d_data(self, ax, data, c='tab:purple', linestyle='-'):
         '''
         accepts an ax object and an n x 3 aray to plot a 3d trajectory and
         returns the data plotted on the ax

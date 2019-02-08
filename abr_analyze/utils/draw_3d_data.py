@@ -53,30 +53,28 @@ class Draw3dData(DrawData):
                 matplotlib compatible linestyle to be used when plotting data
         '''
         # convert our parameters to lists if they are not
-        save_location = self.make_list(save_location)
         parameters = self.make_list(parameters)
         ax = self.make_list(ax)
 
-        for location in save_location:
-            save_name = '%s-%s'%(location, parameters)
-            if save_name not in self.data:
-                self.data[save_name] = self.proc.load_and_process(db_name=self.db_name,
-                        save_location=location, parameters=parameters,
-                        interpolated_samples=self.interpolated_samples)
+        save_name = '%s-%s'%(save_location, parameters)
+        if save_name not in self.data:
+            self.data[save_name] = self.proc.load_and_process(db_name=self.db_name,
+                    save_location=save_location, parameters=parameters,
+                    interpolated_samples=self.interpolated_samples)
 
-            for param in parameters:
-                # remove single dimensions
-                self.data[save_name][param] = np.squeeze(self.data[save_name][param])
-                # avoid passing time in for finding y limits
-                if param is not 'time':
-                    # update our xyz limit with every test we add
-                    self.check_plot_limits(
-                            x=self.data[save_name][param][:,0],
-                            y=self.data[save_name][param][:,1],
-                            z=self.data[save_name][param][:,2])
+        for param in parameters:
+            # remove single dimensions
+            self.data[save_name][param] = np.squeeze(self.data[save_name][param])
+            # avoid passing time in for finding y limits
+            if param is not 'time':
+                # update our xyz limit with every test we add
+                self.check_plot_limits(
+                        x=self.data[save_name][param][:,0],
+                        y=self.data[save_name][param][:,1],
+                        z=self.data[save_name][param][:,2])
 
-                ax = self.vis.plot_trajectory(ax=ax, data=self.data[save_name][param][:step], c=c,
-                        linestyle=linestyle)
+            ax = self.vis.plot_3d_data(ax=ax, data=self.data[save_name][param][:step], c=c,
+                    linestyle=linestyle)
 
         # ax.set_xlim(self.xlimit[0], self.xlimit[1])
         # ax.set_ylim(self.ylimit[0], self.ylimit[1])

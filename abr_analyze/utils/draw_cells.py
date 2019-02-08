@@ -6,8 +6,6 @@ import matplotlib.gridspec as gridspec
 from mpl_toolkits.mplot3d import axes3d
 from abr_analyze.utils.paths import figures_dir
 import uuid
-# import subprocess
-# import os
 
 class DrawCells():
     def __init__(self):
@@ -40,7 +38,7 @@ class DrawCells():
                 # self.master_ax.append(plt.subplot(inner_grid[row,col]))
         return ax
 
-    def add_cell(self, cell, function, save_locations, parameters='None', n_rows=1, n_cols=1,
+    def add_cell(self, cell, function, save_location, parameters='None', n_rows=1, n_cols=1,
             animate=False):
 
         # get the memory location of the cell so we don't reprocess
@@ -48,7 +46,7 @@ class DrawCells():
         # create a unique id to link the parameter set to the cell id
         param_id = uuid.uuid4()
         # save the parameters to a dict for later plotting
-        param_dict = {'function': function, 'save_locations': save_locations,
+        param_dict = {'function': function, 'save_location': save_location,
                 'parameters': parameters, 'animate': animate}
 
         # if this is the first time the cell is passed in, convert it to the
@@ -105,7 +103,7 @@ class DrawCells():
 
                     [ax,limits] = data['function'].plot(
                             ax=ax,
-                            save_location=data['save_locations'],
+                            save_location=data['save_location'],
                             step=step,
                             parameters=data['parameters']
                             )

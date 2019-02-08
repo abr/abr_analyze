@@ -20,8 +20,11 @@ plt.figure()
 ax = plt.subplot(111, projection='3d')
 draw_3d.plot(
         ax=ax,
-        save_location=['%s/session000/run000'%test,
-                       '%s/session000/run000'%baseline],
+        save_location='%s/session000/run000'%test,
+        parameters='ee_xyz')
+draw_3d.plot(
+        ax=ax,
+        save_location='%s/session000/run000'%baseline,
         parameters='ee_xyz')
 plt.title('My 3D Plot')
 

@@ -21,8 +21,11 @@ ax = plt.subplot(111)
 #NOTE: parameters can be a list if you would like them on the same ax object
 draw_2d.plot(
         ax=ax,
-        save_location=['%s/session000/run000'%test,
-                       '%s/session000/run000'%baseline],
+        save_location='%s/session000/run000'%test,
+        parameters='u_base')
+draw_2d.plot(
+        ax=ax,
+        save_location='%s/session000/run000'%baseline,
         parameters='u_base')
 plt.title('My 2D Plot')
 

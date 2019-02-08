@@ -51,7 +51,7 @@ class DrawArm(DrawData):
             PARAMETERS
             ----------
             ax: ax object for plotting
-            save_location: string or list of strings
+            save_location: string
                 points to the location in the hdf5 database to read from
             parameters: None
                 This is not used in this function, but has been keep consistent
@@ -65,42 +65,37 @@ class DrawArm(DrawData):
                 matplotlib compatible linestyle to be used when plotting data
 
         '''
-        if not isinstance(save_location, list):
-            save_location = [save_location]
+        if save_location not in self.data:
+            # create a dictionary with our test data interpolated to the same
+            # number of steps
+            self.data[save_location] = self.proc.load_and_process(db_name=self.db_name,
+                    save_location=save_location,
+                    interpolated_samples=self.interpolated_samples,
+                    parameters=['time', 'filter', 'q'])
+            # get our joint and link positions
+            [joints, links, ee_xyz] = self.proc.calc_cartesian_points(
+                    robot_config=self.robot_config,
+                    q=self.data[save_location]['q'])
+            self.data[save_location]['joints_xyz'] = joints
+            self.data[save_location]['links_xyz'] = links
+            self.data[save_location]['ee_xyz'] = ee_xyz
+            print(ee_xyz.shape)
 
-        for location in save_location:
-            save_name = location
-            if save_name not in self.data:
-                # create a dictionary with our test data interpolated to the same
-                # number of steps
-                self.data[save_name] = self.proc.load_and_process(db_name=self.db_name,
-                        save_location=location,
-                        interpolated_samples=self.interpolated_samples,
-                        parameters=['time', 'filter', 'q'])
-                # get our joint and link positions
-                [joints, links, ee_xyz] = self.proc.calc_cartesian_points(
-                        robot_config=self.robot_config,
-                        q=self.data[save_name]['q'])
-                self.data[save_name]['joints_xyz'] = joints
-                self.data[save_name]['links_xyz'] = links
-                self.data[save_name]['ee_xyz'] = ee_xyz
-                print(ee_xyz.shape)
+        data = self.data[save_location]
 
-            data = self.data[save_name]
+        # plot our arm figure
+        self.vis.plot_arm(ax=ax, joints_xyz=data['joints_xyz'][step],
+                links_xyz=data['links_xyz'][step], ee_xyz=data['ee_xyz'][step])
 
-            # plot our arm figure
-            self.vis.plot_arm(ax=ax, joints_xyz=data['joints_xyz'][step],
-                    links_xyz=data['links_xyz'][step], ee_xyz=data['ee_xyz'][step])
+        # plot the filtered target trajectory
+        if self.show_filter:
+            self.vis.plot_3d_data(ax=ax, data=data['filter'][:step], c='g',
+                    linestyle='-')
 
-            # plot the filtered target trajectory
-            if self.show_filter:
-                self.vis.plot_trajectory(ax=ax, data=data['filter'][:step], c='g',
-                        linestyle='-')
-
-            # plot the ee trajectory
-            if self.show_trajectory:
-                self.vis.plot_trajectory(ax=ax, data=data['ee_xyz'][:step], c=c,
-                        linestyle=linestyle)
+        # plot the ee trajectory
+        if self.show_trajectory:
+            self.vis.plot_3d_data(ax=ax, data=data['ee_xyz'][:step], c=c,
+                    linestyle=linestyle)
 
         # ax.set_title(save_location)
         # ax.set_xlim3d(-0.5,0.5)
