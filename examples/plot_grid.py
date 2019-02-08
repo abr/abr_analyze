@@ -59,12 +59,12 @@ cells.add_cell(
 cells.add_cell(
         cell=cell2,
         function=draw_arm,
-        save_locations=['%s/run%03d'%(test,49)]
+        save_locations=['%s/run%03d'%(test,9)]
         )
 cells.add_cell(
         cell=cell2,
         function=draw_3d,
-        save_locations=['%s/run%03d'%(baseline,49)],
+        save_locations=['%s/run%03d'%(baseline,9)],
         parameters=['ee_xyz']
         )
 # if the same parameters are to be plotted from the same database, the save
@@ -75,7 +75,7 @@ cells.add_cell(
         function=draw_2d,
         save_locations=[
             '%s/run%03d'%(test,0),
-            '%s/run%03d'%(test,49)
+            '%s/run%03d'%(test,9)
             ],
         parameters=['q'],
         n_rows=3,
@@ -99,8 +99,8 @@ cells.add_cell(
         cell=cell5,
         function=draw_2d,
         save_locations=[
-            '%s/run%03d'%(test,49),
-            '%s/run%03d'%(baseline,49)
+            '%s/run%03d'%(test,9),
+            '%s/run%03d'%(baseline,9)
             ],
         parameters=['u_base'],
         )
