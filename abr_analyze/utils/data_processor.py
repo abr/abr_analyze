@@ -159,7 +159,7 @@ class DataProcessor():
                 print('Could not find time data in %s, using range(len(data))'
                         %save_location)
                 print('NOTE: this may cause misalignment to animated figures\n')
-                data['time']=range(0,len(data[parameters[0]]))
+                data['time']=range(0, len(data[parameters[0]]))
         dat = []
 
         # interpolate for even sampling and save to our dictionary
@@ -167,9 +167,10 @@ class DataProcessor():
             if key != 'time':
                 if interpolated_samples is None:
                     interpolated_samples = len(data[key])
-                data[key] = self.interpolate_data(data=data[key],
-                        time_intervals=data['time'],
-                        interpolated_samples=interpolated_samples)
+                data[key] = self.interpolate_data(
+                    data=data[key],
+                    time_intervals=data['time'],
+                    interpolated_samples=interpolated_samples)
         # since we are interpolating over time, we are not interpolating
         # the time data, instead evenly sample interpolated_samples from
         # 0 to the sum(time)

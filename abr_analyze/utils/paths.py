@@ -12,7 +12,7 @@ else:
     home_dir = os.path.expanduser('~')
     current_dir = os.path.abspath('.')
 
-    cache_dir = home_dir + ".cache/abr_analyze"
+    cache_dir = home_dir + "/.cache/abr_analyze"
     database_dir = home_dir + "/databases"
     figures_dir = current_dir
 

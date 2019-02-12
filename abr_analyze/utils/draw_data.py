@@ -7,9 +7,9 @@ class DrawData():
         '''
 
         '''
-        self.xlimit = [0,0]
-        self.ylimit = [0,0]
-        self.zlimit = [0,0]
+        self.xlimit = [0, 0]
+        self.ylimit = [0, 0]
+        self.zlimit = [0, 0]
         self.projection = None
 
     def check_plot_limits(self, x, y, z=None):
