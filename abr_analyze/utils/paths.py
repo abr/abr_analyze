@@ -12,7 +12,7 @@ else:
     home_dir = os.path.expanduser('~')
     current_dir = os.path.abspath('.')
 
-    cache_dir = home_dir + "/.cache/abr_analyze"
+    cache_dir = home_dir + ".cache/abr_analyze"
     database_dir = home_dir + "/databases"
     figures_dir = current_dir
 
@@ -22,3 +22,5 @@ else:
         os.makedirs(database_dir)
     if not os.path.exists(figures_dir):
         os.makedirs(figures_dir)
+    if not os.path.exists('%s/examples'%figures_dir):
+        os.makedirs('%s/examples'%figures_dir)
