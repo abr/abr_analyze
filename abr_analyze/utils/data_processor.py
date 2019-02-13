@@ -207,17 +207,13 @@ class DataProcessor():
 
             # loop through the kinematic chain of joints
             for ii in range(0, robot_config.N_JOINTS):
-                joints_t_xyz.append(robot_config.Tx('joint%i'%ii, q=q_t,
-                        x=robot_config.OFFSET))
-            joints_t_xyz.append(robot_config.Tx('EE', q=q_t,
-                x=robot_config.OFFSET))
-            ee_t_xyz.append(robot_config.Tx('EE', q=q_t,
-                x=robot_config.OFFSET))
+                joints_t_xyz.append(robot_config.Tx('joint%i'%ii, q=q_t))
+            joints_t_xyz.append(robot_config.Tx('EE', q=q_t))
+            ee_t_xyz.append(robot_config.Tx('EE', q=q_t))
 
             # loop through the kinematic chain of links
             for ii in range(0, robot_config.N_LINKS):
-                links_t_xyz.append(robot_config.Tx('link%i'%ii, q=q_t,
-                        x=robot_config.OFFSET))
+                links_t_xyz.append(robot_config.Tx('link%i'%ii, q=q_t))
 
             # append the cartesian coordinates of this time step to our list
             joints_xyz.append(joints_t_xyz)
