@@ -10,7 +10,7 @@ class DrawArm(DrawData):
         A class for plotting a stick arm onto a 3d ax object
     '''
     def __init__(self, db_name, robot_config, interpolated_samples=100,
-            show_filter=True, show_trajectory=True):
+                 show_trajectory=True):
         '''
             PARAMETERS
             ----------
@@ -22,9 +22,6 @@ class DrawArm(DrawData):
                 the number of samples to take (evenly) from the interpolated data
                 if set to None, no interpolated or sampling will be done, the raw
                 data will be returned, Use None for no interpolation
-            show_filter: boolean, Optional (Default: True)
-                True to show the path planner outline, must be saved under the
-                key 'filter'
             show_trajectory: boolean, Optional (Default: True)
                 True to show the end-effector outline
 
@@ -35,7 +32,6 @@ class DrawArm(DrawData):
         self.db_name = db_name
         self.robot_config = robot_config
         self.interpolated_samples = interpolated_samples
-        self.show_filter = show_filter
         self.show_trajectory = show_trajectory
         # create a dict to store processed data
         self.data = {}
@@ -71,7 +67,7 @@ class DrawArm(DrawData):
             self.data[save_location] = self.proc.load_and_process(db_name=self.db_name,
                     save_location=save_location,
                     interpolated_samples=self.interpolated_samples,
-                    parameters=['time', 'filter', 'q'])
+                    parameters=['time', 'q'])
             # get our joint and link positions
             [joints, links, ee_xyz] = self.proc.calc_cartesian_points(
                     robot_config=self.robot_config,
@@ -87,20 +83,15 @@ class DrawArm(DrawData):
         self.vis.plot_arm(ax=ax, joints_xyz=data['joints_xyz'][step],
                 links_xyz=data['links_xyz'][step], ee_xyz=data['ee_xyz'][step])
 
-        # plot the filtered target trajectory
-        if self.show_filter:
-            self.vis.plot_3d_data(ax=ax, data=data['filter'][:step], c='g',
-                    linestyle='-')
-
         # plot the ee trajectory
         if self.show_trajectory:
             self.vis.plot_3d_data(ax=ax, data=data['ee_xyz'][:step], c=c,
                     linestyle=linestyle)
 
         # ax.set_title(save_location)
-        # ax.set_xlim3d(-0.5,0.5)
-        # ax.set_ylim3d(-0.5,0.5)
-        # ax.set_zlim3d(0,1)
-        # ax.set_aspect(1)
+        # ax[0].set_xlim3d(-0.5,0.5)
+        # ax[0].set_ylim3d(-0.5,0.5)
+        # ax[0].set_zlim3d(0,1)
+        # ax[0].set_aspect(1)
 
         return [ax, [self.xlimit, self.ylimit, self.zlimit]]
