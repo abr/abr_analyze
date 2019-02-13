@@ -9,6 +9,7 @@ from .draw_arm import DrawArm
 from .draw_cells import DrawCells
 
 from .make_gif import MakeGif
+import abr_analyze.utils.npz_to_hdf5
 
 # from .trajectory_error_proc import TrajectoryErrorProc
 # from .trajectory_error_vis import TrajectoryErrorVis

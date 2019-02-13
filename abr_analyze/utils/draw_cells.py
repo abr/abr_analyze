@@ -39,7 +39,7 @@ class DrawCells():
         return ax
 
     def add_cell(self, cell, function, save_location, parameters='None', n_rows=1, n_cols=1,
-            animate=False):
+            animate=True):
 
         # get the memory location of the cell so we don't reprocess
         cell_id = hex(id(cell))
