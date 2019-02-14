@@ -39,7 +39,7 @@ cells = DrawCells()
 
 # layout our desired plotting grid
 outer_grid = gridspec.GridSpec(4, 4)
-cell1 = outer_grid[0:1, 0]
+cell1 = outer_grid[0:2, 0]
 cell2 = outer_grid[0:2, 1]
 cell3 = outer_grid[2:4, 0:2]
 cell4 = outer_grid[0:2, 2:4]
@@ -50,7 +50,8 @@ cell5 = outer_grid[2:4, 2:4]
 cells.add_cell(
     cell=cell1,
     function=draw_arm,
-    save_location='%s/run%03d'%(test, 0)
+    save_location='%s/run%03d'%(test, 0),
+    animate=True
     )
 
 # the same cell can be passed in multiple times if you would like to use
@@ -59,7 +60,8 @@ cells.add_cell(
     cell=cell1,
     function=draw_3d,
     save_location='%s/run%03d'%(baseline, 0),
-    parameters=['ee_xyz']
+    parameters=['ee_xyz'],
+    animate=True
     )
 cells.add_cell(
     cell=cell2,
@@ -79,17 +81,15 @@ cells.add_cell(
     cell=cell3,
     function=draw_2d,
     save_location='%s/run%03d'%(test, 0),
-    parameters=['q'],
-    n_rows=3,
-    n_cols=2
+    parameters=['q', 'time'],
+    subplot=[3,2]
     )
 cells.add_cell(
     cell=cell3,
     function=draw_2d,
     save_location='%s/run%03d'%(test, 9),
-    parameters=['q'],
-    n_rows=3,
-    n_cols=2
+    parameters=['time', 'q'],
+    subplot=[3,2]
     )
 
 # Note that we can specify how many rows and columns to break the cell further
@@ -100,8 +100,7 @@ cells.add_cell(
     function=draw_2d,
     save_location='%s/run%03d'%(test, 0),
     parameters=['u_base'],
-    n_rows=6,
-    n_cols=1
+    subplot=[6,1]
     )
 
 # however, if you try to change the number or rows and columns on a cell that
@@ -111,8 +110,7 @@ cells.add_cell(
     function=draw_2d,
     save_location='%s/run%03d'%(baseline, 0),
     parameters=['u_base'],
-    n_rows=3,
-    n_cols=2
+    subplot=[3,2]
     )
 
 # if no rows or columns are specified, then everything will be plotted on 1 ax

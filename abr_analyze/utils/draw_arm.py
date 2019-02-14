@@ -75,7 +75,6 @@ class DrawArm(DrawData):
             self.data[save_location]['joints_xyz'] = joints
             self.data[save_location]['links_xyz'] = links
             self.data[save_location]['ee_xyz'] = ee_xyz
-            print(ee_xyz.shape)
 
         data = self.data[save_location]
 

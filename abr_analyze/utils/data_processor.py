@@ -147,25 +147,22 @@ class DataProcessor():
         data = dat.load(parameters=parameters,
                 save_location=save_location)
 
+        # If time is not passed in, create a range from 0 to the length of any
+        # other parameter in the list that is not time. This assumes that any
+        # data passed in at once will be of the same length
         if 'time' not in parameters:
-            try:
-                data['time'] = dat.load(parameters=['time'],
-                        save_location=save_location)['time']
-                print('Found time data in %s, using for interpolation'
-                        %save_location)
-            except:
-                print('\n\n****WARNING****\n')
-                print('Could not find time data in %s, using range(len(data))'
-                        %save_location)
-                print('NOTE: this may cause misalignment to animated figures\n')
-                data['time']=range(0, len(data[parameters[0]]))
+            total_time = interpolated_samples
+            for param in parameters:
+                if param != 'time':
+                    data['time']=range(0, len(data[param]))
+                    break
+        else:
+            total_time = np.sum(data['time'])
         dat = []
 
         # interpolate for even sampling and save to our dictionary
         for key in data:
             if key != 'time':
-                if interpolated_samples is None:
-                    interpolated_samples = len(data[key])
                 data[key] = self.interpolate_data(
                     data=data[key],
                     time_intervals=data['time'],
@@ -173,8 +170,9 @@ class DataProcessor():
         # since we are interpolating over time, we are not interpolating
         # the time data, instead evenly sample interpolated_samples from
         # 0 to the sum(time)
-        data['time'] = np.linspace(0, sum(data['time']),
-                interpolated_samples)
+        if interpolated_samples is None:
+            interpolated_samples = len(data[key])
+        data['time'] = np.linspace(0, total_time, interpolated_samples)
 
         data['read_location'] = save_location
         return data

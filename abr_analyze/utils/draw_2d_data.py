@@ -73,9 +73,9 @@ class Draw2dData(DrawData):
                 self.check_plot_limits(x=np.cumsum(self.data[save_name]['time']),
                         y=self.data[save_name][param])
 
-            ax = self.vis.plot_2d_data(ax=ax, x=np.cumsum(self.data[save_name]['time'])[:step],
-                    y=self.data[save_name][param][:step], c=c,
-                    linestyle=linestyle)
+                ax = self.vis.plot_2d_data(ax=ax, x=self.data[save_name]['time'][:step],
+                        y=self.data[save_name][param][:step], c=c,
+                        linestyle=linestyle)
 
         # ax.set_xlim(self.xlimit[0], self.xlimit[1])
         # ax.set_ylim(self.ylimit[0], self.ylimit[1])

@@ -53,3 +53,4 @@ class MakeGif():
         process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
         print('Finished')
+        print('Gif saved to %s/%s'%(save_loc, save_name))

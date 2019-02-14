@@ -35,11 +35,10 @@ class DrawCells():
                 else:
                     ax.append(plt.subplot(inner_grid[row,col],
                             projection=projection))
-                # self.master_ax.append(plt.subplot(inner_grid[row,col]))
         return ax
 
-    def add_cell(self, cell, function, save_location, parameters='None', n_rows=1, n_cols=1,
-            animate=True):
+    def add_cell(self, cell, function, save_location, parameters='None',
+            subplot=[1,1], animate=False):
 
         # get the memory location of the cell so we don't reprocess
         cell_id = hex(id(cell))
@@ -54,12 +53,13 @@ class DrawCells():
         if cell_id not in self.data['cell_ids']:
             # get the number of interpolated samples for the function to find
             # the maximum value to loop through when animating
-            if isinstance(function.interpolated_samples, int) and animate:
-                self.animate_steps = max(function.interpolated_samples,
+            if isinstance(function.interpolated_samples, int):
+                if animate:
+                    self.animate_steps = max(function.interpolated_samples,
                         self.animate_steps)
             self.data['cell_ids'].append(cell_id)
-            axes = self.cell_to_subplot(cell=cell, n_rows=n_rows,
-                    n_cols=n_cols, projection=function.projection)
+            axes = self.cell_to_subplot(cell=cell, n_rows=subplot[0],
+                    n_cols=subplot[1], projection=function.projection)
             # save the ax objects and parameters linked to this cell
             cell_dict = {'ax': axes, 'param_ids': [param_id], param_id: param_dict}
             self.data[cell_id] = cell_dict
@@ -69,7 +69,10 @@ class DrawCells():
             self.data[cell_id][param_id] = param_dict
             self.data[cell_id]['param_ids'].append(param_id)
 
-    def generate(self):
+    def generate(self, save_loc=None, save_name='draw_cells'):
+        if save_loc is None:
+            save_loc='examples'
+
         cell_ids = self.data['cell_ids']
         # this will only be greater than one if the cell is being animated
         if self.animate_steps > 1:
@@ -78,7 +81,7 @@ class DrawCells():
             fig_cache = gif.prep_fig_cache()
 
         for ii in range(0, self.animate_steps):
-            # TODO: add progress printout
+            print('%.2f%% complete'%(ii/self.animate_steps*100), end='\r')
             # loop through each cell in the plot
             for cell_id in cell_ids:
                 # get the ax object(s) and parameter sets linked to this cell
@@ -110,8 +113,7 @@ class DrawCells():
                     #TODO: link the x and y limits to the axis
             #TODO: set axis limits
             if self.animate_steps > 1:
-                save_loc = '%s/%05d.png'%(fig_cache, ii)
-                plt.savefig(save_loc)
+                plt.savefig('%s/%05d.png'%(fig_cache, ii))
                 for cell_id in cell_ids:
                     # get the ax object(s) and parameter sets linked to this cell
                     cell_data = self.data[cell_id]
@@ -119,11 +121,12 @@ class DrawCells():
                     for a in ax:
                         a.clear()
             else:
+                plt.savefig('%s/%s/%s'%(figures_dir, save_loc, save_name))
+                print('Figure saved to %s/%s/%s'%(figures_dir, save_loc, save_name))
                 plt.show()
-            #TODO: clear all ax's here
+
         if self.animate_steps > 1:
-            save_loc='%s/draw_cells'%(figures_dir)
             gif.create(fig_loc=fig_cache,
-                       save_loc=save_loc,
-                       save_name='draw_cells_test',
+                       save_loc='%s/%s'%(figures_dir, save_loc),
+                       save_name=save_name,
                        delay=5, res=[1920,1080])
