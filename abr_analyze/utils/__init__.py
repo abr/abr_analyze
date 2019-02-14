@@ -10,6 +10,8 @@ from .draw_cells import DrawCells
 
 from .make_gif import MakeGif
 import abr_analyze.utils.npz_to_hdf5
+from .network_utils import NetworkUtils
+from .intercepts_scan import InterceptsScan
 
 # from .trajectory_error_proc import TrajectoryErrorProc
 # from .trajectory_error_vis import TrajectoryErrorVis

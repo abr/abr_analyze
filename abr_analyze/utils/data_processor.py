@@ -16,7 +16,6 @@ import scipy.interpolate
 
 from abr_analyze.utils.paths import cache_dir
 from abr_analyze.utils import DataHandler
-from abr_control.controllers import path_planners
 
 class DataProcessor():
     def __init__(self):
