@@ -172,8 +172,6 @@ class NetworkUtils:
             scaled_dq.append(dqs[ii])
         scaled_q = np.array(scaled_q).T
         scaled_dq = np.array(scaled_dq).T
-        print('scaled q: ', np.array(scaled_q).shape)
-        print('scaled dq: ', np.array(scaled_dq).shape)
 
         return [scaled_q, scaled_dq]
 
