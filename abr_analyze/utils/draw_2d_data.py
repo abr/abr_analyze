@@ -30,7 +30,8 @@ class Draw2dData(DrawData):
         self.proc = DataProcessor()
         self.vis = DataVisualizer()
 
-    def plot(self, ax, save_location, parameters, step=-1, c=None, linestyle='--'):
+    def plot(self, ax, save_location, parameters, step=-1, c=None, linestyle='--',
+            label=None, title=None):
         '''
             Plots the parameters from save_location on the ax object
             Returns the ax object and the current max x and y limits
@@ -75,7 +76,7 @@ class Draw2dData(DrawData):
 
                 ax = self.vis.plot_2d_data(ax=ax, x=self.data[save_name]['time'][:step],
                         y=self.data[save_name][param][:step], c=c,
-                        linestyle=linestyle)
+                        linestyle=linestyle, label=label, title=title)
 
         # ax.set_xlim(self.xlimit[0], self.xlimit[1])
         # ax.set_ylim(self.ylimit[0], self.ylimit[1])

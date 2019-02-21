@@ -151,13 +151,11 @@ class DataProcessor():
         # other parameter in the list that is not time. This assumes that any
         # data passed in at once will be of the same length
         if 'time' not in parameters:
-            total_time = interpolated_samples
             for param in parameters:
-                if param != 'time':
-                    data['time']=range(0, len(data[param]))
-                    break
-        else:
-            total_time = np.sum(data['time'])
+                data['time']=range(0, len(data[param]))
+                break
+
+        total_time = np.sum(data['time'])
         dat = []
 
         # interpolate for even sampling and save to our dictionary

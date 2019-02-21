@@ -39,7 +39,8 @@ class DrawArm(DrawData):
         self.vis = DataVisualizer()
         self.proc = DataProcessor()
 
-    def plot(self, ax, save_location, step=-1, parameters=None, c='b', linestyle=None):
+    def plot(self, ax, save_location, step=-1, parameters=None, c='b', linestyle=None,
+            label=None, title=None):
         '''
             Plots the parameters from save_location on the ax object
             Returns the ax object and the current max x, y and z limits
@@ -80,17 +81,13 @@ class DrawArm(DrawData):
 
         # plot our arm figure
         self.vis.plot_arm(ax=ax, joints_xyz=data['joints_xyz'][step],
-                links_xyz=data['links_xyz'][step], ee_xyz=data['ee_xyz'][step])
+                links_xyz=data['links_xyz'][step], ee_xyz=data['ee_xyz'][step],
+                title=title)
 
         # plot the ee trajectory
         if self.show_trajectory:
             self.vis.plot_3d_data(ax=ax, data=data['ee_xyz'][:step], c=c,
-                    linestyle=linestyle)
+                    linestyle=linestyle, label=label)
 
         # ax.set_title(save_location)
-        # ax[0].set_xlim3d(-0.5,0.5)
-        # ax[0].set_ylim3d(-0.5,0.5)
-        # ax[0].set_zlim3d(0,1)
-        # ax[0].set_aspect(1)
-
         return [ax, [self.xlimit, self.ylimit, self.zlimit]]

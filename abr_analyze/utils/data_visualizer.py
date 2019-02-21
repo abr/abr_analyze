@@ -41,7 +41,7 @@ class DataVisualizer():
         return ax
 
     def plot_arm(self, ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
-            joint_color='k', arm_color='k'):
+            joint_color='k', arm_color='k', title=None):
         '''
         accepts joint, end-effector, and link COM cartesian locations, and an
         ax object, returns a stick arm with points at the joints and link COM's
@@ -85,9 +85,17 @@ class DataVisualizer():
         ax.plot(joints_xyz.T[0], joints_xyz.T[1], joints_xyz.T[2],
                 c=arm_color)
 
+        ax.set_xlim3d(-0.5,0.5)
+        ax.set_ylim3d(-0.5,0.5)
+        ax.set_zlim3d(0.5,1.2)
+        ax.set_aspect(1)
+        if title is not None:
+            ax.set_title(title)
+
         return ax
 
-    def plot_2d_data(self, ax, y, x=None, c='r', linestyle='-'):
+    def plot_2d_data(self, ax, y, x=None, c='r', linestyle='-', label=None,
+            loc=1, title=None):
         '''
         Accepts a list of data to plot onto a 2d ax and returns the ax object
 
@@ -110,23 +118,32 @@ class DataVisualizer():
         # if we received one ax object, plot everything on it
         if len(ax) == 1:
             if x is None:
-                ax[0].plot(y)
+                ax[0].plot(y, label=label)
             else:
-                ax[0].plot(x,y)
+                ax[0].plot(x, y, label=label)
             ax = ax[0]
+            ax.legend(loc=loc)
+            if title is not None:
+                ax.set_title(title)
         # if a list of ax objects is passed in, plot each dimension onto its
         # own ax
         #TODO: need to check that ax and y dims match
         else:
+            if label is None:
+                label = ''
             for ii, a in enumerate(ax):
                 if x is None:
-                    a.plot(y[:, ii])
+                    a.plot(y[:, ii], label='%s %i'%(label, ii))
                 else:
-                    a.plot(x,y[:,ii])
+                    a.plot(x,y[:,ii], label='%s %i'%(label,ii))
+                a.legend(loc=loc)
+            if title is not None:
+                ax[0].set_title(title)
 
         return ax
 
-    def plot_3d_data(self, ax, data, c='tab:purple', linestyle='-'):
+    def plot_3d_data(self, ax, data, c='tab:purple', linestyle='-', emphasize_end=True,
+            label=None, loc=1, title=None):
         '''
         accepts an ax object and an n x 3 aray to plot a 3d trajectory and
         returns the data plotted on the ax
@@ -146,6 +163,8 @@ class DataVisualizer():
             allows the user to overwrite the instantiated value in case the
             same instantiated DrawArmVis object is used for multiple trajectory
             plots
+        emphasize_end: boolean, Optional (Default: True)
+            True to add a point at the final position with a larger size
         '''
         if isinstance(ax, list):
             if len(ax) > 1:
@@ -155,7 +174,14 @@ class DataVisualizer():
                 ax = ax[0]
 
         ax.plot(data[:, 0], data[:,1], data[:,2],
-                color=c, linestyle=linestyle)
+                color=c, linestyle=linestyle, label=label)
+        if emphasize_end:
+            ax.scatter(data[-1,0], data[-1,1], data[-1,2],
+                color=c)
+
+        ax.legend(loc=loc)
+        if title is not None:
+            ax.set_title(title)
         return ax
 
     def make_list(self, param):

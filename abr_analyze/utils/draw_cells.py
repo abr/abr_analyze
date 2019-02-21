@@ -38,7 +38,8 @@ class DrawCells():
         return ax
 
     def add_cell(self, cell, function, save_location, parameters='None',
-            subplot=[1,1], animate=False):
+            subplot=[1,1], animate=False, c=None, linestyle=None, label=None,
+            title=None):
 
         # get the memory location of the cell so we don't reprocess
         cell_id = hex(id(cell))
@@ -46,7 +47,8 @@ class DrawCells():
         param_id = uuid.uuid4()
         # save the parameters to a dict for later plotting
         param_dict = {'function': function, 'save_location': save_location,
-                'parameters': parameters, 'animate': animate}
+                'parameters': parameters, 'animate': animate, 'c': c,
+                'linestyle': linestyle, 'label': label, 'title': title}
 
         # if this is the first time the cell is passed in, convert it to the
         # specified number of row and column ax objects
@@ -108,7 +110,11 @@ class DrawCells():
                             ax=ax,
                             save_location=data['save_location'],
                             step=step,
-                            parameters=data['parameters']
+                            parameters=data['parameters'],
+                            c=data['c'],
+                            linestyle=data['linestyle'],
+                            label=data['label'],
+                            title=data['title']
                             )
                     #TODO: link the x and y limits to the axis
             #TODO: set axis limits
