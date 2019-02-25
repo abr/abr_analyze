@@ -8,9 +8,10 @@ from abr_analyze.utils.paths import figures_dir
 import uuid
 
 class DrawCells():
-    def __init__(self):
+    def __init__(self, figsize=[16,9], dpi=200):
         self.data = {'cell_ids': []}
         self.animate_steps = 1
+        self.fig = plt.figure(figsize=(figsize[0], figsize[1]), dpi=dpi)
 
     def cell_to_subplot(self, cell, n_rows, n_cols,  projection=None):
         '''
@@ -31,9 +32,9 @@ class DrawCells():
         for row in range(0, n_rows):
             for col in range(0, n_cols):
                 if projection is None:
-                    ax.append(plt.subplot(inner_grid[row,col]))
+                    ax.append(self.fig.add_subplot(inner_grid[row,col]))
                 else:
-                    ax.append(plt.subplot(inner_grid[row,col],
+                    ax.append(self.fig.add_subplot(inner_grid[row,col],
                             projection=projection))
         return ax
 
