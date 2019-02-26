@@ -179,7 +179,8 @@ class DataVisualizer():
             ax.scatter(data[-1,0], data[-1,1], data[-1,2],
                 color=c)
 
-        ax.legend(loc=loc)
+        if label is not None:
+            ax.legend(loc=loc)
         if title is not None:
             ax.set_title(title)
         return ax
