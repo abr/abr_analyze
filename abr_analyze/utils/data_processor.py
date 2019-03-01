@@ -154,6 +154,11 @@ class DataProcessor():
             for param in parameters:
                 data['time']=range(0, len(data[param]))
                 break
+        elif data['time'].item() is None:
+            for param in parameters:
+                if param is not 'time':
+                    data['time']=range(0, len(data[param]))
+                    break
 
         total_time = np.sum(data['time'])
         dat = []
@@ -216,3 +221,27 @@ class DataProcessor():
             ee_xyz.append(ee_t_xyz)
 
         return [np.array(joints_xyz), np.array(links_xyz), np.squeeze(ee_xyz)]
+
+    def two_norm_error(self, trajectory, ideal_trajectory, dt=1):
+        """
+        accepts two nx3 arrays of xyz cartesian coordinates and returns the
+        2norm error of traj to baseline_traj
+
+        Parameters
+        ----------
+        baseline_traj: nx3 array
+            coordinates of ideal trajectory over time
+        traj: nx3 array
+            coordinates of trajectory to compare to baseline
+        dt: float
+            average timestep
+        """
+        # error relative to ideal path
+        error = np.sqrt(np.sum(
+            (ideal_trajectory - trajectory)**2,
+            axis=1)) *dt
+        #TODO: confirm whether or not we should be multiplying by dt
+
+        return error
+
+

@@ -21,7 +21,7 @@ class InterceptsScan():
     def proportion_neurons_active(
             self, n_input, n_output, n_neurons, n_ensembles, pes_learning_rate,
             backend, seed, neuron_type, encoders, input_signal, ideal_function,
-            intercept_vals, save_name='proportion_neurons'):
+            intercept_vals, save_name='proportion_neurons', notes=''):
 
         loop_time = 0
         for ii ,intercept in enumerate(intercept_vals) :
@@ -66,7 +66,7 @@ class InterceptsScan():
             ideal = [ideal_function(x) for val in x]
             self.dat.save(
                     data={'ideal': ideal, 'total_intercepts':
-                        len(intercept_vals)},
+                        len(intercept_vals), 'notes': notes},
                     save_location='%s'%save_name,
                     overwrite=True)
 
@@ -88,7 +88,7 @@ class InterceptsScan():
     def proportion_time_active(
             self, n_input, n_output, n_neurons, n_ensembles, pes_learning_rate,
             backend, seed, neuron_type, encoders, input_signal, ideal_function,
-            intercept_vals, save_name='proportion_time', n_bins=100):
+            intercept_vals, save_name='proportion_time', n_bins=100, notes=''):
 
         loop_time = 0
         bins = np.linspace(0,1,n_bins)
@@ -135,7 +135,7 @@ class InterceptsScan():
             ideal = [ideal_function(x) for x in centers]
             self.dat.save(
                     data={'ideal': ideal, 'total_intercepts':
-                        len(intercept_vals)},
+                        len(intercept_vals), 'notes': notes},
                     save_location='%s'%save_name,
                     overwrite=True)
 

@@ -5,57 +5,67 @@ import seaborn
 import numpy as np
 import os
 
+from abr_analyze.utils.paths import figures_dir
 import nengo
 import nengolib
+from nengolib.stats import spherical_transform
 from nengo.utils.matplotlib import rasterplot
 
 class NetworkUtils:
     def convert_to_spherical(self, input_signal):
-        """
-        accepts data of shape time x N_dim and returns the values converted
-        into spherical space"""
-        x = input_signal.T
-        pi = np.pi
-        spherical = []
+        if input_signal.ndim == 1:
+            input_signal = input_signal.reshape(1, len(input_signal))
+        #print(np.array(input_signal).shape)
+        new_in = spherical_transform(input_signal)
+        #print(np.array(new_in).shape)
+        return(new_in)
+    # def convert_to_spherical(self, input_signal):
+    #     """
+    #     accepts data of shape time x N_dim and returns the values converted
+    #     into spherical space"""
+    #     x = input_signal.T
+    #     x = np.clip(x, -1, 1)
+    #     pi = np.pi
+    #     spherical = []
+    #
+    #     def scale(input_signal):
+    #         """
+    #         Takes inputs in the range of -1 to 1 and scales them to the range of
+    #         0-pi, except for the last dimension which gets scaled to 0-2pi.
+    #         This is the expected range of inputs prior to the conversion to
+    #         spherical
+    #         """
+    #         signal = np.copy(input_signal)
+    #         factor = pi
+    #         for ii, dim in enumerate(input_signal):
+    #             if ii == len(input_signal)-1:
+    #                 factor = 2*pi
+    #             signal[ii] = dim * factor# + factor
+    #         return signal
+    #
+    #     def sin_product(input_signal, count):
+    #         """
+    #         Handles the sin terms in the conversion to spherical coordinates where
+    #         we multiple by sin(x_i) n-1 times
+    #         """
+    #         tmp = 1
+    #         for jj in range(0, count):
+    #             tmp *= np.sin(input_signal[jj])
+    #         return tmp
+    #
+    #     # nth input scaled to 0-2pi range, remainder from 0-pi
+    #     # cycle through each input
+    #     x_rad = scale(input_signal=x)
+    #
+    #     for ss in range(0, len(x)):
+    #         sphr = sin_product(input_signal=x_rad, count=ss)
+    #         sphr*= np.cos(x_rad[ss])
+    #         spherical.append(sphr)
+    #     spherical.append(sin_product(input_signal=x_rad, count=len(x)))
+    #     spherical = np.array(spherical).T
+    #     return(spherical)
 
-        def scale(input_signal):
-            """
-            Takes inputs in the range of -1 to 1 and scales them to the range of
-            0-pi, except for the last dimension which gets scaled to 0-2pi.
-            This is the expected range of inputs prior to the conversion to
-            spherical
-            """
-            signal = np.copy(input_signal)
-            factor = pi
-            for ii, dim in enumerate(input_signal):
-                if ii == len(input_signal)-1:
-                    factor = 2*pi
-                signal[ii] = dim * factor# + factor
-            return signal
-
-        def sin_product(input_signal, count):
-            """
-            Handles the sin terms in the conversion to spherical coordinates where
-            we multiple by sin(x_i) n-1 times
-            """
-            tmp = 1
-            for jj in range(0, count):
-                tmp *= np.sin(input_signal[jj])
-            return tmp
-
-        # nth input scaled to 0-2pi range, remainder from 0-pi
-        # cycle through each input
-        x_rad = scale(input_signal=x)
-
-        for ss in range(0, len(x)):
-            sphr = sin_product(input_signal=x_rad, count=ss)
-            sphr*= np.cos(x_rad[ss])
-            spherical.append(sphr)
-        spherical.append(sin_product(input_signal=x_rad, count=len(x)))
-        spherical = np.array(spherical).T
-        return(spherical)
-
-    def generate_encoders(self, input_signal=None, n_neurons=1000, thresh=0.008):
+    def generate_encoders(self, input_signal=None, n_neurons=1000, n_dims=1, thresh=0.008):
         """
         Accepts inputs signal in the shape of time X dim and outputs encoders
         for the specified number of neurons by sampling from the input.
@@ -70,52 +80,57 @@ class NetworkUtils:
         # and 10k neurons, 10DOF 10k use 0.08, for 10DOF 100 went up to 0.708 by end
         # 0.3 works well for 1000
         # first run so we need to generate encoders for the sessions
-        print('input_signal_length: ', len(input_signal))
-        ii = 0
-        same_count = 0
-        prev_index = 0
-        while (input_signal.shape[0] > n_neurons):
-            if ii%1000 == 0:
-                print(input_signal.shape)
-                print('thresh: ', thresh)
-            # choose a random set of indices
-            n_indices = input_signal.shape[0]
-            # make sure we're dealing with an even number
-            n_indices -= 0 if ((n_indices % 2) == 0) else 1
-            n_half = int(n_indices / 2)
+        if input_signal is not None:
+            print('input_signal_length: ', len(input_signal))
+            ii = 0
+            same_count = 0
+            prev_index = 0
+            while (input_signal.shape[0] > n_neurons):
+                if ii%1000 == 0:
+                    print(input_signal.shape)
+                    print('thresh: ', thresh)
+                # choose a random set of indices
+                n_indices = input_signal.shape[0]
+                # make sure we're dealing with an even number
+                n_indices -= 0 if ((n_indices % 2) == 0) else 1
+                n_half = int(n_indices / 2)
 
-            randomized_indices = np.random.permutation(range(n_indices))
-            a = randomized_indices[:n_half]
-            b = randomized_indices[n_half:]
+                randomized_indices = np.random.permutation(range(n_indices))
+                a = randomized_indices[:n_half]
+                b = randomized_indices[n_half:]
 
-            data1 = input_signal[a]
-            data2 = input_signal[b]
+                data1 = input_signal[a]
+                data2 = input_signal[b]
 
-            distances = np.linalg.norm(data1 - data2, axis=1)
+                distances = np.linalg.norm(data1 - data2, axis=1)
 
-            under_thresh = distances > thresh
+                under_thresh = distances > thresh
 
-            input_signal = np.vstack([data1, data2[under_thresh]])
-            ii += 1
-            if prev_index == n_indices:
-                same_count += 1
-            else:
-                same_count = 0
+                input_signal = np.vstack([data1, data2[under_thresh]])
+                ii += 1
+                if prev_index == n_indices:
+                    same_count += 1
+                else:
+                    same_count = 0
 
-            if same_count == 50:
-                same_count = 0
-                thresh += 0.001
-                print('All values are within threshold, but not at target size.')
-                print('Increasing threshold to %.4f' %thresh)
-            prev_index = n_indices
+                if same_count == 50:
+                    same_count = 0
+                    thresh += 0.001
+                    print('All values are within threshold, but not at target size.')
+                    print('Increasing threshold to %.4f' %thresh)
+                prev_index = n_indices
 
-        if input_signal.shape[0] != n_neurons:
-            print('Too many indices removed, appending with uniform hypersphere')
-            print('shape: ', input_signal.shape)
-            length = n_neurons - input_signal.shape[0]
+            if input_signal.shape[0] != n_neurons:
+                print('Too many indices removed, appending with uniform hypersphere')
+                print('shape: ', input_signal.shape)
+                length = n_neurons - input_signal.shape[0]
+                hypersphere = nengolib.stats.ScatteredHypersphere(surface=True)
+                hyper_inputs = hypersphere.sample(length, input_signal.shape[1])
+                input_signal = np.vstack((input_signal, hyper_inputs))
+        else:
+            print('No input signal passed in, selected encoders randomly from scattered hypersphere')
             hypersphere = nengolib.stats.ScatteredHypersphere(surface=True)
-            hyper_inputs = hypersphere.sample(length, input_signal.shape[1])
-            input_signal = np.vstack((input_signal, hyper_inputs))
+            input_signal = hypersphere.sample(n_neurons, n_dims)
 
 
         print(input_signal.shape)
@@ -148,22 +163,38 @@ class NetworkUtils:
         qs[0] = (qs[0] + np.pi) % (2*np.pi)
         qs[4] = (qs[4] + np.pi) % (2*np.pi)
 
+        # for Pawel's spherical conversion
+        # MEANS = {  # expected mean of joint angles / velocities
+        #     # shift from 0-2pi to -pi to pi
+        #     'q': np.array([3.20, 2.14, 1.52, 4.68, 3.00, 3.00]),
+        #     'dq': np.array([0.002, -0.117, -0.200, 0.002, -0.021, 0.002]),
+        #     }
+        # SCALES = {  # expected variance of joint angles / velocities
+        #     'q': np.array([0.2, 1.14, 1.06, 1.0, 2.8, 0.01]),
+        #     'dq': np.array([0.06, 0.45, 0.7, 0.25, 0.4, 0.01]),
+        #     }
+        # for pp in range(0, 6):
+        #     qs[pp] = (qs[pp] - MEANS['q'][pp]) / SCALES['q'][pp]
+        #     dqs[pp] = (dqs[pp] - MEANS['dq'][pp]) / SCALES['dq'][pp]
+
+
+        # for Aaron's spherical conversion
         MEANS = {  # expected mean of joint angles / velocities
             # shift from 0-2pi to -pi to pi
-            'q': np.array([3.20, 2.14, 1.52, 4.68, 3.00, 3.00]),
-            'dq': np.array([0.002, -0.117, -0.200, 0.002, -0.021, 0.002]),
+            'q': np.array([3.0, 1, 1.1, 4.15, 1.2, 0]),
+            'dq': np.array([0.1, 0.5, 0.65, 0.3, 0.75, 0]),
             }
         SCALES = {  # expected variance of joint angles / velocities
-            'q': np.array([0.2, 1.14, 1.06, 1.0, 2.8, 0.01]),
-            'dq': np.array([0.06, 0.45, 0.7, 0.25, 0.4, 0.01]),
+            'q': np.array([0.3, 2, 1.55, 1.2, 3.6, 6.28]),
+            'dq': np.array([0.2, 0.8, 0.75, 0.6, 1.5, 1]),
             }
 
-        for pp in range(0, 6):
+        for pp in range(0, 5):
             qs[pp] = (qs[pp] - MEANS['q'][pp]) / SCALES['q'][pp]
-            dqs[pp] = (dqs[pp] - MEANS['dq'][pp]) / SCALES['dq'][pp]
+            dqs[pp] = (dqs[pp] + MEANS['dq'][pp]) / SCALES['dq'][pp]
+        qs = np.clip(qs, 0, 1)
+        dqs = np.clip(dqs, 0, 1)
 
-        qs = qs
-        dqs = dqs
         scaled_q = []
         scaled_dq = []
         #print(in_index)
@@ -404,7 +435,10 @@ class NetworkUtils:
 
         if show_plot:
             plt.tight_layout()
+            plt.savefig('%s/examples/learning_profile.png'%figures_dir)
             plt.show()
+            #plt.savefig('%s/examples/learning_profile.png'%figures_dir)
+            print('Saving figure to: %s/examples/learning_profile.png'%figures_dir)
 
     def gen_intercept_bounds_and_modes(
             self, intercept_range=[-0.9,1], intercept_step=0.1,

@@ -456,13 +456,18 @@ class LiveFigure():
                 if data is not None:
                     a = self.fig.add_subplot(111)
                     a.clear()
-                    label = '(%.1f, %.1f), %.1f\nerror: %.2f'%(
-                            data['intercept_bounds'][0],
-                            data['intercept_bounds'][1],
-                            data['intercept_mode'],
-                            data['error']
-                            )
-                    a.plot(data['x'], data['y'], label=label)
+                    label = '(%.1f, %.1f), %.1f\nerror: %.2f\nACTV:%i | INACTV:%i'%(
+                        data['intercept_bounds'][0],
+                        data['intercept_bounds'][1],
+                        data['intercept_mode'],
+                        data['error'],
+                        data['num_active'],
+                        data['num_inactive']
+                        )
+                    length = len(data['x'])
+                    s = length - int(length*0.1)
+                    s = 0
+                    a.plot(data['x'][s:-1], data['y'][s:-1], label=label)
                     a.set_xlabel(data['xlabel'])
                     a.set_ylabel(data['ylabel'])
 
@@ -474,10 +479,10 @@ class LiveFigure():
 
                     if self.test_que:
                         for test in self.test_que:
-                            a.plot(test['x'], test['y'], label=test['label'])
+                            a.plot(test['x'][s:-1], test['y'][s:-1], label=test['label'])
 
                     if toggle_ideal_val:
-                        a.plot(data['x'], self.ideal, label='ideal',
+                        a.plot(data['x'][s:-1], self.ideal[s:-1], label='ideal',
                                 c='k', lw=3)
                     a.legend(loc=legend_loc_val%4+1)
 
@@ -507,7 +512,7 @@ class LiveFigure():
             test_num = int(key_dict[keys[0]][keys[1]][keys[2]])
             data = self.dat.load(
                     parameters=['intercept_bounds', 'intercept_mode', 'x', 'y',
-                        'error', 'xlabel', 'ylabel'],
+                        'error', 'xlabel', 'ylabel', 'num_active', 'num_inactive'],
                     save_location='%s/%05d'%(self.save_location, test_num))
             valid_val.set('Valid')
             return data
@@ -517,7 +522,7 @@ class LiveFigure():
             return None
 
 db_name = 'intercepts_scan'
-save_location = 'proportion_time_dq-q'
+save_location='proportion_time_scat_hyp_1k'
 live = LiveFigure(db_name=db_name, save_location=save_location)
 app = MasterPage(db_name=db_name, save_location=save_location)#, fig=ani_plot.fig)
 ani = animation.FuncAnimation(live.fig, live.plot, interval=1000)
