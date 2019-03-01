@@ -154,11 +154,11 @@ class DataProcessor():
             for param in parameters:
                 data['time']=range(0, len(data[param]))
                 break
-        elif data['time'].item() is None:
-            for param in parameters:
-                if param is not 'time':
-                    data['time']=range(0, len(data[param]))
-                    break
+        # elif data['time'].item() is None:
+        #     for param in parameters:
+        #         if param is not 'time':
+        #             data['time']=range(0, len(data[param]))
+        #             break
 
         total_time = np.sum(data['time'])
         dat = []

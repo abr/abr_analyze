@@ -185,6 +185,20 @@ class DataVisualizer():
             ax.set_title(title)
         return ax
 
+    def plot_mean_and_ci(self, ax, data, c='r', linestyle='-', label=None,
+            loc=1, title=None):
+        '''
+
+        '''
+        ax.fill_between(range(np.array(data['mean']).shape[0]),
+                         data['upper_bound'],
+                         data['lower_bound'],
+                         color=c,
+                         alpha=.5)
+        ax.plot(data['mean'], color=c)
+        return ax
+
+
     def make_list(self, param):
         '''
         converts param into a list if it is not already one
