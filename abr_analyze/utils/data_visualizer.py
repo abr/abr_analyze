@@ -185,7 +185,7 @@ class DataVisualizer():
             ax.set_title(title)
         return ax
 
-    def plot_mean_and_ci(self, ax, data, c='r', linestyle='-', label=None,
+    def plot_mean_and_ci(self, ax, data, c=None, linestyle='-', label=None,
             loc=1, title=None):
         '''
 
@@ -195,7 +195,10 @@ class DataVisualizer():
                          data['lower_bound'],
                          color=c,
                          alpha=.5)
-        ax.plot(data['mean'], color=c)
+        ax.plot(data['mean'], color=c, label=label, linestyle='--')
+        ax.set_title(title)
+        #TODO fix the legend here
+        #ax.legend(loc)
         return ax
 
 

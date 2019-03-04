@@ -49,6 +49,7 @@ class TrajectoryError():
         #NOTE: clear_memory is currently unused
         # instantiate our data processor
         self.proc = DataProcessor()
+        self.vis = DataVisualizer()
         self.dat = DataHandler(db_name)
         self.db_name = db_name
         self.time_derivative = time_derivative
@@ -62,24 +63,26 @@ class TrajectoryError():
 
         '''
         errors = []
-        for session in range(sessions)
+        for session in range(sessions):
             session_error = []
             for run in range(runs):
+                print('%.3f processing complete...'
+                        %(100*((run+1)+(session*runs))
+                            /(sessions*runs)), end='\r')
                 loc = '%s/session%03d/run%03d'%(save_location, session, run)
                 data = self.calculate_error(
-                        save_location=save_location,
+                        save_location=loc,
                         ideal=ideal)
                 session_error.append(np.sum(data['error']))
             errors.append(session_error)
-        print('error shape: ', np.array(errors).shape)
         ci_errors = self.proc.get_mean_and_ci(raw_data=errors)
         ci_errors['time_derivative'] = self.time_derivative
         ci_errors['filter_const'] = self.filter_const
 
         if save_data:
-            self.dat.save(parameters=ci_errors,
+            self.dat.save(data=ci_errors,
                     save_location='%s/statistical_error_%i'%(save_location,
-                        self.time_derivative))
+                        self.time_derivative), overwrite=True)
         else:
             return ci_errors
 
@@ -115,7 +118,7 @@ class TrajectoryError():
         '''
         if ideal is None:
             ideal = 'filter'
-        parameters = ['ee_xyz', ideal]
+        parameters = ['ee_xyz', 'time', ideal]
 
         # load and interpolate data
         data = self.proc.load_and_process(
@@ -126,7 +129,9 @@ class TrajectoryError():
 
         if ideal == 'filter':
             data['filter'] = data['filter'][:, :3]
-        dt = np.mean(np.diff(data['time']))
+        #TODO: which dt calculation should we be using?
+        dt = np.sum(data['time']) / self.interpolated_samples
+        # dt = np.mean(np.diff(data['time']))
 
         # integrate data
         if self.time_derivative > 0:
@@ -152,14 +157,29 @@ class TrajectoryError():
         data['filter_const'] = self.filter_const
         data['read_location'] = save_location
 
-        error = self.two_norm_error(trajectory=data['ee_xyz'],
+        error = self.proc.two_norm_error(trajectory=data['ee_xyz'],
                 ideal_trajectory=data[ideal], dt=dt)
         data['error'] = error
-
+        # data['dt'] = dt
+        #
+        # self.dat.save(data=data,save_location='%s/proc_data_new'%save_location, overwrite=True)
+        # import matplotlib.pyplot as plt
+        # plt.figure()
+        # print('ideal: ', np.array(data[ideal]).shape)
+        # print('test: ', np.array(data['ee_xyz']).shape)
+        # print('error: ', np.array(np.sum(data['error'])).shape)
+        # plt.plot(data[ideal], label='ideal')
+        # plt.plot(data['ee_xyz'], label='test')
+        # plt.plot(np.sum(data['error']), label='error')
+        # plt.legend()
+        # plt.show()
         return data
 
     def plot(self, ax, save_location, step=-1, c=None, linestyle='--',
-            label=None, title='Trajectory Error to Path Planner'):
+            label=None, loc=1, title='Trajectory Error to Path Planner'):
+
         data = self.dat.load(parameters=['mean', 'upper_bound', 'lower_bound'],
                 save_location='%s/statistical_error_%i'%(save_location,
-                    self.tiem_derivative))
+                    self.time_derivative))
+        self.vis.plot_mean_and_ci(ax=ax, data=data, c=c, linestyle=linestyle,
+                label=label, loc=loc, title=title)

@@ -76,6 +76,8 @@ class DataProcessor():
             if data.ndim == 1:
                 data = data.reshape(len(data), 1)
             for kk in range(data.shape[1]):
+                # print(np.array(time_intervals).shape)
+                # print(np.array(data[:, kk]).shape)
                 interp = scipy.interpolate.interp1d(time_intervals, data[:, kk])
                 data_interp.append(np.array([
                     interp(t) for t in np.linspace(time_intervals[0], run_time,
@@ -175,7 +177,7 @@ class DataProcessor():
         # 0 to the sum(time)
         if interpolated_samples is None:
             interpolated_samples = len(data[key])
-        data['time'] = np.linspace(0, total_time, interpolated_samples)
+        data['cumulative_time'] = np.linspace(0, total_time, interpolated_samples)
 
         data['read_location'] = save_location
         return data

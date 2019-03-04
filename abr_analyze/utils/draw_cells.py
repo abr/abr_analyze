@@ -56,6 +56,7 @@ class DrawCells():
         if cell_id not in self.data['cell_ids']:
             # get the number of interpolated samples for the function to find
             # the maximum value to loop through when animating
+            #TODO: BUG TO FIX issue if animate but not interpolating
             if isinstance(function.interpolated_samples, int):
                 if animate:
                     self.animate_steps = max(function.interpolated_samples,
@@ -83,7 +84,8 @@ class DrawCells():
             gif = MakeGif()
             fig_cache = gif.prep_fig_cache()
 
-        for ii in range(0, self.animate_steps):
+        #TODO fix what the starting point of the loop should be (1 if animating, 0 otherwise)
+        for ii in range(1, self.animate_steps):
             print('%.2f%% complete'%(ii/self.animate_steps*100), end='\r')
             # loop through each cell in the plot
             for cell_id in cell_ids:
@@ -102,8 +104,11 @@ class DrawCells():
                     # interpolated_samples values for different tests, this
                     # will catch that and plot to the end of the data set for
                     # parameter sets with interpolated_samples < ii
-                    elif data['function'].interpolated_samples < ii:
-                        step = -1
+                    elif data['function'].interpolated_samples is not None:
+                        if data['function'].interpolated_samples < ii:
+                            step = -1
+                        else:
+                            step = ii
                     else:
                         step = ii
 

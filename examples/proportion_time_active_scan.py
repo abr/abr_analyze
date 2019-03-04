@@ -14,7 +14,7 @@ net_utils = NetworkUtils()
 scan = InterceptsScan()
 
 # get our saved q and dq values
-input_signal_file = 'cpu_53_input_signal.npz'
+input_signal_file = 'cpu_1k_input_signal.npz'
 data = np.load(input_signal_file)
 qs = data['qs']
 dqs = data['dqs']
@@ -38,15 +38,15 @@ backend = 'nengo_cpu'
 seed = 0
 neuron_type = 'lif'
 n_neurons = 1000
-n_ensembles = 20
+n_ensembles = 10
 test_name = '1k x %i: %s'%(n_ensembles, input_signal_file)
 n_input = 11
 n_output = 5
 seed = 0
 
 # ----------- Create your encoders ---------------
-encoders = net_utils.generate_encoders(input_signal=input_signal,
-        n_neurons=n_neurons*n_ensembles, thresh=0.02)
+encoders = net_utils.generate_encoders(input_signal=None,
+        n_neurons=n_neurons*n_ensembles, thresh=0.02, n_dims=n_input)
 
 encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
 
@@ -54,14 +54,15 @@ encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
 # entire list for encoder selection
 # set the decimal percent from the end of the run to use for input
 # 1 == all runs, 0.1 = last 10% of runs
-portion=0.1
+portion=1
 print('Original Input Signal Shape: ', np.array(input_signal).shape)
 input_signal = input_signal[-int(np.array(input_signal).shape[0]*portion):, :]
 print('Input Signal Shape from Selection: ', np.array(input_signal).shape)
 
 
 # ----------- generate possible intercept bounds and modes ---------------
-intercept_vals = net_utils.gen_intercept_bounds_and_modes()
+intercept_vals = net_utils.gen_intercept_bounds_and_modes(
+        intercept_range=[-0.9, 0.0], mode_range=[-0.9,0])
 
 # ----------- create your ideal profile function ---------------
 # triangular distribution
@@ -87,4 +88,10 @@ scan.proportion_time_active(
     neuron_type=neuron_type,
     encoders=encoders,
     input_signal=input_signal,
-    ideal_function=ideal_function)
+    ideal_function=ideal_function,
+    save_name='proportion_time_scat_hyp_10k',
+    notes=
+    '''
+    - 10k ensemble size
+    - encoders selected from scattered hypersphere
+    ''')
