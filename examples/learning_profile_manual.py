@@ -14,9 +14,10 @@ Plots
    of run time
 3. proportion of neurons that are active over time
 """
-from abr_analyze.utils import DataHandler, NetworkUtils
+from abr_analyze import DataHandler
+from abr_analyze.nengo_utils import NetworkUtils
 from abr_control.controllers import signals
-from abr_analyze.utils.paths import cache_dir
+from abr_analyze.paths import cache_dir
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
@@ -68,7 +69,7 @@ intercepts = np.array(intercepts)
 
 # ----------- Create your encoders ---------------
 encoders = net_utils.generate_encoders(input_signal=input_signal,
-        n_neurons=n_neurons*n_ensembles)
+        n_neurons=n_neurons*n_ensembles, n_dims=n_input)
 
 encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
 

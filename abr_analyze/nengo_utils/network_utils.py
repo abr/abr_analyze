@@ -1,84 +1,82 @@
-import matplotlib
-matplotlib.use("TKAgg")
-import matplotlib.pyplot as plt
-import seaborn
-import numpy as np
-import os
+"""
+various tools for use with Nengo such as input signal scaling and running nengo
+simulations to return the neural profile showing different activity metrics.
 
-from abr_analyze.utils.paths import figures_dir
+The profile can consist of:
+- the proportion of active neurons over time
+- the proportion of time neurons are active
+- raster plot of the activity
+
+These can be run individually for any nengo network, or the parameters to
+instantiate a dynamics_adaptation network from abr_control can be passed in to
+get_learning_profile() to run all three of the above
+
+NOTE: see examples of running for a single profile, or looping through various
+intercepts to later view in the intercept_scan_viewer.py gui
+"""
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from abr_analyze.paths import figures_dir
 import nengo
-import nengolib
 from nengolib.stats import spherical_transform
 from nengo.utils.matplotlib import rasterplot
 
 class NetworkUtils:
     def convert_to_spherical(self, input_signal):
+        '''
+        Accepts an input_signal with values ranging from 0 to 1 and returns
+        them converted to the surface of the hyper sphere.
+
+        This is simply using the spherical conversion from nengolib, and adding
+        a check to maintain the expected dimensionality
+        (converting a (n,) dimensional input to a (1,n))
+
+        PARAMETERS
+        ----------
+        input_signal: np.array(time_steps, dimensions)
+            the input signal to scale to spherical coordinates. It can be
+            a single N dimensional value, or an array of them over time to bulk
+            convert
+        '''
         if input_signal.ndim == 1:
             input_signal = input_signal.reshape(1, len(input_signal))
-        #print(np.array(input_signal).shape)
-        new_in = spherical_transform(input_signal)
-        #print(np.array(new_in).shape)
-        return(new_in)
-    # def convert_to_spherical(self, input_signal):
-    #     """
-    #     accepts data of shape time x N_dim and returns the values converted
-    #     into spherical space"""
-    #     x = input_signal.T
-    #     x = np.clip(x, -1, 1)
-    #     pi = np.pi
-    #     spherical = []
-    #
-    #     def scale(input_signal):
-    #         """
-    #         Takes inputs in the range of -1 to 1 and scales them to the range of
-    #         0-pi, except for the last dimension which gets scaled to 0-2pi.
-    #         This is the expected range of inputs prior to the conversion to
-    #         spherical
-    #         """
-    #         signal = np.copy(input_signal)
-    #         factor = pi
-    #         for ii, dim in enumerate(input_signal):
-    #             if ii == len(input_signal)-1:
-    #                 factor = 2*pi
-    #             signal[ii] = dim * factor# + factor
-    #         return signal
-    #
-    #     def sin_product(input_signal, count):
-    #         """
-    #         Handles the sin terms in the conversion to spherical coordinates where
-    #         we multiple by sin(x_i) n-1 times
-    #         """
-    #         tmp = 1
-    #         for jj in range(0, count):
-    #             tmp *= np.sin(input_signal[jj])
-    #         return tmp
-    #
-    #     # nth input scaled to 0-2pi range, remainder from 0-pi
-    #     # cycle through each input
-    #     x_rad = scale(input_signal=x)
-    #
-    #     for ss in range(0, len(x)):
-    #         sphr = sin_product(input_signal=x_rad, count=ss)
-    #         sphr*= np.cos(x_rad[ss])
-    #         spherical.append(sphr)
-    #     spherical.append(sin_product(input_signal=x_rad, count=len(x)))
-    #     spherical = np.array(spherical).T
-    #     return(spherical)
+        new_input = spherical_transform(input_signal)
+        return(new_input)
 
-    def generate_encoders(self, input_signal=None, n_neurons=1000, n_dims=1, thresh=0.008):
+    def generate_encoders(self, n_dims, n_neurons, input_signal=None, thresh=0.008):
         """
-        Accepts inputs signal in the shape of time X dim and outputs encoders
+        Accepts an input_signal in the shape of time X dim and outputs encoders
         for the specified number of neurons by sampling from the input.
         The selection is made by choosing inputs randomly and checking that
         they are minimally thresh away from one another to avoid overly similar
         encoders. If we have exhausted the search then we increase thresh and
         rescan, until len(encoders) == number of neurons. If there are not
-        enough input signal samples to select for the number of neurons, the
-        remainder will be filled with a selection from a scattered hypersphere
+        enough input signal samples to select for the number of neurons, or an
+        input_signal of None is passed in, the remainder will be filled with a
+        selection from a scattered hypersphere
+
+        PARAMETERS
+        ----------
+        n_neurons: int
+            the number of neurons in the simulation, needed to get
+            a corresponding number of encoders
+        n_dims: int
+            the number of input dimensions in the simulation, needed to get
+            a corresponding number of encoders
+        input_signal: array(time_steps, dimensions), Optional (Default: None)
+            the input signal to sample from
+        thresh: float, Optional (Default: 0.008)
+            the threshold to keep encoder values minimally apart from
+            It may be helpful to increase this value if there are many more
+            inputs than there are neurons in the final simulation to speed up
+            the encoder selection process
         """
         #TODO: scale thresh based on dimensionality of input, 0.008 for 2DOF
         # and 10k neurons, 10DOF 10k use 0.08, for 10DOF 100 went up to 0.708 by end
         # 0.3 works well for 1000
+
         # first run so we need to generate encoders for the sessions
         if input_signal is not None:
             print('input_signal_length: ', len(input_signal))
@@ -141,46 +139,38 @@ class NetworkUtils:
 
     def generate_scaled_inputs(self, q, dq, in_index):
         '''
-        pass q dq in as time x dim shape
-        accepts the 6 joint positions and velocities of the jaco2 and does the
-        mean subtraction and scaling. Can set which joints are of interest with
-        in_index, if it is not passed in the self.in_index instantiated in
-        __init_network__ will be used
+        Currently set to accept joint position and velocities as time
+        x dimension arrays, and returns them scaled from 0 to 1
 
-        returns two n x 6 lists scaled, one for q and one for dq
+        PARAMETERS
+        ----------
+        q: array of shape time_steps x dimension
+            the joint positions to scale
+        dq: array of shape time_steps x dimension
+            the joint velocities to scale
+        in_index: list of integers
+            a list corresponding what joints to return scaled inputs for.
+            The function is currently set up to accept the raw feedback from an
+            arm (all joint position and velocities) and only returns the values
+            specified by the indicies in in_index
 
+            EX: in_index = [0, 1, 3, 6]
+            will return the scaled joint position and velocities for joints 0,
+            1, 3 and 6
         '''
-        # check if we received a 1D input (one timestep) or a 2D input (list of
-        # inputs over time)
-        # if np.squeeze(q)[0] > 1 and np.squeeze(q)[1] > 1:
-        #     print('Scaling list of inputs')
+        #TODO: generalize this so the user passes in means and scales? right
+        #now this is specific for the jaco
+        #NOTE: do we want to have in_index here, or have the user specify what
+        # joint positions and velocities they pass in?
         qs = q.T
         dqs = dq.T
-        #print('raw q: ', np.array(qs).T.shape)
 
         # add bias to joints 0 and 4 so that the input signal doesn't keep
         # bouncing back and forth over the 0 to 2*pi line
         qs[0] = (qs[0] + np.pi) % (2*np.pi)
         qs[4] = (qs[4] + np.pi) % (2*np.pi)
 
-        # for Pawel's spherical conversion
-        # MEANS = {  # expected mean of joint angles / velocities
-        #     # shift from 0-2pi to -pi to pi
-        #     'q': np.array([3.20, 2.14, 1.52, 4.68, 3.00, 3.00]),
-        #     'dq': np.array([0.002, -0.117, -0.200, 0.002, -0.021, 0.002]),
-        #     }
-        # SCALES = {  # expected variance of joint angles / velocities
-        #     'q': np.array([0.2, 1.14, 1.06, 1.0, 2.8, 0.01]),
-        #     'dq': np.array([0.06, 0.45, 0.7, 0.25, 0.4, 0.01]),
-        #     }
-        # for pp in range(0, 6):
-        #     qs[pp] = (qs[pp] - MEANS['q'][pp]) / SCALES['q'][pp]
-        #     dqs[pp] = (dqs[pp] - MEANS['dq'][pp]) / SCALES['dq'][pp]
-
-
-        # for Aaron's spherical conversion
         MEANS = {  # expected mean of joint angles / velocities
-            # shift from 0-2pi to -pi to pi
             'q': np.array([3.0, 1, 1.1, 4.15, 1.2, 0]),
             'dq': np.array([0.1, 0.5, 0.65, 0.3, 0.75, 0]),
             }
@@ -197,7 +187,7 @@ class NetworkUtils:
 
         scaled_q = []
         scaled_dq = []
-        #print(in_index)
+
         for ii in in_index:
             scaled_q.append(qs[ii])
             scaled_dq.append(dqs[ii])
@@ -214,8 +204,9 @@ class NetworkUtils:
 
         PARAMETERS
         ----------
-        network: a Nengo network object
-        input_signal: [time x input_dim] list
+        network: .DynamicsAdaptation
+            'abr_control.controllers.signals.dynamics_adaptation'
+        input_signal: np array shape of (time_steps x input_dim)
             the input used for the network sim
         ax: ax object
             used for the rasterplot
@@ -258,16 +249,16 @@ class NetworkUtils:
         '''
         Accepts a Nengo network and checks the tuning curve responses to the input signal
         Plots the proportion of active neurons vs run time onto the ax object if provided
-        Returns the proportion active and the activities if ax is None
+        Returns the proportion active and the activities
 
         PARAMETERS
         ----------
-        network: a Nengo network object
-        input_signal: [time x input_dim] list
+        network: .DynamicsAdaptation
+            'abr_control.controllers.signals.dynamics_adaptation'
+        input_signal: np array shape of (time_steps x input_dim)
             the input used for the network sim
-        ax: ax object, Optional (Default: None)
-            if None then the prop active and activities will be returned
-            if provided will plot onto ax
+        ax: ax object
+            used for the rasterplot
         thresh: float, Optional (Default: None)
             the values above and below which activities get set to 1 and 0, respectively
             When None, the default of the function will be used
@@ -300,16 +291,16 @@ class NetworkUtils:
         '''
         Accepts a Nengo network and checks the tuning curves response to the input signal
         Plots the the number of active neurons vs proportion of run time onto the ax object
-        if provided, otherwise Returns the time active and the activities
+        if provided, Returns the time active and the activities
 
         PARAMETERS
         ----------
-        network: a Nengo network object
-        input_signal: [time x input_dim] list
+        network: .DynamicsAdaptation
+            'abr_control.controllers.signals.dynamics_adaptation'
+        input_signal: np array shape of (time_steps x input_dim)
             the input used for the network sim
-        ax: ax object, Optional (Default: None)
-            if None then the prop active and activities will be returned
-            if provided will plot onto ax
+        ax: ax object
+            used for the rasterplot
         thresh: float, Optional (Default: None)
             the values above and below which activities get set to 1 and 0, respectively
             When None, the default of the function will be used
@@ -340,8 +331,9 @@ class NetworkUtils:
 
         PARAMETERS
         ----------
-        network: a Nengo network object
-        input_signal: [time x input_dim] list
+        network: .DynamicsAdaptation
+            'abr_control.controllers.signals.dynamics_adaptation'
+        input_signal: np array shape of (time_steps x input_dim)
             the input used for the network sim
         thresh: float, Optional (Default: 1e-5)
             the values above and below which activities get set to 1 and 0, respectively
@@ -354,9 +346,22 @@ class NetworkUtils:
             activity[activity>thresh]=1
             activity[activity<=thresh]=0
             activities.append(np.copy(activity))
+        print(np.array(activities).shape)
         return activities
 
     def num_neurons_active_and_inactive(self, activity):
+        '''
+        Accepts a list of activities set to 1's and 0's based on some
+        thereshold in self.get_activities() and returns how many neurons are
+        active and never active
+
+        PARAMETERS
+        ----------
+        activity: int list of shape (n_ensembles x n_inputs x n_neurons)
+            a list of activities represented as 1 for spiking and 0 for not
+            spiking over all inputs passed to the nengo simulator, for each
+            ensemble of the network
+        '''
         # check how many neurons are never active
         num_inactive = 0
         num_active = 0
@@ -369,8 +374,6 @@ class NetworkUtils:
                     num_active += 1
         return [num_active, num_inactive]
 
-
-
     def gen_learning_profile(self, network, input_signal, ax=None, num_ens_to_raster=None,
             thresh=None, show_plot=True):
         """
@@ -378,7 +381,7 @@ class NetworkUtils:
         proportion of active neurons over time, and how many neurons were active over
         different proportions of run time
 
-        Accepts a Nengo network and input signal
+        Accepts an abr_control dynamics_adaptation network object and input signal
         Plots
         1. rasterplot showing spikes for each neuron over time on one axis, and the
            input signal of the other
@@ -388,11 +391,12 @@ class NetworkUtils:
 
         PARAMETERS
         ----------
-        network: a Nengo network object
-        input_signal: [time x input_dim] list
+        network: .DynamicsAdaptation
+            'abr_control.controllers.signals.dynamics_adaptation'
+        input_signal: np array shape of (time_steps x input_dim)
             the input used for the network sim
-        ax: list of 3 ax objects, Optional (Default: None)
-            if the three ax objects are not provided, they will be created
+        ax: ax object
+            used for the rasterplot
         num_ens_to_raster: int, Optional (Default: None)
             the number of ensembles to plot in the raster, if None all will be plotted
         thresh: float, Optional (Default: None)
@@ -414,7 +418,7 @@ class NetworkUtils:
                 ax=ax[0],
                 num_ens_to_raster=num_ens_to_raster)
 
-        self.prop_active_neurons_over_time(
+        [proportion_active, __] = self.prop_active_neurons_over_time(
                 network=network,
                 input_signal=input_signal,
                 ax=ax[1],
@@ -430,19 +434,46 @@ class NetworkUtils:
                                         activity=activity)
         print('Number of neurons inactive: ', num_inactive)
         print('Number of neurons active: ', num_active)
-        ax[2].set_title('Proportion of time neurons are active\n'
-                + 'Active: %i  |  Inactive: %i'%(num_active, num_inactive))
+        ax[1].legend(['Mean Prop Active: %.2f'%np.mean(proportion_active)])
+        ax[2].legend('Active: %i  |  Inactive: %i'%(num_active, num_inactive))
 
         if show_plot:
             plt.tight_layout()
-            plt.savefig('%s/examples/learning_profile.png'%figures_dir)
             plt.show()
-            #plt.savefig('%s/examples/learning_profile.png'%figures_dir)
-            print('Saving figure to: %s/examples/learning_profile.png'%figures_dir)
 
     def gen_intercept_bounds_and_modes(
             self, intercept_range=[-0.9,1], intercept_step=0.1,
             mode_range=[-0.9, 1], mode_step=0.2):
+        '''
+        Accepts a range of intercept bounds and modes and returns an np.array
+        of the valid combinations
+
+        The validity is based on the following rules:
+        - left bound < right bound
+        - mode >= left bound
+        - mode <= right bound
+
+        PARAMETERS
+        ----------
+        intercept_range: list of two floats, Optional (Default: [-0.9, 1])
+            the range of bounds to try. *See Note at bottom*
+        mode_range: list of two floats, Optional (Default: [-0.9, 1])
+            the range of modes to try. *See Note at bottom*
+        intercept_step: float, Optional (Default: 0.1)
+            the step size for the range of values between the range specified
+        mode_step: float, Optional (Default: 0.2)
+            the step size for the range of values between the range specified
+
+        NOTE:
+            the way the range function used on these values works, the second
+            value (far right of range) is ignored. For this reason, to include
+            0.9, you must have the right side of the limit set to you desired
+            limit + intercept_step.
+            EX: to include 0.9 as the far right limit for the intercept bounds,
+            assuming the intercept step is set to 0.1, the intercept range for
+            the right bound must be set to 0.9 + 0.1 = 1.0 to check the range
+            of values up to and including 0.9
+        '''
 
         intercept_range=np.arange(intercept_range[0], intercept_range[1],
                 intercept_step)
@@ -465,5 +496,3 @@ class NetworkUtils:
         intercepts = np.array(valid)
         print('There are %i valid combinations of intercepts and modes'%len(intercepts))
         return intercepts
-
-

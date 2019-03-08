@@ -1,4 +1,4 @@
-from abr_analyze.utils import DataHandler
+from abr_analyze import DataHandler
 import numpy as np
 
 '''

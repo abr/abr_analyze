@@ -1,5 +1,5 @@
-from abr_analyze.utils import Draw3dData
-from abr_analyze.utils.paths import figures_dir
+from abr_analyze.plotting import Draw3dData
+from abr_analyze.paths import figures_dir
 import matplotlib.pyplot as plt
 """
 A simple example of plotting parameters saved to the database on a 3d ax object

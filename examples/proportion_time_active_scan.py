@@ -1,8 +1,8 @@
 """
 """
-from abr_analyze.utils import NetworkUtils, InterceptsScan
+from abr_analyze.nengo_utils import NetworkUtils, InterceptsScan
 from abr_control.controllers import signals
-from abr_analyze.utils.paths import cache_dir
+from abr_analyze.paths import cache_dir
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')

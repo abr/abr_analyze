@@ -14,9 +14,10 @@ Plots
    of run time
 3. proportion of neurons that are active over time
 """
-from abr_analyze.utils import DataHandler, NetworkUtils
+from abr_analyze import DataHandler
+from abr_analyze.nengo_utils import NetworkUtils
 from abr_control.controllers import signals
-from abr_analyze.utils.paths import cache_dir
+from abr_analyze.paths import cache_dir
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
@@ -35,7 +36,7 @@ runs = 50
 db_name = 'dewolf2018neuromorphic'
 dat = DataHandler(db_name=db_name)
 
-fig = plt.figure()
+fig = plt.figure(figsize=(8,12))
 ax = [
       fig.add_subplot(311),
       fig.add_subplot(312),

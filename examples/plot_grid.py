@@ -1,5 +1,5 @@
 import abr_jaco2
-from abr_analyze.utils import DrawCells, Draw2dData, Draw3dData, DrawArm
+from abr_analyze.plotting import DrawCells, Draw2dData, Draw3dData, DrawArm
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 """

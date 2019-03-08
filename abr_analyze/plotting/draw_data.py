@@ -1,8 +1,8 @@
+'''
+A general outline for the plotting classes, and some commonly used
+functions
+'''
 class DrawData():
-    '''
-        A general outline for the plotting classes, and some commonly used
-        functions
-    '''
     def __init__(self):
         '''
 

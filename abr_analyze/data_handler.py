@@ -1,34 +1,31 @@
 """
-Handler for saving and loading data from HDF5 database
+Data handler for saving and loading data
 
+This class is meant to help simplify running automated tests. This is
+specifically helpful when running consecutive runs of learning where it is
+desired to pick up where the last run ended off.
+
+The naming convention used is as follows:
+- runs are consecutive tests, usually where the previous run is used as
+a starting point for the following run
+- a group of runs is called a session, multiple sessions are used for
+  averaging and other statistical purposes like getting confidence
+  intervals
+- a test_name is the user specified name of the test being run, which is
+  made up of sessions that consist of several runs
+- by default the test_name data is saved in the abr_analyze database_dir.
+  the location of this folder is specified in the path.py file
+
+However, this convention does not have to be used. Any save name can be passed
+in and data will be saved there, and can later be loaded.
 """
 import numpy as np
 import os
-from abr_analyze.utils.paths import database_dir
+from abr_analyze.paths import database_dir
 import h5py
 import time
 
 class DataHandler():
-    """
-    Data handler for saving and loading data
-
-    This class is meant to help simplify running automated tests. This is
-    specifically helpful when running consecutive runs of learning where it is
-    desired to pick up where the last run ended off.
-
-    The naming convention used is as follows:
-    - runs are consecutive tests, usually where the previous run is used as
-    a starting point for the following run
-    - a group of runs is called a session, multiple sessions are used for
-      averaging and other statistical purposes like getting confidence
-      intervals
-    - a test_name is the user specified name of the test being run, which is
-      made up of sessions that consist of several runs
-    - by default the test_name data is saved in the abr_analyze database_dir.
-      This folder can be found in abr_control/utils/paths.py. However, the user
-      can prevent prepending the test_name folder with the abr_cache by setting
-    """
-
     def __init__(self, db_name='abr_analyze'):
         """
         Saves the path to the databse to use in this instanitated object
@@ -63,8 +60,12 @@ class DataHandler():
         save_location: string, Optional (Default: 'test')
             the group that all of the data will be saved to
         overwrite: boolean, Optional (Default: False)
-            determines whether or not to overwrite data if a group / dataset
-            already exists
+            determines whether or not to overwrite data if a group already exists
+            An error gets triggered if the data is being saved to a group
+            (folder) that already exists. Setting this to true will ignore that
+            and save the data. Data will only get overwritten if the same key
+            is used, otherwise the other data in the group will remain
+            untouched
         create: boolean, Optional (Default: True)
             determines whether to create the group provided if it does not
             exist, or to warn to the user that it does not
@@ -117,8 +118,6 @@ class DataHandler():
         Accepts a list of parameters and their path to where they are saved in
         the instantiated db, and returns a dictionary of the parameters and their
         values
-
-        The path to the group is used as 'test_group/test_name/session/run'
 
         PARAMETERS
         ----------

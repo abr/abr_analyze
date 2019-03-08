@@ -1,4 +1,4 @@
-from abr_analyze.utils import TrajectoryError
+from abr_analyze.plotting import TrajectoryError
 import numpy as np
 import matplotlib
 matplotlib.use("TkAgg")

@@ -1,11 +1,16 @@
+'''
+Plotting organizational layer. This class takes in gridspec cells and an
+abr_analyze plotting class (plot_2d_data, plot_3d_data etc...) with the
+corresponding parameters for it's plot() function, and returns a grid plot with
+all of the data. Cells can also be animated, in which case a gif is saved.
+'''
 import numpy as np
-import matplotlib
-matplotlib.use("TKAgg")
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from mpl_toolkits.mplot3d import axes3d
-from abr_analyze.utils.paths import figures_dir
 import uuid
+
+from abr_analyze.paths import figures_dir
 
 class DrawCells():
     def __init__(self, figsize=[16,9], dpi=200):
@@ -26,6 +31,19 @@ class DrawCells():
         ax[1].plot(data1)
         ax[2].plot(data2)
         plt.show()
+
+        PARAMETERS
+        ----------
+        cell: gridspec.Gridspec(n,m)[x,y] cell
+            the cell to break down into sub plots
+        n_rows: int
+            the number of rows to break the cell into
+        n_cols: int
+            the number of columns to break the cell into
+        projection: string, Optional (Default: None)
+            None for 2d plots, '3d' for 3d plots, if the cell is passed from
+            the add_cell() function, then this parameter will be set in the
+            instantiated plotting class already
         '''
         inner_grid = gridspec.GridSpecFromSubplotSpec(n_rows, n_cols, cell)
         ax = []
@@ -41,6 +59,38 @@ class DrawCells():
     def add_cell(self, cell, function, save_location, parameters='None',
             subplot=[1,1], animate=False, c=None, linestyle=None, label=None,
             title=None):
+        '''
+        accepts a gridspec cell and an instantiated abr_analzye plotting class
+        to plot parameters onto. The cells can be animated into gifs, or
+        plotted as a single figure.
+
+        PARAMETERS
+        ----------
+        cell: gridspec.Gridspec(n,m)[x,y] cell
+            the cell to break down into sub plots
+        function: instantiated abr_analyze plotting class
+            draw_2d_data(), draw_3d_data(), draw_arm
+        save_location: string
+            location in the database where parameters to plot are saved
+        parameters: list of string, Optional (Default: None)
+            the parameters to pass to 'function.plot(), in the case of draw_arm
+            parameters are not passed in, so a default of None is used
+        subplot: list of two ints, Optional (Default: [1,1])
+            the number of subplots to break the cell into
+        animate: Boolean, Optional (Default: False)
+            True to step through the plot, saving a figure each time, to later
+            turn them into a gif. This can be done for the whole figure, or
+            for individual cells, in which case non-animated cells will plot
+            the final frame each step
+        c: string, Optional (Default: None)
+            matplotlib compatible color to be used when plotting data
+        linestyle: string, Optional (Default: None)
+            matplotlib compatible linestyle to be used when plotting data
+        label: string, Optional (Default: None)
+            the legend label for the data
+        title: string, Optional (Default: None)
+            the title of the ax object
+        '''
 
         # get the memory location of the cell so we don't reprocess
         cell_id = hex(id(cell))
@@ -56,7 +106,6 @@ class DrawCells():
         if cell_id not in self.data['cell_ids']:
             # get the number of interpolated samples for the function to find
             # the maximum value to loop through when animating
-            #TODO: BUG TO FIX issue if animate but not interpolating
             if isinstance(function.interpolated_samples, int):
                 if animate:
                     self.animate_steps = max(function.interpolated_samples,
@@ -74,18 +123,34 @@ class DrawCells():
             self.data[cell_id]['param_ids'].append(param_id)
 
     def generate(self, save_loc=None, save_name='draw_cells'):
+        '''
+        Takes all of the saved cells, functions and parameters, that were
+        passed in to add_cell() and creates the figure, placing the plots from
+        functions into their corresponding cells
+
+        PARAMETERS
+        ----------
+        save_loc: string, Optional (Default: None)
+            the save location for the final figure
+        save_name: string, Optional (Default: draw_cells)
+            the name to save the figure under
+        '''
         if save_loc is None:
             save_loc='examples'
 
         cell_ids = self.data['cell_ids']
         # this will only be greater than one if the cell is being animated
         if self.animate_steps > 1:
-            from abr_analyze.utils import MakeGif
+            from abr_analyze.plotting.make_gif import MakeGif
             gif = MakeGif()
             fig_cache = gif.prep_fig_cache()
 
         #TODO fix what the starting point of the loop should be (1 if animating, 0 otherwise)
-        for ii in range(1, self.animate_steps):
+        if self.animate_steps > 1:
+            start = 1
+        else:
+            start = 0
+        for ii in range(start, self.animate_steps):
             print('%.2f%% complete'%(ii/self.animate_steps*100), end='\r')
             # loop through each cell in the plot
             for cell_id in cell_ids:

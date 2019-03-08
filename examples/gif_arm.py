@@ -1,6 +1,6 @@
 import abr_jaco2
-from abr_analyze.utils import DrawArm, Draw3dData, MakeGif
-from abr_analyze.utils.paths import figures_dir
+from abr_analyze.plotting import DrawArm, Draw3dData, MakeGif
+from abr_analyze.paths import figures_dir
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')

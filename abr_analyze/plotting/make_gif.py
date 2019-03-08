@@ -1,11 +1,20 @@
-import subprocess
+'''
+A class for converting a folder of images into a gif
+'''
 import os
-from abr_analyze.utils.paths import figures_dir, cache_dir
+import subprocess
+
+from abr_analyze.paths import figures_dir, cache_dir
 
 class MakeGif():
     def __init__(self):
         pass
     def prep_fig_cache(self):
+        '''
+        clear the gif figure cache to avoid adding other figures to the final
+        animation
+        returns the location of the gif_fig_cache
+        '''
         # set up save location for figures
         fig_cache = '%s/gif_fig_cache'%(cache_dir)
 
@@ -40,6 +49,8 @@ class MakeGif():
             name to use for gif
         delay: int
             changs the delay between images in the gif
+        res: list of two integers, Optional (Default: [1200, 1200])
+            the pixel resolution of the final gif
         """
         if not os.path.exists(save_loc):
             os.makedirs(save_loc)

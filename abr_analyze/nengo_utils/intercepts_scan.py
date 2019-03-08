@@ -1,17 +1,17 @@
-"""
-using the input from a provided test and the desired upper and lower limits of
-a triangular distribution, the script will run through every possible set of
-intercepts and modes. The sets that provide activity that matches the ideal the
-closest will be plotted along with their intercept values.
-"""
-from abr_analyze.utils import DataHandler, NetworkUtils
-from abr_control.controllers import signals
-import numpy as np
-import time
-import timeit
-import matplotlib
-matplotlib.use('TkAgg')
+'''
+Accepts the parameters to instantiate a dynamics_adaptation network from
+abr_control and a list of intercept ranges and modes. A simulation of each
+possible intercept is run, passing in the input signal, to generate a neural
+profile for each sim. The profiles can be viewed using the
+intercept_scan_viewer.py gui
+'''
 import matplotlib.pyplot as plt
+import numpy as np
+import timeit
+
+from abr_analyze.data_handler import DataHandler
+from abr_analyze.nengo_utils.network_utils import NetworkUtils
+from abr_control.controllers import signals
 
 class InterceptsScan():
     def __init__(self):
@@ -22,6 +22,48 @@ class InterceptsScan():
             self, n_input, n_output, n_neurons, n_ensembles, pes_learning_rate,
             backend, seed, neuron_type, encoders, input_signal, ideal_function,
             intercept_vals, save_name='proportion_neurons', notes=''):
+        '''
+        runs a scan for the proportion of neurons that are active over time
+
+        PARAMETERS
+        ----------
+        n_input: int
+            the number of input dimensions
+        n_output: int
+            the number of output dimensions
+        n_neurons: int
+            the number of neurons in each ensemble
+        n_ensembles: int
+            the number of ensembles in the sim
+        pes_learning_rate: float
+            the learning rate for the simulation, note however that this
+            simulation does not perform any learning so this value will not
+            affect the results
+        backend: string
+            specifies what nengo backend to use, which are listed in the
+            abr_control.controllers.signals.dynamics_adaptation() class
+            'nengo_cpu', 'nengo_gpu', 'nengo_ocl'
+        seed: int
+            the seed used for any randomization in the sim
+        neuron_type: string
+            the type of neurons to use for the simulation
+            'lif', 'relu'
+        encoders: array of floats (n_ensembles x n_neurons)
+            the values that specify along what vector a neuron will be
+            sensitive to
+        input_signal: array of floats (n_timesteps x n_neurons)
+            the input signal that we want to check our networks response to
+        ideal_fuinction: lambda function(n_timesteps)
+            used as the desired profile to compare against. The review function
+            will use this to find the closest matching results
+        intercept_vals: array of floats (n_intercepts to try x 3)
+            the [left_bound, mode, right_bound] to pass on to the triangluar
+            intercept function in NetworkUtils
+        save_name: string, Optional (Default: proportion_neurons)
+            the name to save the data under in the intercept_scan database
+        notes: string, Optional (Default: '')
+            any additional notes to save with the scan
+        '''
 
         loop_time = 0
         for ii ,intercept in enumerate(intercept_vals) :
@@ -89,7 +131,51 @@ class InterceptsScan():
             self, n_input, n_output, n_neurons, n_ensembles, pes_learning_rate,
             backend, seed, neuron_type, encoders, input_signal, ideal_function,
             intercept_vals, save_name='proportion_time', n_bins=100, notes=''):
+        '''
+        runs a scan for to show how many neurons are active over different
+        proportions of sim time
 
+        PARAMETERS
+        ----------
+        n_input: int
+            the number of input dimensions
+        n_output: int
+            the number of output dimensions
+        n_neurons: int
+            the number of neurons in each ensemble
+        n_ensembles: int
+            the number of ensembles in the sim
+        pes_learning_rate: float
+            the learning rate for the simulation, note however that this
+            simulation does not perform any learning so this value will not
+            affect the results
+        backend: string
+            specifies what nengo backend to use, which are listed in the
+            abr_control.controllers.signals.dynamics_adaptation() class
+            'nengo_cpu', 'nengo_gpu', 'nengo_ocl'
+        seed: int
+            the seed used for any randomization in the sim
+        neuron_type: string
+            the type of neurons to use for the simulation
+            'lif', 'relu'
+        encoders: array of floats (n_ensembles x n_neurons)
+            the values that specify along what vector a neuron will be
+            sensitive to
+        input_signal: array of floats (n_timesteps x n_neurons)
+            the input signal that we want to check our networks response to
+        ideal_fuinction: lambda function(0 to 1)
+            used as the desired profile to compare against. The review function
+            will use this to find the closest matching results
+        intercept_vals: array of floats (n_intercepts to try x 3)
+            the [left_bound, mode, right_bound] to pass on to the triangluar
+            intercept function in NetworkUtils
+        save_name: string, Optional (Default: proportion_neurons)
+            the name to save the data under in the intercept_scan database
+        n_bins: int, Optional (Default: 100)
+            the number of time proportions to break up the neurons into
+        notes: string, Optional (Default: '')
+            any additional notes to save with the scan
+        '''
         loop_time = 0
         bins = np.linspace(0,1,n_bins)
         for ii ,intercept in enumerate(intercept_vals) :
@@ -155,8 +241,17 @@ class InterceptsScan():
         self.review(save_name=save_name, num_to_plot=10)
 
     def review(self, save_name, num_to_plot=10):
-        # Plot the activity for the 5 sets of intercepts with the least deviation from
-        # the ideal
+        '''
+        loads the data from save name and gets num_to_plot tests that most
+        closley match the ideal function that was passed in during the scan
+
+        PARAMETERS
+        ----------
+        save_name: string
+            the location in the intercepts_scan database to load from
+        num_to_plot: int, Optional (Default: 10)
+            the number of tests to find that most closley match the ideal
+        '''
         ideal_data = self.dat.load(parameters=['ideal', 'total_intercepts'],
                 save_location='%s'%save_name)
         ideal = ideal_data['ideal']

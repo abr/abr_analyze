@@ -1,14 +1,18 @@
-import smtplib
+'''
+Function for sending emails, with the option to attach images
+'''
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+import smtplib
 import traceback
 
 def send_email(from_email=None, from_password=None, to_email=None,
         subject=None, body=None, file_location=None):
     """
     Send an email with the option of adding an attachment
+
     PARAMETERS
     ----------
     from_email: string

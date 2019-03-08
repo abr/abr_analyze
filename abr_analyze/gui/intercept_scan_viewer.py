@@ -1,10 +1,6 @@
-# Add link to sentdex youtube
-#https://www.youtube.com/watch?v=A0gaXfM1UN0&index=2&list=PLQVvvaa0QuDclKx-QpC9wntnURXVJqLyk
-#TODO Tutorial 19 adds help button option to walk through gui
 """
-sudo apt-get build-dep python-imaging
-sudo apt-get install libjpeg8 libjpeg62-dev libfreetype6 libfreetype6-dev
-sudo pip install Pillow
+A visualizer for looking through intercept scan data. Currently the test group
+save name has to be manually changed at the bottom of the script.
 """
 import tkinter as tk
 from tkinter import ttk
@@ -21,8 +17,8 @@ import seaborn
 from PIL import Image, ImageTk
 
 import numpy as np
-from abr_analyze.utils import DataHandler
-from abr_analyze.utils.paths import figures_dir
+from abr_analyze.data_handler import DataHandler
+from abr_analyze.paths import figures_dir
 
 from terminaltables import AsciiTable
 
@@ -41,6 +37,9 @@ global legend_loc_val
 global update_plot
 
 class FontsAndColors():
+    '''
+    constants for text styles and colors
+    '''
     def __init__(self):
         # colors for terminal tables
         self.HEADER = '\033[95m'
@@ -69,7 +68,20 @@ class FontsAndColors():
         self.secondary_bg = '#ffff7f'
 
 class ButtonFun():
+    '''
+    a class for all of the button functions
+    '''
     def val_up(self, val, step):
+        '''
+        increases val by step
+
+        PARAMETERS
+        ----------
+        val: tk.StringVar()
+            a value linked to a button to increment
+        step: float
+            the amount to increase val by
+        '''
         global update_plot
         val_num = float(val.get())
         val_num += step
@@ -77,6 +89,16 @@ class ButtonFun():
         update_plot = True
 
     def val_down(self, val, step):
+        '''
+        decreases val by step
+
+        PARAMETERS
+        ----------
+        val: tk.StringVar()
+            a value linked to a button to decrement
+        step: float
+            the amount to decrease val by
+        '''
         global update_plot
         val_num = float(val.get())
         val_num -= step
@@ -84,40 +106,80 @@ class ButtonFun():
         update_plot = True
 
     def save(*args):
+        '''
+        updates the global value that tells the gui to save the current figure
+        '''
         global update_plot
         global save_val
         save_val = True
         update_plot = True
 
     def keep_test(*args):
+        '''
+        updates the global value that tells the gui to keep the current test
+        plotted on the figure
+        '''
         global update_plot
         global keep_test_val
         keep_test_val = True
         update_plot = True
 
     def toggle_ideal(*args):
+        '''
+        updates the global value that tells the gui to toggle the current
+        status of the ideal baseline between visible and not
+        '''
         global update_plot
         global toggle_ideal_val
         toggle_ideal_val = not toggle_ideal_val
         update_plot = True
 
     def clear_plot(*args):
+        '''
+        updates the global value that tells the gui to clear the figure
+        '''
         global update_plot
         global clear_plot_val
         clear_plot_val = True
         update_plot = True
 
     def legend_loc(*args):
+        '''
+        updates the global value that tells the gui to cycle to the next legend
+        location
+        '''
         global update_plot
         global legend_loc_val
         legend_loc_val += 1
         update_plot = True
 
 class GuiItems():
+    '''
+    Class for creating common gui objects
+    '''
     def __init__(self):
         self.pars = FontsAndColors()
     def button(self, frame, text, function, row=1, col=1,
             f_col=None, b_col=None):
+        '''
+        creates a button in the gui
+
+        PARAMETERS
+        ----------
+        frame: tk.Frame() object
+        text: string
+            label for the button
+        function: function
+            the function the button will trigger
+        row: int, Optional (Default: 1)
+            the row location of the button
+        col: int, Optional (Default: 1)
+            the col location of the button
+        f_col: string, Optional (Default: None)
+            the color of the button foreground
+        b_col: string, Optional (Default: None)
+            the color of the button background
+        '''
         if f_col is None:
             f_col = self.pars.button_text_color
         if b_col is None:
@@ -130,6 +192,30 @@ class GuiItems():
 
     def entry_box(self, frame, text_var, width=1, row=1, col=1,
             f_col=None, b_col=None, rowspan=1, colspan=1):
+        '''
+        creates an entry box in the gui
+
+        PARAMETERS
+        ----------
+        frame: tk.Frame() object
+        text_var: tk.StringVar()
+            the string variable to link to the entry box, this is the variable
+            that will be updated with the value in the entry box
+        width: int, Optional (Default: 1)
+            the width of the entry box
+        row: int, Optional (Default: 1)
+            the row location of the button
+        col: int, Optional (Default: 1)
+            the col location of the button
+        f_col: string, Optional (Default: None)
+            the color of the button foreground
+        b_col: string, Optional (Default: None)
+            the color of the button background
+        rowspan: int, Optional (Default: 1)
+            the amount of point in the grid to span across in x
+        colspan: int, Optional (Default: 1)
+            the amount of point in the grid to span across in y
+        '''
         if f_col is None:
             f_col = self.pars.text_color
         if b_col is None:
@@ -143,6 +229,40 @@ class GuiItems():
     def label(self, frame, textvariable=None, text=None,
             row=1, col=1, font=None, height=0, width=0,
             f_col=None, b_col=None, rowspan=1, colspan=1):
+        '''
+        creates a label in the gui
+
+        PARAMETERS
+        ----------
+        frame: tk.Frame() object
+        textvariable: tk.StringVar(), Optional (Default: None)
+            the string variable to link to the entry box, this is the variable
+            that will be updated with the value in the entry box
+        text: string, Optional (Default: None)
+            the string that will be placed in the label
+        row: int, Optional (Default: 1)
+            the row location of the button
+        col: int, Optional (Default: 1)
+            the col location of the button
+        font: string, Optional (Default, None)
+            the font for the label
+        width: int, Optional (Default: 0)
+            the width of the entry box
+        height: int, Optional (Default: 0)
+            the height of the entry box
+        f_col: string, Optional (Default: None)
+            the color of the button foreground
+        b_col: string, Optional (Default: None)
+            the color of the button background
+        rowspan: int, Optional (Default: 1)
+            the amount of point in the grid to span across in x
+        colspan: int, Optional (Default: 1)
+            the amount of point in the grid to span across in y
+
+        NOTE* the label can either be simple text, or a tk.StringVar() that
+        will change the value of the label. If both are passed in the simple
+        string will be used
+        '''
         if f_col is None:
             f_col = self.pars.text_color
         # elif type(f_col) is not str:
@@ -171,8 +291,19 @@ class GuiItems():
         return np.copy(labl)
 
 class MasterPage(tk.Tk):
-
+    '''
+    The master page container that is created to be filled with a grid of
+    tk.Frame() objects
+    '''
     def __init__(self, db_name, save_location, *args, **kwargs):
+        '''
+        PARAMETERS
+        ----------
+        db_name: string
+            the name of the database that holds the intercept scans
+        save_location: string
+            the location in the database the data is saved
+        '''
 
         # instantiate our container
         tk.Tk.__init__(self, *args, **kwargs)
@@ -201,7 +332,18 @@ class MasterPage(tk.Tk):
         frame.tkraise()
 
 class InterceptScanViewer(tk.Frame):
+    '''
+    the intercept scanner page
+    '''
     def __init__(self, parent, db_name, save_location, *args):
+        '''
+        PARAMETERS
+        ----------
+        db_name: string
+            the name of the database that holds the intercept scans
+        save_location: string
+            the location in the database the data is saved
+        '''
         global key_dict
         global intercept_vals
         global save_val
@@ -420,12 +562,20 @@ class InterceptScanViewer(tk.Frame):
         canvas.get_tk_widget().grid(row=0, column=0)
         canvas.get_tk_widget().configure(background=self.pars.background_color)
 
-    #TODO: entry overwrite global var
-    #TODO: load the corresponding data and plot against ideal
-    #TODO: save and hold buttons, clear, ideal toggle
-
 class LiveFigure():
+    '''
+    Class that handles the live plotting of the figure in the gui
+    '''
     def __init__(self, db_name, save_location):
+
+        '''
+        PARAMETERS
+        ----------
+        db_name: string
+            the name of the database that holds the intercept scans
+        save_location: string
+            the location in the database the data is saved
+        '''
         self.save_location = save_location
         self.dat = DataHandler(db_name)
         self.fig = Figure()#figsize=(10,12), dpi=100)
@@ -436,6 +586,10 @@ class LiveFigure():
         self.test_que = []
 
     def plot(self,i):
+        '''
+        plots the data specified in the global variables that get updated with
+        the functions linked to the gui buttons
+        '''
         global save_val
         global keep_test_val
         global toggle_ideal_val
@@ -499,6 +653,10 @@ class LiveFigure():
 
 
     def get_intercept_vals_from_buttons(self):
+        '''
+        updates the intercept values that are linked to a specific test based
+        on the values in the text boxes
+        '''
         global intercept_vals
         intercept_keys = []
         for ii, val in enumerate(intercept_vals):
@@ -506,6 +664,16 @@ class LiveFigure():
         return intercept_keys
 
     def load(self, keys):
+        '''
+        loads the required data for plotting from the test specified by the
+        provided keys
+
+        PARAMETERS
+        ----------
+        keys: list of 3 strings
+            this list is created in the intercept scanner page and it links the
+            test numbers to their intercept ranges and mode
+        '''
         global key_dict
         global valid_val
         try:
@@ -521,7 +689,9 @@ class LiveFigure():
             valid_val.set('Invalid')
             return None
 
+# the database to load data from
 db_name = 'intercepts_scan'
+# the name of the intercept scan to look at
 save_location='proportion_time_scat_hyp_1k'
 live = LiveFigure(db_name=db_name, save_location=save_location)
 app = MasterPage(db_name=db_name, save_location=save_location)#, fig=ani_plot.fig)

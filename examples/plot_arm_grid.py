@@ -8,8 +8,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import os
 
-from abr_analyze.utils.paths import figures_dir
-from abr_analyze.utils import DrawCells, Draw3dData, DrawArm
+from abr_analyze.paths import figures_dir
+from abr_analyze.plotting import DrawCells, Draw3dData, DrawArm
 import abr_jaco2
 
 interpolated_samples = 100
@@ -42,8 +42,7 @@ for cnt, runs in enumerate(runs_list):
     draw_arm = DrawArm(
         db_name=db_name,
         robot_config=robot_config,
-        interpolated_samples=interpolated_samples,
-        show_trajectory=False)
+        interpolated_samples=interpolated_samples)
 
     # Instantiate our 3d drawing module
     draw_3d = Draw3dData(

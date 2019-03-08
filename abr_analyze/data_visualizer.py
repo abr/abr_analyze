@@ -1,44 +1,14 @@
-import numpy as np
-import matplotlib
-matplotlib.use("TKAgg")
+'''
+A class for plotting data onto ax objects
+'''
 import matplotlib.pyplot as plt
 import matplotlib.gridspec
+import numpy as np
 from mpl_toolkits.mplot3d import axes3d
-# import subprocess
-# import os
 
 class DataVisualizer():
     def __init__(self):
         pass
-
-    def cell_to_subplot(cell, n_rows, n_cols):
-        '''
-        Accepts a gridspec.Gridspec(n,m)[x,y] cell, and breaks that location
-        up into n_rows and n_cols ax objects, returns a list of ax objects
-
-        *EXAMPLE*
-        outer_grid = gridspec.GridSpec(3,3)
-        cell = outer_grid[1,2]
-        ax = cell_to_subplot(cell=cell, n_rows=3, n_cols=1)
-        ax[0].plot(data0)
-        ax[1].plot(data1)
-        ax[2].plot(data2)
-        plt.show()
-
-        PARAMETERS
-        ----------
-        cell: gridspec.GridSpec(n,m)[x,y] object
-        n_rows: int
-            the number of rows to break the cell into
-        n_cols: int
-            the number of columns to break the cell into
-        '''
-        inner_grid = gridspec.GridSpecFromSubplotSpec(rows, cols, cell)
-        ax = []
-        for row in range(0, rows):
-            for col in range(0, cols):
-                ax.append(plt.subplot(inner_grid[row,col]))
-        return ax
 
     def plot_arm(self, ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
             joint_color='k', arm_color='k', title=None):
@@ -62,6 +32,8 @@ class DataVisualizer():
             the color for the joint points
         arm_color: matplotlib compatible color, Optional (Default: 'k')
             the color for the links joining the joints
+        title: string, Optional (Default: None)
+            the ax title
         '''
 
         if isinstance(ax, list):
@@ -106,10 +78,17 @@ class DataVisualizer():
         PARAMETERS
         ----------
         ax: ax object for plotting
+            can be a single ax object or a list of them
         y: list of data to plot
         x: list of time points to plot along y
         c: matplotlib compatible color to use in plotting
         linestyle: matplotlib compatible linestyle to use
+        label: string, Optional (Default: None)
+            the legend label for the data
+        title: string, Optional (Default: None)
+            the title of the ax object
+        loc: int, Optional (Default: 1)
+            the legend location
         '''
         #TODO: should c and linestyle be accepted as lists?
         #TODO: check if x and y are supposed to be lists or arrays
@@ -165,6 +144,12 @@ class DataVisualizer():
             plots
         emphasize_end: boolean, Optional (Default: True)
             True to add a point at the final position with a larger size
+        label: string, Optional (Default: None)
+            the legend label for the data
+        title: string, Optional (Default: None)
+            the title of the ax object
+        loc: int, Optional (Default: 1)
+            the legend location
         '''
         if isinstance(ax, list):
             if len(ax) > 1:
@@ -188,7 +173,30 @@ class DataVisualizer():
     def plot_mean_and_ci(self, ax, data, c=None, linestyle='-', label=None,
             loc=1, title=None):
         '''
+        accepts dict with keys upper_bound, lower_bound, and mean, and plots
+        the mean onto the ax object with the upper and lower bounds shaded
 
+        PARAMETERS
+        ----------
+        ax: axis object
+            allows for control of the plot from outside of this function
+        data: n x 3 array of 3D cartesian coordinates
+        c: string, Optional (Default: None)
+            matplotlib compatible color to be used when plotting data, this
+            allows the user to overwrite the instantiated value in case the
+            same instantiated DrawArmVis object is used for multiple trajectory
+            plots
+        linestyle: string, Optional (Default: None)
+            matplotlib compatible linestyle to be used when plotting data, this
+            allows the user to overwrite the instantiated value in case the
+            same instantiated DrawArmVis object is used for multiple trajectory
+            plots
+        label: string, Optional (Default: None)
+            the legend label for the data
+        title: string, Optional (Default: None)
+            the title of the ax object
+        loc: int, Optional (Default: 1)
+            the legend location
         '''
         ax.fill_between(range(np.array(data['mean']).shape[0]),
                          data['upper_bound'],
@@ -201,10 +209,10 @@ class DataVisualizer():
         #ax.legend(loc)
         return ax
 
-
     def make_list(self, param):
         '''
         converts param into a list if it is not already one
+        returns param as a list
 
         PARAMETERS
         ----------
