@@ -4,9 +4,6 @@ functions
 '''
 class DrawData():
     def __init__(self):
-        '''
-
-        '''
         self.xlimit = [0, 0]
         self.ylimit = [0, 0]
         self.zlimit = [0, 0]
@@ -59,7 +56,5 @@ class DrawData():
         return parameter
 
     def plot(self):
-        '''
-
-        '''
-        raise Exception ('ERROR: The instantiated subclass is missing a plot function')
+        raise Exception(
+            'ERROR: The instantiated subclass is missing a plot function')

@@ -21,7 +21,7 @@ class DrawArm(DrawData):
         '''
         super(DrawArm, self).__init__()
 
-        self.projection='3d'
+        self.projection = '3d'
         self.db_name = db_name
         self.robot_config = robot_config
         self.interpolated_samples = interpolated_samples
@@ -31,8 +31,8 @@ class DrawArm(DrawData):
         self.vis = DataVisualizer()
         self.proc = DataProcessor()
 
-    def plot(self, ax, save_location, step=-1, parameters=None, c='b', linestyle=None,
-            label=None, title=None):
+    def plot(self, ax, save_location, step=-1, parameters=None, c='b',
+             linestyle=None, label=None, title=None):
         '''
         Plots the parameters from save_location on the ax object
         Returns the ax object and the current max x, y and z limits
@@ -60,14 +60,15 @@ class DrawArm(DrawData):
         if save_location not in self.data:
             # create a dictionary with our test data interpolated to the same
             # number of steps
-            self.data[save_location] = self.proc.load_and_process(db_name=self.db_name,
-                    save_location=save_location,
-                    interpolated_samples=self.interpolated_samples,
-                    parameters=['time', 'q'])
+            self.data[save_location] = self.proc.load_and_process(
+                db_name=self.db_name,
+                save_location=save_location,
+                interpolated_samples=self.interpolated_samples,
+                parameters=['time', 'q'])
             # get our joint and link positions
             [joints, links, ee_xyz] = self.proc.calc_cartesian_points(
-                    robot_config=self.robot_config,
-                    q=self.data[save_location]['q'])
+                robot_config=self.robot_config,
+                q=self.data[save_location]['q'])
             self.data[save_location]['joints_xyz'] = joints
             self.data[save_location]['links_xyz'] = links
             self.data[save_location]['ee_xyz'] = ee_xyz
@@ -75,9 +76,12 @@ class DrawArm(DrawData):
         data = self.data[save_location]
 
         # plot our arm figure
-        self.vis.plot_arm(ax=ax, joints_xyz=data['joints_xyz'][step],
-                links_xyz=data['links_xyz'][step], ee_xyz=data['ee_xyz'][step],
-                title=title)
+        self.vis.plot_arm(
+            ax=ax,
+            joints_xyz=data['joints_xyz'][step],
+            links_xyz=data['links_xyz'][step],
+            ee_xyz=data['ee_xyz'][step],
+            title=title)
 
         # ax.set_title(save_location)
         return [ax, [self.xlimit, self.ylimit, self.zlimit]]

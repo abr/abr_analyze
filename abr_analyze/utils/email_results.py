@@ -9,7 +9,7 @@ import smtplib
 import traceback
 
 def send_email(from_email=None, from_password=None, to_email=None,
-        subject=None, body=None, file_location=None):
+               subject=None, body=None, file_location=None):
     """
     Send an email with the option of adding an attachment
 
@@ -70,6 +70,7 @@ def send_email(from_email=None, from_password=None, to_email=None,
         text = msg.as_string()
         server.sendmail(from_email, to_email, text)
         server.quit()
-    except:
+
+    except:  # pylint: disable=W0702
         print('Error: unable to send email')
         print(traceback.format_exc())

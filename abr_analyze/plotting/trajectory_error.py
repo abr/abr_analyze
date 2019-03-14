@@ -23,7 +23,7 @@ from abr_analyze.data_visualizer import DataVisualizer
 
 class TrajectoryError():
     def __init__(self, db_name, time_derivative=0, filter_const=None,
-            interpolated_samples=100):
+                 interpolated_samples=100):
         '''
         PARAMETERS
         ----------
@@ -52,7 +52,7 @@ class TrajectoryError():
         self.interpolated_samples = interpolated_samples
 
     def statistical_error(self, save_location, ideal=None, sessions=1, runs=1,
-            save_data=True):
+                          save_data=True):
         '''
         calls the calculate error function to get the trajectory for all runs
         and sessions specified at the save location and calculates the mean
@@ -78,25 +78,26 @@ class TrajectoryError():
         for session in range(sessions):
             session_error = []
             for run in range(runs):
-                print('%.3f processing complete...'
-                        %(100*((run+1)+(session*runs))
-                            /(sessions*runs)), end='\r')
-                loc = '%s/session%03d/run%03d'%(save_location, session, run)
-                data = self.calculate_error(
-                        save_location=loc,
-                        ideal=ideal)
+                print('%.3f processing complete...' %
+                      (100*((run+1)+(session*runs)) / (sessions*runs)),
+                      end='\r')
+                loc = '%s/session%03d/run%03d' % (save_location, session, run)
+                data = self.calculate_error(save_location=loc, ideal=ideal)
                 session_error.append(np.sum(data['error']))
             errors.append(session_error)
+
         ci_errors = self.proc.get_mean_and_ci(raw_data=errors)
         ci_errors['time_derivative'] = self.time_derivative
         ci_errors['filter_const'] = self.filter_const
 
         if save_data:
-            self.dat.save(data=ci_errors,
-                    save_location='%s/statistical_error_%i'%(save_location,
-                        self.time_derivative), overwrite=True)
-        else:
-            return ci_errors
+            self.dat.save(
+                data=ci_errors,
+                save_location='%s/statistical_error_%i' % (
+                    save_location, self.time_derivative),
+                overwrite=True)
+
+        return ci_errors
 
     def calculate_error(self, save_location, ideal=None):
         '''
@@ -134,10 +135,10 @@ class TrajectoryError():
 
         # load and interpolate data
         data = self.proc.load_and_process(
-                db_name=self.db_name,
-                save_location=save_location,
-                parameters=parameters,
-                interpolated_samples=self.interpolated_samples)
+            db_name=self.db_name,
+            save_location=save_location,
+            parameters=parameters,
+            interpolated_samples=self.interpolated_samples)
 
         if ideal == 'ideal_trajectory':
             data['ideal_trajectory'] = data['ideal_trajectory'][:, :3]
@@ -149,34 +150,40 @@ class TrajectoryError():
                 if key != 'time':
                     # differentiate the number of times specified by
                     # time_derivative
-                    for ii in range(0, self.time_derivative):
-                        print(np.array(data[key][:,0]).shape)
+                    for _ in range(0, self.time_derivative):
+                        print(np.array(data[key][:, 0]).shape)
                         print(np.mean(data['time']))
-                        data[key][:,0] = np.gradient(data[key][:,0], dt)
-                        data[key][:,1] = np.gradient(data[key][:,1], dt)
-                        data[key][:,2] = np.gradient(data[key][:,2], dt)
+                        data[key][:, 0] = np.gradient(data[key][:, .0], dt)
+                        data[key][:, 1] = np.gradient(data[key][:, .1], dt)
+                        data[key][:, 2] = np.gradient(data[key][:, .2], dt)
 
         # filter data
         if self.filter_const is not None:
             for key in data:
                 if key != 'time':
-                    data[key] = self.proc.filter_data(data=data[key],
-                            alpha=self.filter_const)
+                    data[key] = self.proc.filter_data(
+                        data=data[key],
+                        alpha=self.filter_const)
 
         data['time_derivative'] = self.time_derivative
         data['filter_const'] = self.filter_const
         data['read_location'] = save_location
 
-        error = self.proc.two_norm_error(trajectory=data['ee_xyz'],
-                ideal_trajectory=data[ideal], dt=dt)
+        error = self.proc.two_norm_error(
+            trajectory=data['ee_xyz'],
+            ideal_trajectory=data[ideal],
+            dt=dt)
         data['error'] = error
+
         return data
 
     def plot(self, ax, save_location, step=-1, c=None, linestyle='--',
-            label=None, loc=1, title='Trajectory Error to Path Planner'):
+             label=None, loc=1, title='Trajectory Error to Path Planner'):
 
-        data = self.dat.load(parameters=['mean', 'upper_bound', 'lower_bound'],
-                save_location='%s/statistical_error_%i'%(save_location,
-                    self.time_derivative))
-        self.vis.plot_mean_and_ci(ax=ax, data=data, c=c, linestyle=linestyle,
-                label=label, loc=loc, title=title)
+        data = self.dat.load(
+            parameters=['mean', 'upper_bound', 'lower_bound'],
+            save_location='%s/statistical_error_%i'%(
+                save_location, self.time_derivative))
+        self.vis.plot_mean_and_ci(
+            ax=ax, data=data, c=c, linestyle=linestyle,
+            label=label, loc=loc, title=title)

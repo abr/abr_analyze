@@ -68,7 +68,7 @@ intercept_vals = net_utils.gen_intercept_bounds_and_modes(
 # triangular distribution
 # ideal_function = lambda x: -(100/.6)*x + 100 if x<0.6 else 0
 # gaussian distribution
-# A == y peak, dependant on how many neurons in your network
+# A == y peak, dependent on how many neurons in your network
 # mu == x offset
 # sig == std dev
 ideal_function = lambda x, A=400, mu=0.4, sig=0.025: A*np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))

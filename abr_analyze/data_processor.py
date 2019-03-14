@@ -4,17 +4,11 @@ calculating average and confidence intervals, scaling data, filtering data, and
 comparing to an ideal trajectory
 """
 import numpy as np
-import os
 import scipy.interpolate
 
-from abr_analyze.paths import cache_dir
 from abr_analyze.data_handler import DataHandler
 
 class DataProcessor():
-    def __init__(self):
-        """
-        """
-        pass
 
     def get_mean_and_ci(self, raw_data):
         '''
@@ -29,10 +23,10 @@ class DataProcessor():
         sets = np.array(raw_data).shape[0]
         data_pts = np.array(raw_data).shape[1]
         print('Mean and CI calculation found %i sets of %i data points'
-                %(sets, data_pts))
+              %(sets, data_pts))
         raw_data = np.array(raw_data)
         for i in range(data_pts):
-            data = raw_data[:,i]
+            data = raw_data[:, i]
             ci = self.bootstrapci(data, np.mean)
             sample.append(np.mean(data))
             lower_bound.append(ci[0])
@@ -43,7 +37,7 @@ class DataProcessor():
         return data
 
     def bootstrapci(self, data, func, n=3000, p=0.95):
-        index=int(n*(1-p)/2)
+        index = int(n*(1-p)/2)
         samples = np.random.choice(data, size=(n, len(data)))
         r = [func(s) for s in samples]
         r.sort()
@@ -97,7 +91,9 @@ class DataProcessor():
                 # print(np.array(data[:, kk]).shape)
                 interp = scipy.interpolate.interp1d(time_intervals, data[:, kk])
                 data_interp.append(np.array([
-                    interp(t) for t in np.linspace(time_intervals[0], run_time,
+                    interp(t) for t in np.linspace(
+                        time_intervals[0],
+                        run_time,
                         interpolated_samples)]))
             data_interp = np.array(data_interp).T
         else:
@@ -142,20 +138,17 @@ class DataProcessor():
         alpha: float, Optional (Default: 0.2)
             the filter constant
         '''
-        data_filtered = []
-        for nn in range(0,len(data)):
-            if nn == 0:
-                data_filtered.append((alpha*data[nn]
-                                          + (1-alpha)*0))
+        data_filtered = np.zeros(len(data))
+        for ii, val in enumerate(data):
+            if ii == 0:
+                data_filtered[ii] = alpha*val
             else:
-                data_filtered.append((alpha*data[nn]
-                                          + (1-alpha)*data_filtered[nn-1]))
-        data_filtered = np.array(data_filtered)
+                data_filtered[ii] = alpha*val + (1-alpha)*data_filtered[ii-1]
 
         return data_filtered
 
     def load_and_process(self, db_name, save_location, parameters,
-            interpolated_samples=100):
+                         interpolated_samples=100):
         """
         Loads the parameters from the save_location,
         returns a dictionary of the interpolated and sampled data
@@ -178,16 +171,18 @@ class DataProcessor():
         """
         # load data from hdf5 database
         dat = DataHandler(db_name=db_name)
-        data = dat.load(parameters=parameters,
-                save_location=save_location)
+        data = dat.load(parameters=parameters, save_location=save_location)
 
         # If time is not passed in, create a range from 0 to the length of any
         # other parameter in the list that is not time. This assumes that any
         # data passed in at once will be of the same length
+
+        data_len = len(data[list(data.keys())[0]])
         if 'time' not in parameters:
-            for param in parameters:
-                data['time']=range(0, len(data[param]))
-                break
+            data['time'] = np.ones(0, data_len)
+
+        if interpolated_samples is None:
+            interpolated_samples = data_len
 
         total_time = np.sum(data['time'])
         dat = []
@@ -202,8 +197,6 @@ class DataProcessor():
         # since we are interpolating over time, we are not interpolating
         # the time data, instead evenly sample interpolated_samples from
         # 0 to the sum(time)
-        if interpolated_samples is None:
-            interpolated_samples = len(data[key])
         data['cumulative_time'] = np.linspace(0, total_time, interpolated_samples)
 
         data['read_location'] = save_location
@@ -230,7 +223,7 @@ class DataProcessor():
 
         # loop through our arm joints over time
         for q_t in q:
-            joints_t_xyz= []
+            joints_t_xyz = []
             links_t_xyz = []
             ee_t_xyz = []
 

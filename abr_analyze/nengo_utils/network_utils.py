@@ -15,13 +15,12 @@ NOTE: see examples of running for a single profile, or looping through various
 intercepts to later view in the intercept_scan_viewer.py gui
 """
 
+import nengo
+from nengo.utils.matplotlib import rasterplot
+from nengolib.stats import spherical_transform, ScatteredHypersphere
 import matplotlib.pyplot as plt
 import numpy as np
 
-from abr_analyze.paths import figures_dir
-import nengo
-from nengolib.stats import spherical_transform
-from nengo.utils.matplotlib import rasterplot
 
 class NetworkUtils:
     def convert_to_spherical(self, input_signal):
@@ -43,7 +42,7 @@ class NetworkUtils:
         if input_signal.ndim == 1:
             input_signal = input_signal.reshape(1, len(input_signal))
         new_input = spherical_transform(input_signal)
-        return(new_input)
+        return new_input
 
     def generate_encoders(self, n_dims, n_neurons, input_signal=None, thresh=0.008):
         """
@@ -83,7 +82,7 @@ class NetworkUtils:
             ii = 0
             same_count = 0
             prev_index = 0
-            while (input_signal.shape[0] > n_neurons):
+            while input_signal.shape[0] > n_neurons:
                 if ii%1000 == 0:
                     print(input_signal.shape)
                     print('thresh: ', thresh)
@@ -122,12 +121,13 @@ class NetworkUtils:
                 print('Too many indices removed, appending with uniform hypersphere')
                 print('shape: ', input_signal.shape)
                 length = n_neurons - input_signal.shape[0]
-                hypersphere = nengolib.stats.ScatteredHypersphere(surface=True)
+                hypersphere = ScatteredHypersphere(surface=True)
                 hyper_inputs = hypersphere.sample(length, input_signal.shape[1])
                 input_signal = np.vstack((input_signal, hyper_inputs))
         else:
-            print('No input signal passed in, selected encoders randomly from scattered hypersphere')
-            hypersphere = nengolib.stats.ScatteredHypersphere(surface=True)
+            print('No input signal passed in, selected encoders randomly ' +
+                  'from scattered hypersphere')
+            hypersphere = ScatteredHypersphere(surface=True)
             input_signal = hypersphere.sample(n_neurons, n_dims)
 
 
@@ -152,7 +152,7 @@ class NetworkUtils:
             a list corresponding what joints to return scaled inputs for.
             The function is currently set up to accept the raw feedback from an
             arm (all joint position and velocities) and only returns the values
-            specified by the indicies in in_index
+            specified by the indices in in_index
 
             EX: in_index = [0, 1, 3, 6]
             will return the scaled joint position and velocities for joints 0,
@@ -218,8 +218,8 @@ class NetworkUtils:
             if not hasattr(network.nengo_model, 'ens_probes'):
                 network.nengo_model.ens_probes = []
                 for ens in network.adapt_ens:
-                    network.nengo_model.ens_probes.append(nengo.Probe(ens.neurons,
-                            synapse=None))
+                    network.nengo_model.ens_probes.append(
+                        nengo.Probe(ens.neurons, synapse=None))
 
         sim = nengo.Simulator(network.nengo_model)
         print('Running sim...')
@@ -240,7 +240,7 @@ class NetworkUtils:
 
         probes = np.hstack(probes)
         time = np.ones(len(input_signal))
-        ax = rasterplot(np.cumsum(time),probes, ax=ax)
+        ax = rasterplot(np.cumsum(time), probes, ax=ax)
         ax.set_ylabel('Neuron')
         ax.set_xlabel('Time [sec]')
         ax.set_title('Spiking Activity')
@@ -272,8 +272,8 @@ class NetworkUtils:
             # axis=1 mean over neurons
             # len(activity.T) gives the number of neurons
             proportion_active.append(np.sum(activity, axis=1)/len(activity.T))
-        proportion_active = np.sum(proportion_active,
-                axis=0)/len(proportion_active)
+        proportion_active = np.sum(
+            proportion_active, axis=0)/len(proportion_active)
 
         if ax is not None:
             print('Plotting proportion of active neurons over time...')
@@ -305,7 +305,6 @@ class NetworkUtils:
             the values above and below which activities get set to 1 and 0, respectively
             When None, the default of the function will be used
         '''
-        time = np.ones(len(input_signal))
         activities = self.get_activities(network=network, input_signal=input_signal)
 
         time_active = []
@@ -317,7 +316,7 @@ class NetworkUtils:
         time_active = np.hstack(time_active)
 
         if ax is not None:
-            plt.hist(time_active, bins=np.linspace(0,1,100))
+            plt.hist(time_active, bins=np.linspace(0, 1, 100))
             ax.set_ylabel('Number of active neurons')
             ax.set_xlabel('Proportion of Time')
             ax.set_title('Proportion of time neurons are active')
@@ -341,12 +340,12 @@ class NetworkUtils:
 
         activities = []
         for ens in network.adapt_ens:
-            _, activity = nengo.utils.ensemble.tuning_curves(ens,
-                    network.sim, input_signal)
-            activity[activity>thresh]=1
-            activity[activity<=thresh]=0
+            _, activity = nengo.utils.ensemble.tuning_curves(
+                ens, network.sim, input_signal)
+            activity[activity > thresh] = 1
+            activity[activity <= thresh] = 0
             activities.append(np.copy(activity))
-        print(np.array(activities).shape)
+
         return activities
 
     def num_neurons_active_and_inactive(self, activity):
@@ -367,15 +366,16 @@ class NetworkUtils:
         num_active = 0
         for ens in activity:
             ens = ens.T
-            for nn, neuron in enumerate(ens):
+            for nn, _ in enumerate(ens):
                 if np.sum(ens[nn]) == 0:
                     num_inactive += 1
                 else:
                     num_active += 1
         return [num_active, num_inactive]
 
-    def gen_learning_profile(self, network, input_signal, ax=None, num_ens_to_raster=None,
-            thresh=None, show_plot=True):
+    def gen_learning_profile(self, network, input_signal, ax=None,
+                             num_ens_to_raster=None, thresh=None,
+                             show_plot=True):
         """
         Plots the networks neural activity onto three subplots, showing the rasterplot,
         proportion of active neurons over time, and how many neurons were active over
@@ -407,31 +407,32 @@ class NetworkUtils:
         """
 
         if ax is None:
-            plt.figure(figsize=(8,15))
+            plt.figure(figsize=(8, 15))
             ax = []
-            for ii in range(0,3):
-                ax.append(plt.subplot(3,1,ii+1))
+            for ii in range(0, 3):
+                ax.append(plt.subplot(3, 1, ii+1))
 
         self.raster_plot(
-                network=network,
-                input_signal=input_signal,
-                ax=ax[0],
-                num_ens_to_raster=num_ens_to_raster)
+            network=network,
+            input_signal=input_signal,
+            ax=ax[0],
+            num_ens_to_raster=num_ens_to_raster)
 
-        [proportion_active, __] = self.prop_active_neurons_over_time(
-                network=network,
-                input_signal=input_signal,
-                ax=ax[1],
-                thresh=thresh)
+        [proportion_active, _] = self.prop_active_neurons_over_time(
+            network=network,
+            input_signal=input_signal,
+            ax=ax[1],
+            thresh=thresh)
 
-        [__, activity] = self.prop_time_neurons_active(
-                network=network,
-                input_signal=input_signal,
-                ax=ax[2],
-                thresh=thresh)
+        [_, activity] = self.prop_time_neurons_active(
+            network=network,
+            input_signal=input_signal,
+            ax=ax[2],
+            thresh=thresh)
 
         [num_active, num_inactive] = self.num_neurons_active_and_inactive(
-                                        activity=activity)
+            activity=activity)
+
         print('Number of neurons inactive: ', num_inactive)
         print('Number of neurons active: ', num_active)
         ax[1].legend(['Mean Prop Active: %.2f'%np.mean(proportion_active)])
@@ -441,9 +442,9 @@ class NetworkUtils:
             plt.tight_layout()
             plt.show()
 
-    def gen_intercept_bounds_and_modes(
-            self, intercept_range=[-0.9,1], intercept_step=0.1,
-            mode_range=[-0.9, 1], mode_step=0.2):
+    def gen_intercept_bounds_and_modes(self, intercept_range=None,
+                                       intercept_step=0.1,
+                                       mode_range=None, mode_step=0.2):
         '''
         Accepts a range of intercept bounds and modes and returns an np.array
         of the valid combinations
@@ -474,25 +475,30 @@ class NetworkUtils:
             the right bound must be set to 0.9 + 0.1 = 1.0 to check the range
             of values up to and including 0.9
         '''
-
-        intercept_range=np.arange(intercept_range[0], intercept_range[1],
-                intercept_step)
-        mode_range=np.arange(mode_range[0], mode_range[1], mode_step)
+        if intercept_range is None:
+            intercept_range = [-0.9, 1]
+        if mode_range is None:
+            mode_range = [-0.9, 1]
+        intercept_range = np.arange(intercept_range[0], intercept_range[1],
+                                    intercept_step)
+        mode_range = np.arange(mode_range[0], mode_range[1], mode_step)
 
         # Create list of all possible intercepts
-        intercepts = np.array(np.meshgrid(intercept_range, intercept_range)).T.reshape(-1, 2)
+        intercepts = np.array(np.meshgrid(
+            intercept_range, intercept_range)).T.reshape(-1, 2)
         # get a list of all valid intercepts
         valid = []
-        rej = []
         for vals in intercepts:
             vals[0] = round(vals[0], 1)
             vals[1] = round(vals[1], 1)
             if vals[0] < vals[1]:
                 for mode in mode_range:
                     mode = round(mode, 1)
-                    if vals[0] <= mode and mode <= vals[1]:
-                        valid.append(np.array([vals[0],vals[1], mode]))
+                    if vals[0] <= mode <= vals[1]:
+                        valid.append(np.array([vals[0], vals[1], mode]))
 
         intercepts = np.array(valid)
-        print('There are %i valid combinations of intercepts and modes'%len(intercepts))
+        print('There are %i valid combinations of intercepts and modes' %
+              len(intercepts))
+
         return intercepts

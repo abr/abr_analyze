@@ -5,7 +5,7 @@ you must first call set_normal_term to set the terminal to its initial
 state. Then you can monitor the keyboard in your main loop.
 KBHIT.set_normal_term()
 if KBHit.kbhit():
-    c = KBHIT.getch # variabe to store key press
+    c = KBHIT.getch # variable to store key press
     if ord(c) == ord('s'):
         print('Starting Script')
 
@@ -45,5 +45,5 @@ class KBHit:
     def kbhit(self):
         """ Returns True if keyboard character was hit, False otherwise.
         """
-        dr, dw, de = select([sys.stdin], [], [], 0)
+        dr, _, _ = select([sys.stdin], [], [], 0)
         return dr != []

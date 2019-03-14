@@ -21,7 +21,7 @@ class Draw3dData(DrawData):
         '''
         super(Draw3dData, self).__init__()
 
-        self.projection='3d'
+        self.projection = '3d'
         self.db_name = db_name
         self.interpolated_samples = interpolated_samples
         # create a dict to store processed data
@@ -30,8 +30,8 @@ class Draw3dData(DrawData):
         self.proc = DataProcessor()
         self.vis = DataVisualizer()
 
-    def plot(self, ax, save_location, parameters, step=-1, c='tab:purple', linestyle='--',
-            label=None, title=None):
+    def plot(self, ax, save_location, parameters, step=-1, c='tab:purple',
+             linestyle='--', label=None, title=None):
         '''
         Plots the parameters from save_location on the ax object
         Returns the ax object and the current max x, y and z limits
@@ -62,23 +62,27 @@ class Draw3dData(DrawData):
 
         save_name = '%s-%s'%(save_location, parameters)
         if save_name not in self.data:
-            self.data[save_name] = self.proc.load_and_process(db_name=self.db_name,
-                    save_location=save_location, parameters=parameters,
-                    interpolated_samples=self.interpolated_samples)
+            self.data[save_name] = self.proc.load_and_process(
+                db_name=self.db_name,
+                save_location=save_location,
+                parameters=parameters,
+                interpolated_samples=self.interpolated_samples)
 
         for param in parameters:
             # remove single dimensions
-            self.data[save_name][param] = np.squeeze(self.data[save_name][param])
+            self.data[save_name][param] = np.squeeze(
+                self.data[save_name][param])
             # avoid passing time in for finding y limits
-            if param is not 'time' or param is not 'cumulative_time':
+            if param != 'time' or param != 'cumulative_time':
                 # update our xyz limit with every test we add
                 self.check_plot_limits(
-                        x=self.data[save_name][param][:,0],
-                        y=self.data[save_name][param][:,1],
-                        z=self.data[save_name][param][:,2])
+                    x=self.data[save_name][param][:, 0],
+                    y=self.data[save_name][param][:, 1],
+                    z=self.data[save_name][param][:, 2])
 
-            ax = self.vis.plot_3d_data(ax=ax, data=self.data[save_name][param][:step], c=c,
-                    linestyle=linestyle, label=label, title=title)
+            ax = self.vis.plot_3d_data(
+                ax=ax, data=self.data[save_name][param][:step], c=c,
+                linestyle=linestyle, label=label, title=title)
 
         # ax.set_xlim(self.xlimit[0], self.xlimit[1])
         # ax.set_ylim(self.ylimit[0], self.ylimit[1])

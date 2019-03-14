@@ -28,8 +28,8 @@ class Draw2dData(DrawData):
         self.proc = DataProcessor()
         self.vis = DataVisualizer()
 
-    def plot(self, ax, save_location, parameters, step=-1, c=None, linestyle='--',
-            label=None, title=None):
+    def plot(self, ax, save_location, parameters, step=-1, c=None,
+             linestyle='--', label=None, title=None):
         '''
         Plots the parameters from save_location on the ax object
         Returns the ax object and the current max x and y limits
@@ -63,23 +63,27 @@ class Draw2dData(DrawData):
         # a different step or onto a different axis
         save_name = '%s-%s'%(save_location, parameters)
         if save_name not in self.data:
-            self.data[save_name] = self.proc.load_and_process(db_name=self.db_name,
-                    save_location=save_location, parameters=parameters,
-                    interpolated_samples=self.interpolated_samples)
+            self.data[save_name] = self.proc.load_and_process(
+                db_name=self.db_name,
+                save_location=save_location,
+                parameters=parameters,
+                interpolated_samples=self.interpolated_samples)
 
         for param in parameters:
             # remove single dimensions
-            self.data[save_name][param] = np.squeeze(self.data[save_name][param])
+            self.data[save_name][param] = np.squeeze(
+                self.data[save_name][param])
             # avoid passing time in for finding y limits
             if param is not 'time' and param is not 'cumulative_time':
                 # update our x and y limits with every test we add
-                self.check_plot_limits(x=np.cumsum(self.data[save_name]['cumulative_time']),
-                        y=self.data[save_name][param])
+                self.check_plot_limits(
+                    x=np.cumsum(self.data[save_name]['cumulative_time']),
+                    y=self.data[save_name][param])
 
-                ax = self.vis.plot_2d_data(ax=ax,
-                        x=self.data[save_name]['cumulative_time'][:step],
-                        y=self.data[save_name][param][:step], c=c,
-                        linestyle=linestyle, label=label, title=title)
+                ax = self.vis.plot_2d_data(
+                    ax=ax, x=self.data[save_name]['cumulative_time'][:step],
+                    y=self.data[save_name][param][:step], c=c,
+                    linestyle=linestyle, label=label, title=title)
 
         # ax.set_xlim(self.xlimit[0], self.xlimit[1])
         # ax.set_ylim(self.ylimit[0], self.ylimit[1])

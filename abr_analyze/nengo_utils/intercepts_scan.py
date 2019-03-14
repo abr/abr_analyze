@@ -5,9 +5,9 @@ possible intercept is run, passing in the input signal, to generate a neural
 profile for each sim. The profiles can be viewed using the
 intercept_scan_viewer.py gui
 '''
+import timeit
 import matplotlib.pyplot as plt
 import numpy as np
-import timeit
 
 from abr_analyze.data_handler import DataHandler
 from abr_analyze.nengo_utils.network_utils import NetworkUtils
@@ -66,12 +66,12 @@ class InterceptsScan():
         '''
 
         loop_time = 0
-        for ii ,intercept in enumerate(intercept_vals) :
+        for ii, intercept in enumerate(intercept_vals):
             start = timeit.default_timer()
-            print('%.2f%% Complete, ~%.2f min remaining...'%
-                    ((ii/len(intercept_vals)*100),
-                     (len(intercept_vals)-ii)*loop_time/60))#,
-                     #end='\r')
+            print('%.2f%% Complete, ~%.2f min remaining...' %
+                  ((ii/len(intercept_vals)*100),
+                   (len(intercept_vals)-ii)*loop_time/60))#,
+                   #end='\r')
             # create our intercept distribution from the intercepts vals
             intercept_list = signals.AreaIntercepts(
                 dimensions=n_input,
@@ -95,22 +95,23 @@ class InterceptsScan():
                 encoders=encoders)
 
             # get the proportion of neurons active
-            [proportion_active, activity] = self.net_utils.prop_active_neurons_over_time(
-                                            network=network,
-                                            input_signal=input_signal)
+            proportion_active, activity = (
+                self.net_utils.prop_active_neurons_over_time(
+                    network=network, input_signal=input_signal))
 
             # get the number of active and inactive neurons
-            [num_active, num_inactive] = self.net_utils.num_neurons_active_and_inactive(
-                                            activity=activity)
+            num_active, num_inactive = (
+                self.net_utils.num_neurons_active_and_inactive(
+                    activity=activity))
 
             # save the data for the line plot of the histogram
             x = np.cumsum(np.ones(len(proportion_active)))
             ideal = [ideal_function(x) for val in x]
             self.dat.save(
-                    data={'ideal': ideal, 'total_intercepts':
-                        len(intercept_vals), 'notes': notes},
-                    save_location='%s'%save_name,
-                    overwrite=True)
+                data={'ideal':ideal, 'total_intercepts':len(intercept_vals),
+                      'notes':notes},
+                save_location='%s' % save_name,
+                overwrite=True)
 
             diff_to_ideal = ideal - proportion_active
             error = np.sum(np.abs(diff_to_ideal))
@@ -177,17 +178,18 @@ class InterceptsScan():
             any additional notes to save with the scan
         '''
         loop_time = 0
-        bins = np.linspace(0,1,n_bins)
-        for ii ,intercept in enumerate(intercept_vals) :
+        bins = np.linspace(0, 1, n_bins)
+        for ii, intercept in enumerate(intercept_vals):
             start = timeit.default_timer()
-            print('%.2f%% Complete, ~%.2f min remaining...'%
-                    ((ii/len(intercept_vals)*100),
-                     (len(intercept_vals)-ii)*loop_time/60))#,
-                     #end='\r')
+            print('%.2f%% Complete, ~%.2f min remaining...' %
+                  ((ii/len(intercept_vals)*100),
+                   (len(intercept_vals)-ii)*loop_time/60))#,
+                  #end='\r')
             # create our intercept distribution from the intercepts vals
             intercept_list = signals.AreaIntercepts(
                 dimensions=n_input,
-                base=signals.Triangular(intercept[0], intercept[2], intercept[1]))
+                base=signals.Triangular(intercept[0], intercept[2],
+                                        intercept[1]))
             rng = np.random.RandomState(seed)
             intercept_list = intercept_list.sample(n_neurons, rng=rng)
             intercept_list = np.array(intercept_list)
@@ -207,34 +209,40 @@ class InterceptsScan():
                 encoders=encoders)
 
             # get the time active
-            [time_active, activity] = self.net_utils.prop_time_neurons_active(
-                                            network=network,
-                                            input_signal=input_signal)
+            time_active, activity = self.net_utils.prop_time_neurons_active(
+                network=network, input_signal=input_signal)
 
             # get the number of active and inactive neurons
-            [num_active, num_inactive] = self.net_utils.num_neurons_active_and_inactive(
-                                            activity=activity)
+            num_active, num_inactive = (
+                self.net_utils.num_neurons_active_and_inactive(
+                    activity=activity))
 
             # save the data for the line plot of the histogram
             y, bins_out = np.histogram(np.squeeze(time_active), bins=bins)
             centers = 0.5*(bins_out[1:]+bins_out[:-1])
             ideal = [ideal_function(x) for x in centers]
             self.dat.save(
-                    data={'ideal': ideal, 'total_intercepts':
-                        len(intercept_vals), 'notes': notes},
-                    save_location='%s'%save_name,
-                    overwrite=True)
+                data={'ideal': ideal, 'total_intercepts': len(intercept_vals),
+                      'notes': notes},
+                save_location='%s' % save_name,
+                overwrite=True)
 
             diff_to_ideal = ideal - y
             error = np.sum(np.abs(diff_to_ideal))
 
             # not saving activity because takes up a lot of disk space
-            data = {'intercept_bounds': intercept[:2],
-                    'intercept_mode': intercept[2], 'diff_to_ideal': diff_to_ideal,
-                    'x': centers, 'y': y, 'num_active': num_active,
-                    'num_inactive': num_inactive, 'error': error,
-                    'xlabel': 'proportion time active', 'ylabel': 'num neurons active'}
-            self.dat.save(data=data, save_location='%s/%05d'%(save_name, ii), overwrite=True)
+            data = {'intercept_bounds':intercept[:2],
+                    'intercept_mode':intercept[2],
+                    'diff_to_ideal':diff_to_ideal,
+                    'x':centers,
+                    'y':y,
+                    'num_active':num_active,
+                    'num_inactive':num_inactive,
+                    'error':error,
+                    'xlabel':'proportion time active',
+                    'ylabel':'num neurons active'}
+            self.dat.save(data=data, save_location='%s/%05d' % (save_name, ii),
+                          overwrite=True)
 
             loop_time = timeit.default_timer() - start
 
@@ -253,18 +261,18 @@ class InterceptsScan():
             the number of tests to find that most closley match the ideal
         '''
         ideal_data = self.dat.load(parameters=['ideal', 'total_intercepts'],
-                save_location='%s'%save_name)
+                                   save_location='%s' % save_name)
         ideal = ideal_data['ideal']
         num = ideal_data['total_intercepts']
 
         run_data = []
         errors = []
-        for ii in range(0, num) :
+        for ii in range(0, num):
             data = self.dat.load(
-                    parameters=['intercept_bounds', 'intercept_mode', 'diff_to_ideal',
-                    'x', 'y', 'error', 'num_active', 'num_inactive', 'xlabel',
-                    'ylabel'],
-                    save_location='%s/%05d'%(save_name,ii))
+                parameters=['intercept_bounds', 'intercept_mode',
+                            'diff_to_ideal', 'x', 'y', 'error', 'num_active',
+                            'num_inactive', 'xlabel', 'ylabel'],
+                save_location='%s/%05d' % (save_name, ii))
             run_data.append(data)
             errors.append(data['error'])
 
@@ -274,13 +282,16 @@ class InterceptsScan():
         for ii in range(0, num_to_plot):
             ind = indices[ii]
             data = run_data[ind]
-            #plt.title('Active: %i | Inactive: %i'%(data['num_active'], data['num_inactive']))
+            #plt.title('Active: %i | Inactive: %i' % (data['num_active'],
+            #          data['num_inactive']))
             plt.plot(np.squeeze(data['x']), np.squeeze(data['y']),
-                    label='%i: err:%.2f \n%s: %s'%
-                    (ind, data['error'], data['intercept_bounds'], data['intercept_mode']))
+                     label='%i: err:%.2f \n%s: %s'%
+                     (ind, data['error'], data['intercept_bounds'],
+                      data['intercept_mode']))
 
         plt.xlabel(data['xlabel'])
         plt.ylabel(data['ylabel'])
-        plt.plot(np.squeeze(data['x']), ideal, c='k', lw=3, linestyle='--', label='ideal')
+        plt.plot(np.squeeze(data['x']), ideal, c='k', lw=3, linestyle='--',
+                 label='ideal')
         plt.legend()
         plt.show()

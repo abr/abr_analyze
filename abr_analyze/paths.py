@@ -1,9 +1,9 @@
 import os
 import sys
 
-""" Set the path based on the operating system"""
+# Set the path based on the operating system
 
-if sys.platform.startswith('win'):
+if sys.platform.startswith('win'):  # pylint: disable=R1720
     raise Exception('Currently not supported for Windows')
     # config_dir = os.path.expanduser(os.path.join("~", ".abr_analyze"))
     # cache_dir = os.path.join(config_dir, "cache")
