@@ -1,6 +1,7 @@
 '''
 A class for plotting data onto ax objects
 '''
+from mpl_toolkits.mplot3d import axes3d  # pylint: disable=W0611
 import numpy as np
 
 class DataVisualizer():

@@ -5,7 +5,6 @@ import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import os
 """
 A simple example of plotting a 3d stick arm figure from saved data.
