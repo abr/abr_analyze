@@ -46,7 +46,7 @@ seed = 0
 
 # ----------- Create your encoders ---------------
 encoders = net_utils.generate_encoders(input_signal=input_signal,
-        n_neurons=n_neurons*n_ensembles, thresh=0.02)
+        n_neurons=n_neurons*n_ensembles, thresh=0.02, n_dims=n_input)
 
 encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
 

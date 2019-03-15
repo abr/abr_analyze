@@ -63,4 +63,3 @@ gif.create(fig_loc=fig_cache,
             save_loc=save_loc,
             save_name='gif_arm',
             delay=5, res=[1920,1080])
-print('Gif saved to %s'%save_loc)

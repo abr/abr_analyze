@@ -7,6 +7,7 @@ all of the data. Cells can also be animated, in which case a gif is saved.
 import uuid
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from mpl_toolkits.mplot3d import axes3d
 
 from abr_analyze.paths import figures_dir
 

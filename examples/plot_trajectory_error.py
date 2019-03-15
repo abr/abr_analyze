@@ -7,13 +7,11 @@ import matplotlib.pyplot as plt
 db_name = 'dewolf2018neuromorphic'
 test_group = 'friction_post_tuning'
 test_list = [
-          'pd_no_friction_6_0',
-          'pd_friction_12_0',
-          'nengo_loihi_friction_44_0',
-          'nengo_loihi_friction_43_0',
-          'nengo_loihi_friction_45_0',
+          'nengo_cpu_friction_102_0',
+          'nengo_cpu_friction_103_0',
+          'nengo_cpu_friction_104_0',
           ]
-sessions = 5
+sessions = 1
 runs = 50
 time_derivative=0
 filter_const=None

@@ -179,7 +179,7 @@ class DataProcessor():
 
         data_len = len(data[list(data.keys())[0]])
         if 'time' not in parameters:
-            data['time'] = np.ones(0, data_len)
+            data['time'] = np.ones(data_len)
 
         if interpolated_samples is None:
             interpolated_samples = data_len

@@ -436,7 +436,7 @@ class NetworkUtils:
         print('Number of neurons inactive: ', num_inactive)
         print('Number of neurons active: ', num_active)
         ax[1].legend(['Mean Prop Active: %.2f'%np.mean(proportion_active)])
-        ax[2].legend('Active: %i  |  Inactive: %i'%(num_active, num_inactive))
+        ax[2].legend(['Active: %i  |  Inactive: %i'%(num_active, num_inactive)])
 
         if show_plot:
             plt.tight_layout()

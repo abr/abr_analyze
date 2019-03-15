@@ -29,7 +29,7 @@ net_utils = NetworkUtils()
 
 test_group = 'friction_post_tuning'
 test_names = [
-        'nengo_cpu_friction_70_0',
+        'nengo_cpu_friction_103_0',
         #'nengo_cpu_friction_67_0'
         ]
 runs = 50
