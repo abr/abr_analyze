@@ -146,16 +146,19 @@ class TrajectoryError():
 
         # integrate data
         if self.time_derivative > 0:
+            # set our keys that are able to be differentiated to avoid errors
+            differentiable_keys = ['ee_xyz', 'ideal_trajectory']
+            if ideal is not None:
+                differentiable_keys.append(ideal)
+
             for key in data:
-                if key != 'time':
+                if key in differentiable_keys:
                     # differentiate the number of times specified by
                     # time_derivative
                     for _ in range(0, self.time_derivative):
-                        print(np.array(data[key][:, 0]).shape)
-                        print(np.mean(data['time']))
-                        data[key][:, 0] = np.gradient(data[key][:, .0], dt)
-                        data[key][:, 1] = np.gradient(data[key][:, .1], dt)
-                        data[key][:, 2] = np.gradient(data[key][:, .2], dt)
+                        data[key][:, 0] = np.gradient(data[key][:, 0], dt)
+                        data[key][:, 1] = np.gradient(data[key][:, 1], dt)
+                        data[key][:, 2] = np.gradient(data[key][:, 2], dt)
 
         # filter data
         if self.filter_const is not None:
