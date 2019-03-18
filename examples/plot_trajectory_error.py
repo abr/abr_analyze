@@ -12,12 +12,16 @@ test_list = [
              'nengo_cpu_friction_103_0',
              'nengo_cpu_friction_104_0',
              'nengo_loihi_friction_46_0',
+             'nengo_loihi_friction_47_0',
+             'nengo_loihi_friction_48_0',
             ]
 label = [
          ': 10k',
          ': 1k',
          ': 50k',
-         ': 50k',
+         ': 50k lr30',
+         ': 50k lr35',
+         ': 50k lr45',
         ]
 sessions = 1
 runs = 50
@@ -39,17 +43,17 @@ for jj, td in enumerate(time_derivatives):
                         time_derivative=td,
                         filter_const=filter_const,
                         interpolated_samples=interpolated_samples)
-    c = ['k','b', 'g', 'r', 'y']
+    c = ['k','b', 'g', 'r', 'y', 'm', 'o', 'tab:purple']
     for ii, test in enumerate(test_list):
         print('Processing test %i/%i: %s'%(ii+1, len(test_list), test))
         traj.statistical_error(save_location='%s/%s'%(test_group, test),
-                sessions=sessions, runs=runs)
+                sessions=sessions, runs=runs, regen=False)
     print('Plotting...')
     for ii, test in enumerate(test_list):
         traj.plot(ax=ax, save_location='%s/%s'%(test_group, test), label=test+label[ii],
                 c=c[ii], loc=0, title=title)
         ax.legend()
-loc = '%s/neuroarm/trajectory_error.png'%(figures_dir)
+loc = '%s/trajectory_error.png'%(figures_dir)
 print('Figure saved to %s'%(loc))
 plt.savefig(loc)
 plt.show()

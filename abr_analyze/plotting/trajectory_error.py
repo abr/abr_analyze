@@ -52,7 +52,7 @@ class TrajectoryError():
         self.interpolated_samples = interpolated_samples
 
     def statistical_error(self, save_location, ideal=None, sessions=1, runs=1,
-                          save_data=True):
+                          save_data=True, regen=False):
         '''
         calls the calculate error function to get the trajectory for all runs
         and sessions specified at the save location and calculates the mean
@@ -73,29 +73,50 @@ class TrajectoryError():
             the number of runs in each session
         save_data: boolean, Optional (Default: True)
             True to save data, this saves the error for each session
+        regen: boolean, Optional (Default: False)
+            True to regenerate data
+            False to load data if it exists
         '''
-        errors = []
-        for session in range(sessions):
-            session_error = []
-            for run in range(runs):
-                print('%.3f processing complete...' %
-                      (100*((run+1)+(session*runs)) / (sessions*runs)),
-                      end='\r')
-                loc = '%s/session%03d/run%03d' % (save_location, session, run)
-                data = self.calculate_error(save_location=loc, ideal=ideal)
-                session_error.append(np.sum(data['error']))
-            errors.append(session_error)
+        if regen is False:
+            exists = self.dat.check_group_exists(
+                '%s/statistical_error_%s'%(save_location, self.time_derivative))
+            if exists:
+                ci_errors = self.dat.load(
+                    parameters=['mean', 'upper_bound', 'lower_bound', 'ee_xyz',
+                                'ideal_trajectory', 'time', 'time_derivative',
+                                'filter_const', 'read_location', 'error'],
+                    save_location='%s/statistical_error_%i' % (
+                        save_location, self.time_derivative))
+                if len(ci_errors['mean']) > 0:
+                    exists = True
+                else:
+                    exists = False
+        else:
+            exists = False
 
-        ci_errors = self.proc.get_mean_and_ci(raw_data=errors)
-        ci_errors['time_derivative'] = self.time_derivative
-        ci_errors['filter_const'] = self.filter_const
+        if not exists:
+            errors = []
+            for session in range(sessions):
+                session_error = []
+                for run in range(runs):
+                    print('%.3f processing complete...' %
+                        (100*((run+1)+(session*runs)) / (sessions*runs)),
+                        end='\r')
+                    loc = '%s/session%03d/run%03d' % (save_location, session, run)
+                    data = self.calculate_error(save_location=loc, ideal=ideal)
+                    session_error.append(np.sum(data['error']))
+                errors.append(session_error)
 
-        if save_data:
-            self.dat.save(
-                data=ci_errors,
-                save_location='%s/statistical_error_%i' % (
-                    save_location, self.time_derivative),
-                overwrite=True)
+            ci_errors = self.proc.get_mean_and_ci(raw_data=errors)
+            ci_errors['time_derivative'] = self.time_derivative
+            ci_errors['filter_const'] = self.filter_const
+
+            if save_data:
+                self.dat.save(
+                    data=ci_errors,
+                    save_location='%s/statistical_error_%i' % (
+                        save_location, self.time_derivative),
+                    overwrite=True)
 
         return ci_errors
 
