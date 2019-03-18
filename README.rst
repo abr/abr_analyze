@@ -32,4 +32,4 @@ this will assume the file is unchanged and will not commit it.
 Usage
 =====
 
-TODO
+To understand how to use this code, check out the code in the examples folder.
