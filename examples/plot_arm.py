@@ -44,6 +44,9 @@ draw_arm.plot(
         save_location='%s/session000/run000'%test)
 
 plt.title('My 3D Arm Plot')
+ax.set_xlim(-0.5, 0.5)
+ax.set_ylim(-0.5, 0.5)
+ax.set_zlim(0.0, 1.2)
 
 save_loc='%s/examples/3d_arm_plot.png'%(figures_dir)
 plt.savefig(save_loc)
