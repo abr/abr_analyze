@@ -19,13 +19,13 @@ ABR_Analyze is tested to work on Python 3.4+.
 Setting paths
 =============
 
-See abr_analyze/utils/paths.py and adjust your default locations for
-databases, figures, and caches items
+See abr_analyze/paths.py and adjust your default locations for
+databases, figures, and cached items
 
 A default paths.py is committed, to avoid running into conflicts with
 you personal setup, run::
 
-   git update-index --assume-unchanged path_to_paths.py
+   git update-index --assume-unchanged <path to paths.py>
 
 this will assume the file is unchanged and will not commit it.
 

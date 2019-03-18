@@ -4,7 +4,7 @@ ABR_Analyze license
 
 ABR_Analyze is made available under a proprietary license that permits
 using, copying, sharing, and making derivative works
-from ABR_Analyez and its source code for any non-commercial purpose.
+from ABR_Analye and its source code for any non-commercial purpose.
 
 If you would like to use ABR_Analyze commercially, licenses can be
 purchased from Applied Brain Research, Inc. Please contact
