@@ -87,10 +87,9 @@ class TrajectoryError():
                                 'filter_const', 'read_location', 'error'],
                     save_location='%s/statistical_error_%i' % (
                         save_location, self.time_derivative))
-                if len(ci_errors['mean']) > 0:
-                    exists = True
-                else:
-                    exists = False
+
+                # still using as boolean, just a python cheatcode
+                exists = len(ci_errors['mean'])
         else:
             exists = False
 
@@ -100,8 +99,8 @@ class TrajectoryError():
                 session_error = []
                 for run in range(runs):
                     print('%.3f processing complete...' %
-                        (100*((run+1)+(session*runs)) / (sessions*runs)),
-                        end='\r')
+                          (100*((run+1)+(session*runs)) / (sessions*runs)),
+                          end='\r')
                     loc = '%s/session%03d/run%03d' % (save_location, session, run)
                     data = self.calculate_error(save_location=loc, ideal=ideal)
                     session_error.append(np.sum(data['error']))
