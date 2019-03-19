@@ -48,7 +48,7 @@ setup(
     author='Applied Brain Research',
     author_email='pawel.jaworski@appliedbrainresearch.com',
     license="Free for non-commercial use",
-    long_description=read('README.md'),
+    long_description=read('README.rst'),
     install_requires=install_requires + setup_requires,
     setup_requires=setup_requires,
     extras_require={"tests": tests_require},
