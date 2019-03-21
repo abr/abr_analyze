@@ -31,7 +31,7 @@ input_signal = np.hstack((qs, dqs))
 # print('Original Input Signal Shape: ', np.array(input_signal).shape)
 # input_signal = input_signal[-int(np.array(input_signal).shape[0]*portion):, :]
 # print('Input Signal Shape from Selection: ', np.array(input_signal).shape)
-input_signal = net_utils.convert_to_spherical(input_signal)
+input_signal = nengolib.stats.spherical_transform(input_signal.reshape(-1, 1))
 
 # specify our network parameters
 backend = 'nengo_cpu'

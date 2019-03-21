@@ -17,32 +17,12 @@ intercepts to later view in the intercept_scan_viewer.py gui
 
 import nengo
 from nengo.utils.matplotlib import rasterplot
-from nengolib.stats import spherical_transform, ScatteredHypersphere
+from nengolib.stats import ScatteredHypersphere
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 class NetworkUtils:
-    def convert_to_spherical(self, input_signal):
-        '''
-        Accepts an input_signal with values ranging from 0 to 1 and returns
-        them converted to the surface of the hyper sphere.
-
-        This is simply using the spherical conversion from nengolib, and adding
-        a check to maintain the expected dimensionality
-        (converting a (n,) dimensional input to a (1,n))
-
-        PARAMETERS
-        ----------
-        input_signal: np.array(time_steps, dimensions)
-            the input signal to scale to spherical coordinates. It can be
-            a single N dimensional value, or an array of them over time to bulk
-            convert
-        '''
-        if input_signal.ndim == 1:
-            input_signal = input_signal.reshape(1, len(input_signal))
-        new_input = spherical_transform(input_signal)
-        return new_input
 
     def generate_encoders(self, n_dims, n_neurons, input_signal=None, thresh=0.008):
         """
