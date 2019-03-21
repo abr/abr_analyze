@@ -15,7 +15,7 @@ Plots
 3. proportion of neurons that are active over time
 """
 from abr_analyze import DataHandler
-from abr_analyze.nengo_utils import NetworkUtils
+from abr_analyze.nengo_utils import network_utils
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir
 import numpy as np
@@ -24,8 +24,6 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
 import nengolib
-
-net_utils = NetworkUtils()
 
 test_group = 'friction_post_tuning'
 test_names = [
@@ -82,7 +80,7 @@ for test_name in test_names:
         neuron_type=neuron_type,
         encoders=encoders)
 
-    net_utils.gen_learning_profile(
+    network_utils.gen_learning_profile(
         network=network,
         input_signal=input_signal,
         ax=ax,

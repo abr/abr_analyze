@@ -1,6 +1,6 @@
 """
 """
-from abr_analyze.nengo_utils import NetworkUtils, InterceptsScan
+from abr_analyze.nengo_utils import network_utils, intercepts_scan
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir
 import numpy as np
@@ -9,9 +9,6 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
 import nengolib
-
-net_utils = NetworkUtils()
-scan = InterceptsScan()
 
 # get our saved q and dq values
 input_signal_file = 'cpu_53_input_signal.npz'
@@ -22,7 +19,7 @@ dqs = data['dqs']
 # scale q-dq and convert to spherical, but only for the adapting joints
 adapt_input = np.array([True, True, True, True, True, False], dtype=bool)
 in_index = np.arange(6)[adapt_input]
-[qs, dqs] = net_utils.generate_scaled_inputs(q=qs, dq=dqs, in_index=in_index)
+[qs, dqs] = network_utils.generate_scaled_inputs(q=qs, dq=dqs, in_index=in_index)
 input_signal = np.hstack((qs, dqs))
 
 # # set the decimal percent from the end of the run to use for input
@@ -45,7 +42,7 @@ n_output = 5
 seed = 0
 
 # ----------- Create your encoders ---------------
-encoders = net_utils.generate_encoders(input_signal=input_signal,
+encoders = network_utils.generate_encoders(input_signal=input_signal,
         n_neurons=n_neurons*n_ensembles, thresh=0.02, n_dims=n_input)
 
 encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
@@ -61,7 +58,7 @@ print('Input Signal Shape from Selection: ', np.array(input_signal).shape)
 
 
 # ----------- generate possible intercept bounds and modes ---------------
-intercept_vals = net_utils.gen_intercept_bounds_and_modes()
+intercept_vals = network_utils.gen_intercept_bounds_and_modes()
 
 # ----------- create your ideal profile function ---------------
 ideal_function = lambda x: 0.3
@@ -69,7 +66,7 @@ ideal_function = lambda x: 0.3
 # ----------- Instantiate your nengo simulator ---------------
 # This example uses the network defined in
 # abr_control/controllers/signals/dynamics_adaptation.py
-scan.proportion_neurons_active(
+intercepts_scan.proportion_neurons_active(
     n_input=n_input,
     n_output=n_output,
     n_neurons=n_neurons,

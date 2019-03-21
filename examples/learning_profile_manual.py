@@ -15,7 +15,7 @@ Plots
 3. proportion of neurons that are active over time
 """
 from abr_analyze import DataHandler
-from abr_analyze.nengo_utils import NetworkUtils
+from abr_analyze.nengo_utils import network_utils
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir
 import numpy as np
@@ -24,8 +24,6 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
 import nengolib
-
-net_utils = NetworkUtils()
 
 # get our saved q and dq values
 input_signal_file = 'cpu_53_input_signal.npz'
@@ -36,7 +34,7 @@ dqs = data['dqs']
 # scale q-dq and convert to spherical, but only for the adapting joints
 adapt_input = np.array([True, True, True, True, True, False], dtype=bool)
 in_index = np.arange(6)[adapt_input]
-[qs, dqs] = net_utils.generate_scaled_inputs(q=qs, dq=dqs, in_index=in_index)
+[qs, dqs] = network_utils.generate_scaled_inputs(q=qs, dq=dqs, in_index=in_index)
 input_signal = np.hstack((qs, dqs))
 
 # set the decimal percent from the end of the run to use for input
@@ -68,7 +66,7 @@ intercepts = intercepts.sample(n_neurons, rng=rng)
 intercepts = np.array(intercepts)
 
 # ----------- Create your encoders ---------------
-encoders = net_utils.generate_encoders(input_signal=input_signal,
+encoders = network_utils.generate_encoders(input_signal=input_signal,
         n_neurons=n_neurons*n_ensembles, n_dims=n_input)
 
 encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
@@ -91,7 +89,7 @@ network = signals.DynamicsAdaptation(
 
 # pass your network and input signal to the network utils module
 # run a sim and plot the learning profile
-net_utils.gen_learning_profile(
+network_utils.gen_learning_profile(
     network=network,
     input_signal=input_signal,
     ax=None,
