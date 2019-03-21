@@ -43,7 +43,7 @@ class DataProcessor():
         r.sort()
         return r[index], r[-index]
 
-    def list_to_function(self, data, time_intervals):
+    def list_to_function(self, data, time_intervals, axis=0):
         '''
         accepts a list of dart points and returns an interpolated function that
         can be used to get points at different time intervals
@@ -54,16 +54,35 @@ class DataProcessor():
             the data to turn into a function
         time_intervals: list of floats
             the timesteps corresponding to the data (not cumulative time)
+        axis: int, Optional (Default: 0)
+            the axis to interpolate across
+            0 to interpolate across columns
+            1 to interpolate across rows
         '''
+        data = np.asarray(data)
         time_intervals = np.cumsum(time_intervals)
+        assert axis == 1 or axis == 0, "Axis must be 0(columns) or 1(rows)"
+
+        if axis == 1:
+            data = data.T
+
         functions = []
+        if data.ndim == 1:
+            data = data.reshape(len(data), 1)
+            no_list = True
+        else:
+            no_list = False
         for kk in range(data.shape[1]):
             interp = scipy.interpolate.interp1d(time_intervals, data[:, kk])
             functions.append(interp)
 
+        if no_list:
+            functions = functions[0]
+
         return functions
 
-    def interpolate_data(self, data, time_intervals, interpolated_samples):
+    def interpolate_data(self, data, time_intervals, interpolated_samples,
+            axis=0):
         '''
         accepts data and interpolates to the specified number of points
 
@@ -76,20 +95,32 @@ class DataProcessor():
         interpolated_samples: int
             the number of evenly distributed points along get interpolated data
             for
+        axis: int, Optional (Default: 0)
+            the axis to interpolate across
+            0 to interpolate across columns
+            1 to interpolate across rows
         '''
+        data = np.asarray(data)
+        time_intervals = np.asarray(time_intervals)
+        assert axis <= 1, "Axis must be 0(columns) or 1(rows)"
+
+        if axis == 1:
+            data = data.T
+
         if interpolated_samples is not None:
             run_time = sum(time_intervals)
             time_intervals = np.cumsum(time_intervals)
             # interpolate to even samples out
             data_interp = []
-            # if our array is one dimensional, make sure to add a second dimension
-            # to avoid errors in our loop
+            # if our array is one dimensional, make sure to add a second
+            # dimension to avoid errors in our loop
             if data.ndim == 1:
                 data = data.reshape(len(data), 1)
             for kk in range(data.shape[1]):
                 # print(np.array(time_intervals).shape)
                 # print(np.array(data[:, kk]).shape)
-                interp = scipy.interpolate.interp1d(time_intervals, data[:, kk])
+                interp = scipy.interpolate.interp1d(
+                    time_intervals, data[:, kk])
                 data_interp.append(np.array([
                     interp(t) for t in np.linspace(
                         time_intervals[0],
@@ -99,15 +130,19 @@ class DataProcessor():
         else:
             data_interp = data
 
+        if axis == 1:
+            data_interp = data_interp.T
+
         return data_interp
 
-    def scale_data(self, input_data, baseline_low, baseline_high, scaling_factor=1):
+    def scale_data(self, data, baseline_low, baseline_high,
+            scaling_factor=1):
         """
         scale data to some baseline to get values from 0-1 relative
         to baseline times the scaling factor
 
         PARAMETERS
-        input_data: list of floats
+        data: list of floats
             the data to be scaled
         baseline_low: list of floats
             the lower error baseline that will be the zero
@@ -119,10 +154,10 @@ class DataProcessor():
             a value to scale the final data by
         """
         #TODO: add check for whether or not to np.array -ize
-        input_data = np.array(input_data)
-        baseline_low = np.array(baseline_low)
-        baseline_high = np.array(baseline_high)
-        scaled_data = ((input_data - baseline_low)
+        data = np.asarray(data)
+        baseline_low = np.asarray(baseline_low)
+        baseline_high = np.asarray(baseline_high)
+        scaled_data = ((data - baseline_low)
                        / (baseline_high - baseline_low))
         scaled_data *= scaling_factor
 
@@ -149,12 +184,15 @@ class DataProcessor():
 
     def load_and_process(self, db_name, save_location, parameters,
                          interpolated_samples=100):
+        #TODO: move interpolated samples is None check out of interpolation
+        # function and add it here, no sense in having it check in the function
+        # and have it do nothing, should only call interpolate if interpolating
         """
         Loads the parameters from the save_location,
         returns a dictionary of the interpolated and sampled data
 
-        NOTE: if interpolated_samples is set to None, the raw data will be return without
-        interpolation and sampling
+        NOTE: if interpolated_samples is set to None, the raw data will be
+        returned without interpolation and sampling
 
         PARAMETERS
         ----------
@@ -197,7 +235,8 @@ class DataProcessor():
         # since we are interpolating over time, we are not interpolating
         # the time data, instead evenly sample interpolated_samples from
         # 0 to the sum(time)
-        data['cumulative_time'] = np.linspace(0, total_time, interpolated_samples)
+        data['cumulative_time'] = np.linspace(0, total_time,
+                                              interpolated_samples)
 
         data['read_location'] = save_location
         return data
