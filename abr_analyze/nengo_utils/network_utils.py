@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def generate_encoders(n_dims, n_neurons, input_signal=None, thresh=0.008):
+def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
     """
     Accepts an input_signal in the shape of time X dim and outputs encoders
     for the specified number of neurons by sampling from the input.
@@ -36,19 +36,18 @@ def generate_encoders(n_dims, n_neurons, input_signal=None, thresh=0.008):
 
     PARAMETERS
     ----------
-    n_neurons: int
+    n_neurons : int
         the number of neurons in the simulation, needed to get
         a corresponding number of encoders
-    n_dims: int
-        the number of input dimensions in the simulation, needed to get
-        a corresponding number of encoders
-    input_signal: array(time_steps, dimensions), Optional (Default: None)
+    input_signal : array(time_steps, dimensions), Optional (Default: None)
         the input signal to sample from
-    thresh: float, Optional (Default: 0.008)
+    thresh : float, Optional (Default: 0.008)
         the threshold to keep encoder values minimally apart from
         It may be helpful to increase this value if there are many more
         inputs than there are neurons in the final simulation to speed up
         the encoder selection process
+    depth : int
+        how many times has this function been recursively called
     """
     #TODO: scale thresh based on dimensionality of input, 0.008 for 2DOF
     # and 10k neurons, 10DOF 10k use 0.08, for 10DOF 100 went up to 0.708 by end
@@ -58,62 +57,81 @@ def generate_encoders(n_dims, n_neurons, input_signal=None, thresh=0.008):
     if input_signal is not None:
         print('input_signal_length: ', len(input_signal))
         ii = 0
-        same_count = 0
-        prev_index = 0
+        iters_with_no_update = 0
+        prev_n_indices = 0
         while input_signal.shape[0] > n_neurons:
-            if ii%1000 == 0:
-                print(input_signal.shape)
-                print('thresh: ', thresh)
+
+            ii += 1
+            if (ii % 1000) == 0:
+                print('Downsampled to %i encoders at iteration %i' %
+                      (input_signal.shape[0], ii))
+                print('Current threshold value: %.3f' % thresh)
+
             # choose a random set of indices
             n_indices = input_signal.shape[0]
+
             # make sure we're dealing with an even number
-            n_indices -= 0 if ((n_indices % 2) == 0) else 1
+            n_indices -= int(n_indices % 2)
             n_half = int(n_indices / 2)
 
+            # split data into two random groups
             randomized_indices = np.random.permutation(range(n_indices))
             a = randomized_indices[:n_half]
             b = randomized_indices[n_half:]
-
             data1 = input_signal[a]
             data2 = input_signal[b]
 
+            # calculate the 2 norm between random pairs between data1 and 2
             distances = np.linalg.norm(data1 - data2, axis=1)
-
+            # find any pairs within threshold distance of each other
             under_thresh = distances > thresh
-
+            # remove the values from data2 within thresh of corresponding data1
             input_signal = np.vstack([data1, data2[under_thresh]])
-            ii += 1
-            if prev_index == n_indices:
-                same_count += 1
-            else:
-                same_count = 0
 
-            if same_count == 50:
-                same_count = 0
-                thresh += 0.001
-                print('All values are within threshold, but not at target size.')
-                print('Increasing threshold to %.4f' %thresh)
-            prev_index = n_indices
+            if prev_n_indices == n_indices:
+                iters_with_no_updates += 1
+            else:
+                iters_with_no_updates = 0
+
+            # if we've run 50 iterations but we're still haven't downsampled
+            # enough, increase the threshold distance and keep going
+            if iters_with_no_updates == 50:
+                iters_with_no_updates = 0
+                thresh += .1 * thresh
+                print('All values within threshold, but not at target size.')
+                print('Increasing threshold to %.4f' % thresh)
+            prev_n_indices = n_indices
 
         if input_signal.shape[0] != n_neurons:
-            print('Too many indices removed, appending with uniform hypersphere')
-            print('shape: ', input_signal.shape)
-            length = n_neurons - input_signal.shape[0]
+            print('Too many indices removed, appending samples from ' +
+                  'ScatteredHypersphere')
+            length = n_neurons - input_signal.shape[0] + 1
             hypersphere = ScatteredHypersphere(surface=True)
             hyper_inputs = hypersphere.sample(length, input_signal.shape[1])
             input_signal = np.vstack((input_signal, hyper_inputs))
+
+            # make sure that the new inputs meet threshold constraints
+            if depth < 10:
+                input_signal = generate_encoders(
+                    n_neurons,
+                    input_signal,
+                    thresh=thresh,
+                    depth=depth+1)
+            else:
+                # if we've tried several times to find input meeting
+                # outside threshold distance but failed, return with warning
+                # so we're not stuck in infinite loop
+                import warnings
+                warnings.warn(
+                    'Could not find set of encoders outside thresh distance')
     else:
         print('No input signal passed in, selected encoders randomly ' +
               'from scattered hypersphere')
         hypersphere = ScatteredHypersphere(surface=True)
-        input_signal = hypersphere.sample(n_neurons, n_dims)
+        input_signal = hypersphere.sample(n_neurons, input_signal.shape[1])
 
+    return np.array(input_signal)
 
-    print(input_signal.shape)
-    print('thresh: ', thresh)
-    encoders = np.array(input_signal)
-    print(encoders.shape)
-    return encoders
 
 def generate_scaled_inputs(q, dq, in_index):
     '''
