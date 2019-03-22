@@ -89,14 +89,14 @@ def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
             input_signal = np.vstack([data1, data2[under_thresh]])
 
             if prev_n_indices == n_indices:
-                iters_with_no_updates += 1
+                iters_with_no_update += 1
             else:
-                iters_with_no_updates = 0
+                iters_with_no_update = 0
 
             # if we've run 50 iterations but we're still haven't downsampled
             # enough, increase the threshold distance and keep going
-            if iters_with_no_updates == 50:
-                iters_with_no_updates = 0
+            if iters_with_no_update == 50:
+                iters_with_no_update = 0
                 thresh += .1 * thresh
                 print('All values within threshold, but not at target size.')
                 print('Increasing threshold to %.4f' % thresh)
@@ -197,17 +197,18 @@ def raster_plot(network, input_signal, ax, num_ens_to_raster=None):
     num_ens_to_raster: int, Optional (Default: None)
         the number of ensembles to plot in the raster, if None all will be plotted
     '''
+    if num_ens_to_raster is None:
+        num_ens_to_raster = len(network.adapt_ens)
+
     # create probes to get rasterplot
     with network.nengo_model:
-        if not hasattr(network.nengo_model, 'ens_probes'):
-            network.nengo_model.ens_probes = []
-            for ens in network.adapt_ens:
-                network.nengo_model.ens_probes.append(
-                    nengo.Probe(ens.neurons, synapse=None))
-
+        network.nengo_model.ens_probes = [
+            nengo.Probe(network.adapt_ens[ii].neurons, synapse=None)
+            for ii in range(num_ens_to_raster)]
     sim = nengo.Simulator(network.nengo_model)
+
     print('Running sim...')
-    for ii, inputs in enumerate(input_signal):
+    for inputs in input_signal:
         network.input_signal = inputs
         sim.run(time_in_seconds=0.001, progress_bar=False)
     print('Sim complete')
@@ -216,11 +217,6 @@ def raster_plot(network, input_signal, ax, num_ens_to_raster=None):
     print('Plotting spiking activity...')
     for ii, probe in enumerate(network.nengo_model.ens_probes):
         probes.append(sim.data[probe])
-        # it can become hard to read the plot if there are too many ensembles
-        # plotted onto one raster plot, let the user choose how many to plot
-        if num_ens_to_raster is not None:
-            if num_ens_to_raster == ii+1:
-                break
 
     probes = np.hstack(probes)
     time = np.ones(len(input_signal))
