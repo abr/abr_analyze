@@ -215,7 +215,7 @@ def raster_plot(network, input_signal, ax, num_ens_to_raster=None):
 
     probes = []
     print('Plotting spiking activity...')
-    for ii, probe in enumerate(network.nengo_model.ens_probes):
+    for probe in network.nengo_model.ens_probes:
         probes.append(sim.data[probe])
 
     probes = np.hstack(probes)
