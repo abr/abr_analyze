@@ -161,34 +161,22 @@ def generate_scaled_inputs(q, dq, in_index):
     qs = q.T
     dqs = dq.T
 
-    # add bias to joints 0 and 4 so that the input signal doesn't keep
-    # bouncing back and forth over the 0 to 2*pi line
-    qs[0] = (qs[0] + np.pi) % (2*np.pi)
-    qs[4] = (qs[4] + np.pi) % (2*np.pi)
+    # expected mean of joint angles / velocities
+    means_q = np.array([0, 0, 0, 0, 0, 0])
+    means_dq = np.array([1.25, 1.25, 1.25, 1.25, 1.25, 1.25])
 
-    MEANS = {  # expected mean of joint angles / velocities
-        'q': np.array([3.0, 1, 1.1, 4.15, 1.2, 0]),
-        'dq': np.array([0.1, 0.5, 0.65, 0.3, 0.75, 0]),
-        }
-    SCALES = {  # expected variance of joint angles / velocities
-        'q': np.array([0.3, 2, 1.55, 1.2, 3.6, 6.28]),
-        'dq': np.array([0.2, 0.8, 0.75, 0.6, 1.5, 1]),
-        }
+    # expected variance of joint angles / velocities
+    scales_q = np.array([6.28, 6.28, 6.28, 6.28, 6.28, 6.28,])
+    scales_dq = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5])
 
     for pp in range(0, 5):
-        qs[pp] = (qs[pp] - MEANS['q'][pp]) / SCALES['q'][pp]
-        dqs[pp] = (dqs[pp] + MEANS['dq'][pp]) / SCALES['dq'][pp]
+        qs[pp] = (qs[pp] - means_q[pp]) / scales_q[pp]
+        dqs[pp] = (dqs[pp] + means_dq[pp]) / scales_dq[pp]
     qs = np.clip(qs, 0, 1)
     dqs = np.clip(dqs, 0, 1)
 
-    scaled_q = []
-    scaled_dq = []
-
-    for ii in in_index:
-        scaled_q.append(qs[ii])
-        scaled_dq.append(dqs[ii])
-    scaled_q = np.array(scaled_q).T
-    scaled_dq = np.array(scaled_dq).T
+    scaled_q = np.array([qs[ii] for ii in in_index]).T
+    scaled_dq = np.array([dqs[ii] for ii in in_index]).T
 
     return [scaled_q, scaled_dq]
 
