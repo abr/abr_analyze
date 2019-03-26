@@ -55,7 +55,6 @@ def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
 
     # first run so we need to generate encoders for the sessions
     if input_signal is not None:
-        print('input_signal_length: ', len(input_signal))
         ii = 0
         iters_with_no_update = 0
         prev_n_indices = 0
@@ -180,6 +179,7 @@ def generate_scaled_inputs(q, dq, in_index):
 
     return [scaled_q, scaled_dq]
 
+
 def raster_plot(network, input_signal, ax, num_ens_to_raster=None):
     '''
     Accepts a Nengo network and runs a simulation with the provided input_signal
@@ -225,7 +225,66 @@ def raster_plot(network, input_signal, ax, num_ens_to_raster=None):
     ax.set_xlabel('Time [sec]')
     ax.set_title('Spiking Activity')
 
-def prop_active_neurons_over_time(network, input_signal, ax=None):
+
+def get_activities(network, input_signal):
+    '''
+    Accepts a Nengo network and input signal and returns a list of the neural
+    activities based on the encoders, does not incorporate neural dynamics
+
+    PARAMETERS
+    ----------
+    network: .DynamicsAdaptation
+        'abr_control.controllers.signals.dynamics_adaptation'
+    input_signal: np array shape of (time_steps x input_dim)
+        the input used for the network sim
+    '''
+
+    thresh = 1e-5
+    activities = []
+    for ens in network.adapt_ens:
+        _, activity = nengo.utils.ensemble.tuning_curves(
+            ens, network.sim, input_signal)
+        activity[activity > thresh] = 1
+        activity[activity <= thresh] = 0
+        activities.append(np.copy(activity))
+
+    return np.array(activities)
+
+
+def get_spike_trains(network, input_signal, dt=0.001):
+    '''
+    Accepts a Nengo network and input signal and simulates it, returns the
+    spike trains
+
+    PARAMETERS
+    ----------
+    network: .DynamicsAdaptation
+        'abr_control.controllers.signals.dynamics_adaptation'
+    input_signal: np array shape of (time_steps x input_dim)
+        the input used for the network sim
+    '''
+    if not hasattr(network, 'probe_neurons'):
+        # if there aren't neuron probes in the network add them
+        with network.nengo_model:
+            network.probe_neurons = []
+            for ens in network.adapt_ens:
+                network.probe_neurons.append(
+                    nengo.Probe(ens.neurons), synapse=None)
+        network.sim = nengo.Simulator(network.nengo_model)
+
+    for in_sig in input_signal:
+        network.input_signal = in_sig
+        network.sim.run(dt, progress_bar=False)
+
+    spike_trains = []
+    for probe in network.probe_neurons:
+        spike_trains.append(network.sim.data[probe] * dt)
+
+    return np.array(spike_trains)
+
+
+def proportion_neurons_responsive_to_input_signal(
+        network, input_signal, ax=None):
     '''
     Accepts a Nengo network and checks the tuning curve responses to the input signal
     Plots the proportion of active neurons vs run time onto the ax object if provided
@@ -240,7 +299,6 @@ def prop_active_neurons_over_time(network, input_signal, ax=None):
     ax: ax object
         used for the rasterplot
     '''
-    time = np.ones(len(input_signal))
     activities = get_activities(network=network, input_signal=input_signal)
 
     proportion_active = []
@@ -254,7 +312,7 @@ def prop_active_neurons_over_time(network, input_signal, ax=None):
 
     if ax is not None:
         print('Plotting proportion of active neurons over time...')
-        ax.plot(np.cumsum(time), proportion_active, label='proportion active')
+        ax.plot(proportion_active, label='proportion active')
 
         ax.set_title('Proportion of active neurons over time')
         ax.set_ylabel('Proportion Active')
@@ -262,7 +320,46 @@ def prop_active_neurons_over_time(network, input_signal, ax=None):
         ax.set_ylim(0, 1)
         plt.legend()
 
-    return(proportion_active, activities)
+    return proportion_active, activities
+
+
+def proportion_neurons_active_over_time(network, input_signal, ax=None):
+    '''
+    Accepts a Nengo network and simulates its response to a given input
+    Plots the proportion of active neurons vs run time onto the ax object
+    Returns the proportion active and the activities
+
+    PARAMETERS
+    ----------
+    network: .DynamicsAdaptation
+        'abr_control.controllers.signals.dynamics_adaptation'
+    input_signal: np array shape of (time_steps x input_dim)
+        the input used for the network sim
+    ax: ax object
+        used for the rasterplot
+    '''
+    spike_trains = get_spike_trains(network=network, input_signal=input_signal)
+
+    proportion_active = []
+    for spike_train in spike_trains:
+        # axis=0 mean over time
+        # axis=1 mean over neurons
+        proportion_active.append(np.sum(spike_train, axis=1)/len(spike_train.T))
+    proportion_active = np.sum(
+        proportion_active, axis=0)/len(proportion_active)
+
+    if ax is not None:
+        print('Plotting proportion of active neurons over time...')
+        ax.plot(proportion_active, label='proportion active')
+
+        ax.set_title('Proportion of active neurons over time')
+        ax.set_ylabel('Proportion Active')
+        ax.set_xlabel('Time steps')
+        ax.set_ylim(0, 1)
+        plt.legend()
+
+    return proportion_active, spike_trains
+
 
 def prop_time_neurons_active(network, input_signal, ax=None):
     '''
@@ -297,61 +394,6 @@ def prop_time_neurons_active(network, input_signal, ax=None):
 
     return (time_active, activities)
 
-def get_spike_trains(network, input_signal, dt=0.001):
-    '''
-    Accepts a Nengo network and input signal and simulates it, returns the
-    spike trains
-
-    PARAMETERS
-    ----------
-    network: .DynamicsAdaptation
-        'abr_control.controllers.signals.dynamics_adaptation'
-    input_signal: np array shape of (time_steps x input_dim)
-        the input used for the network sim
-    '''
-    if not hasattr(network, 'probe_neurons'):
-        # if there aren't neuron probes in the network add them
-        with network.nengo_model:
-            network.probe_neurons = []
-            for ens in network.adapt_ens:
-                network.probe_neurons.append(
-                    nengo.Probe(ens.neurons), synapse=None)
-        network.sim = nengo.Simulator(network.nengo_model)
-
-    for in_sig in input_signal:
-        network.input_signal = in_sig
-        network.sim.run(dt, progress_bar=False)
-
-    spike_trains = []
-    for probe in network.probe_neurons:
-        spike_trains.append(network.sim.data[probe])
-
-    return np.vstack(spike_trains)
-
-
-def get_activities(network, input_signal):
-    '''
-    Accepts a Nengo network and input signal and returns a list of the neural
-    activities based on the encoders, does not incorporate neural dynamics
-
-    PARAMETERS
-    ----------
-    network: .DynamicsAdaptation
-        'abr_control.controllers.signals.dynamics_adaptation'
-    input_signal: np array shape of (time_steps x input_dim)
-        the input used for the network sim
-    '''
-
-    thresh = 1e-5
-    activities = []
-    for ens in network.adapt_ens:
-        _, activity = nengo.utils.ensemble.tuning_curves(
-            ens, network.sim, input_signal)
-        activity[activity > thresh] = 1
-        activity[activity <= thresh] = 0
-        activities.append(np.copy(activity))
-
-    return activities
 
 def num_neurons_active_and_inactive(activity):
     '''
@@ -423,7 +465,7 @@ def gen_learning_profile(network, input_signal, ax=None,
         ax=ax[0],
         num_ens_to_raster=num_ens_to_raster)
 
-    proportion_active, _ = prop_active_neurons_over_time(
+    proportion_active, _ = proportion_neurons_active_over_time(
         network=network,
         input_signal=input_signal,
         ax=ax[1],

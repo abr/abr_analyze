@@ -48,7 +48,6 @@ def test_generate_encoders(thresh):
     # distance of each other
     for ii in range(n_neurons):
         assert np.all(np.linalg.norm(encoders - encoders[ii]) > thresh)
-    print('Encoders: ', encoders)
 
 
 @pytest.mark.parametrize('q', (np.zeros(6), np.ones(6)*6.28))
@@ -113,6 +112,57 @@ def test_get_spike_trains(network, input_signal, answer):
     spike_trains = network_utils.get_spike_trains(
         network, np.array(input_signal), dt) * dt
 
-    print(np.sum(spike_trains))
     # assert the result is within 1 of the expected spiking rate
     assert (np.sum(spike_trains) - answer) <= 1
+
+
+@pytest.mark.parametrize('network, input_signal, answer', (
+    (DynamicsAdaptation(2, 1, encoders=[[1], [1]], max_rates=[10, 10]),
+     np.ones((1000, 1)), 1),
+    (DynamicsAdaptation(2, 1, encoders=[[1], [-1]], max_rates=[10, 10]),
+     np.ones((1000, 1)), .5),
+    ))
+def test_proportion_neurons_responsive_to_input_signal(
+        network, input_signal, answer):
+    import matplotlib.pyplot as plt
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    prop_active, _ = (
+        network_utils.proportion_neurons_responsive_to_input_signal(
+            network, input_signal, ax))
+
+    assert np.all(prop_active == answer)
+
+    plt.savefig('results/test_proportion_neurons_responsive_to_input_signal' +
+                '%i_%i_%i_%i' %
+                (network.adapt_ens[0].encoders[0],
+                 network.adapt_ens[0].max_rates[0],
+                 np.sum(input_signal),
+                 answer))
+
+@pytest.mark.parametrize('network, input_signal, answer', (
+    (DynamicsAdaptation(2, 1, encoders=[[1], [1]], max_rates=[10, 10]),
+     np.ones((1000, 1)), 20),
+    (DynamicsAdaptation(2, 1, encoders=[[1], [-1]], max_rates=[10, 10]),
+     np.ones((1000, 1)), 10),
+    (DynamicsAdaptation(2, 1, encoders=[[-1], [-1]], max_rates=[10, 10]),
+     np.ones((1000, 1)), 0),
+    (DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[100]),
+     np.ones((1000, 1)), 100),
+    ))
+def test_proportion_neurons_active_over_time(network, input_signal, answer):
+    import matplotlib.pyplot as plt
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    prop_active, _ = network_utils.proportion_neurons_active_over_time(
+        network, input_signal, ax)
+
+    assert (np.sum(prop_active) - answer) <= 1
+
+    plt.savefig('results/test_proportion_neurons_active_over_time%i_%i_%i_%i' %
+        (network.adapt_ens[0].encoders[0],
+         network.adapt_ens[0].max_rates[0],
+         np.sum(input_signal),
+         answer))
