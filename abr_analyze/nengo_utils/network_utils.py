@@ -225,7 +225,7 @@ def raster_plot(network, input_signal, ax, num_ens_to_raster=None):
     ax.set_xlabel('Time [sec]')
     ax.set_title('Spiking Activity')
 
-def prop_active_neurons_over_time(network, input_signal, ax=None, thresh=None):
+def prop_active_neurons_over_time(network, input_signal, ax=None):
     '''
     Accepts a Nengo network and checks the tuning curve responses to the input signal
     Plots the proportion of active neurons vs run time onto the ax object if provided
@@ -239,9 +239,6 @@ def prop_active_neurons_over_time(network, input_signal, ax=None, thresh=None):
         the input used for the network sim
     ax: ax object
         used for the rasterplot
-    thresh: float, Optional (Default: None)
-        the values above and below which activities get set to 1 and 0, respectively
-        When None, the default of the function will be used
     '''
     time = np.ones(len(input_signal))
     activities = get_activities(network=network, input_signal=input_signal)
@@ -267,7 +264,7 @@ def prop_active_neurons_over_time(network, input_signal, ax=None, thresh=None):
 
     return(proportion_active, activities)
 
-def prop_time_neurons_active(network, input_signal, ax=None, thresh=None):
+def prop_time_neurons_active(network, input_signal, ax=None):
     '''
     Accepts a Nengo network and checks the tuning curves response to the input signal
     Plots the the number of active neurons vs proportion of run time onto the ax object
@@ -281,9 +278,6 @@ def prop_time_neurons_active(network, input_signal, ax=None, thresh=None):
         the input used for the network sim
     ax: ax object
         used for the rasterplot
-    thresh: float, Optional (Default: None)
-        the values above and below which activities get set to 1 and 0, respectively
-        When None, the default of the function will be used
     '''
     activities = get_activities(network=network, input_signal=input_signal)
 
@@ -303,10 +297,10 @@ def prop_time_neurons_active(network, input_signal, ax=None, thresh=None):
 
     return (time_active, activities)
 
-def get_activities(network, input_signal, thresh=1e-5):
+def get_spike_trains(network, input_signal, dt=0.001):
     '''
-    Accepts a Nengo network and input signal and returns a list of the neural
-    activities set to 1 or 0 based on the set thresh
+    Accepts a Nengo network and input signal and simulates it, returns the
+    spike trains
 
     PARAMETERS
     ----------
@@ -314,10 +308,41 @@ def get_activities(network, input_signal, thresh=1e-5):
         'abr_control.controllers.signals.dynamics_adaptation'
     input_signal: np array shape of (time_steps x input_dim)
         the input used for the network sim
-    thresh: float, Optional (Default: 1e-5)
-        the values above and below which activities get set to 1 and 0, respectively
+    '''
+    if not hasattr(network, 'probe_neurons'):
+        # if there aren't neuron probes in the network add them
+        with network.nengo_model:
+            network.probe_neurons = []
+            for ens in network.adapt_ens:
+                network.probe_neurons.append(
+                    nengo.Probe(ens.neurons), synapse=None)
+        network.sim = nengo.Simulator(network.nengo_model)
+
+    for in_sig in input_signal:
+        network.input_signal = in_sig
+        network.sim.run(dt, progress_bar=False)
+
+    spike_trains = []
+    for probe in network.probe_neurons:
+        spike_trains.append(network.sim.data[probe])
+
+    return np.vstack(spike_trains)
+
+
+def get_activities(network, input_signal):
+    '''
+    Accepts a Nengo network and input signal and returns a list of the neural
+    activities based on the encoders, does not incorporate neural dynamics
+
+    PARAMETERS
+    ----------
+    network: .DynamicsAdaptation
+        'abr_control.controllers.signals.dynamics_adaptation'
+    input_signal: np array shape of (time_steps x input_dim)
+        the input used for the network sim
     '''
 
+    thresh = 1e-5
     activities = []
     for ens in network.adapt_ens:
         _, activity = nengo.utils.ensemble.tuning_curves(

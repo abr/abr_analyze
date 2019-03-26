@@ -6,9 +6,10 @@ import nengo
 from abr_analyze.nengo_utils import network_utils
 
 class DynamicsAdaptation:
-    def __init__(self, n_neurons, n_ensembles):
+    def __init__(self, n_neurons, n_ensembles, **kwargs):
         self.n_neurons = n_neurons
         self.n_ensembles = n_ensembles
+        self.input_signal = 0
 
         self.nengo_model = nengo.Network()
         with self.nengo_model:
@@ -18,9 +19,18 @@ class DynamicsAdaptation:
             input_node = nengo.Node(input_func, size_out=1)
 
             self.adapt_ens = []
+            self.probe_neurons = []
             for ii in range(n_ensembles):
-                self.adapt_ens.append(nengo.Ensemble(n_neurons, dimensions=1))
+                # create ensemble
+                self.adapt_ens.append(nengo.Ensemble(
+                    n_neurons, dimensions=1, **kwargs))
+                # connect to input
                 nengo.Connection(input_node, self.adapt_ens[ii])
+                # create neuron activity probe
+                self.probe_neurons.append(
+                    nengo.Probe(self.adapt_ens[-1].neurons, synapse=None))
+
+        self.sim = nengo.Simulator(self.nengo_model)
 
 @pytest.mark.parametrize('thresh', ((0.001, 0.01, 0.1, 1.0)))
 def test_generate_encoders(thresh):
@@ -69,3 +79,40 @@ def test_raster_plot(network, num_ens_to_raster):
     network_utils.raster_plot(network, input_signal, ax, num_ens_to_raster)
     plt.savefig('results/test_raster_plot_%i_%i' %
                 (network.n_neurons, network.n_ensembles))
+
+
+@pytest.mark.parametrize('network, input_signal, answer', (
+    (DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[10]), 1, 1),
+    (DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[100]), 1, 1),
+    (DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[100]), -1, 0),
+    (DynamicsAdaptation(1, 1, encoders=[[-1]], max_rates=[100]), 1, 0),
+    (DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[100]), [1, 1], 2),
+    (DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[5]), np.ones(10), 10),
+    ))
+def test_get_activities(network, input_signal, answer):
+
+    activities = network_utils.get_activities(
+        network, np.array(input_signal))
+
+    assert np.sum(activities) == answer
+
+
+@pytest.mark.parametrize('network, input_signal, answer', (
+    (DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[10]),
+     np.ones(1000), 10),
+    (DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[100]),
+     np.ones(1000), 100),
+    (DynamicsAdaptation(1, 1, encoders=[[-1]], max_rates=[100]),
+     -1 * np.ones(1000), 100),
+    (DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[100]),
+     -1 * np.ones(1000), 0),
+    ))
+def test_get_spike_trains(network, input_signal, answer):
+
+    dt = 0.001
+    spike_trains = network_utils.get_spike_trains(
+        network, np.array(input_signal), dt) * dt
+
+    print(np.sum(spike_trains))
+    # assert the result is within 1 of the expected spiking rate
+    assert (np.sum(spike_trains) - answer) <= 1
