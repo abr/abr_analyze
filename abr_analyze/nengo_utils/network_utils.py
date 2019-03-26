@@ -279,6 +279,7 @@ def get_spike_trains(network, input_signal, dt=0.001):
     spike_trains = []
     for probe in network.probe_neurons:
         spike_trains.append(network.sim.data[probe] * dt)
+        print('spike_trains: ', spike_trains[-1])
 
     return np.array(spike_trains)
 
@@ -303,12 +304,10 @@ def proportion_neurons_responsive_to_input_signal(
 
     proportion_active = []
     for activity in activities:
-        # axis=0 mean over time
-        # axis=1 mean over neurons
-        # len(activity.T) gives the number of neurons
-        proportion_active.append(np.sum(activity, axis=1)/len(activity.T))
+        proportion_active.append(np.sum(activity, axis=1) /
+                                 network.n_neurons)
     proportion_active = np.sum(
-        proportion_active, axis=0)/len(proportion_active)
+        proportion_active, axis=0) / len(proportion_active)
 
     if ax is not None:
         print('Plotting proportion of active neurons over time...')
@@ -327,7 +326,7 @@ def proportion_neurons_active_over_time(network, input_signal, ax=None):
     '''
     Accepts a Nengo network and simulates its response to a given input
     Plots the proportion of active neurons vs run time onto the ax object
-    Returns the proportion active and the activities
+    Returns the proportion active and the spike trains
 
     PARAMETERS
     ----------
@@ -342,11 +341,8 @@ def proportion_neurons_active_over_time(network, input_signal, ax=None):
 
     proportion_active = []
     for spike_train in spike_trains:
-        # axis=0 mean over time
-        # axis=1 mean over neurons
-        proportion_active.append(np.sum(spike_train, axis=1)/len(spike_train.T))
-    proportion_active = np.sum(
-        proportion_active, axis=0)/len(proportion_active)
+        proportion_active.append(np.sum(spike_train, axis=1))
+    proportion_active = np.sum(proportion_active, axis=0) / network.n_neurons
 
     if ax is not None:
         print('Plotting proportion of active neurons over time...')
@@ -361,11 +357,11 @@ def proportion_neurons_active_over_time(network, input_signal, ax=None):
     return proportion_active, spike_trains
 
 
-def prop_time_neurons_active(network, input_signal, ax=None):
+def proportion_time_neurons_active(network, input_signal, ax=None):
     '''
-    Accepts a Nengo network and checks the tuning curves response to the input signal
-    Plots the the number of active neurons vs proportion of run time onto the ax object
-    if provided, Returns the time active and the activities
+    Accepts a Nengo network andsimulates its response to a given input
+    Plots a histogram of neuron activity relative to run time onto ax
+    Returns the time active and the spike trains
 
     PARAMETERS
     ----------
@@ -376,23 +372,20 @@ def prop_time_neurons_active(network, input_signal, ax=None):
     ax: ax object
         used for the rasterplot
     '''
-    activities = get_activities(network=network, input_signal=input_signal)
+    spike_trains = get_spike_trains(network=network, input_signal=input_signal)
 
-    time_active = []
-    for activity in activities:
-        # axis=0 mean over time
-        # axis=1 mean over neurons
-        # len(activity.T) gives the number of neurons
-        time_active.append(np.sum(activity, axis=0)/len(activity))
-    time_active = np.hstack(time_active)
+    proportion_time_active = []
+    for spike_train in spike_trains:
+        proportion_time_active.append(np.sum(spike_train, axis=0) / input_signal.shape[0])
+    proportion_time_active = np.hstack(proportion_time_active)
 
     if ax is not None:
-        plt.hist(time_active, bins=np.linspace(0, 1, 100))
+        plt.hist(proportion_time_active, bins=np.linspace(0, 1, 100))
         ax.set_ylabel('Number of active neurons')
         ax.set_xlabel('Proportion of Time')
         ax.set_title('Proportion of time neurons are active')
 
-    return (time_active, activities)
+    return proportion_time_active, spike_trains
 
 
 def num_neurons_active_and_inactive(activity):
@@ -471,7 +464,7 @@ def gen_learning_profile(network, input_signal, ax=None,
         ax=ax[1],
         thresh=thresh)
 
-    _, activity = prop_time_neurons_active(
+    _, activity = proportion_time_neurons_active(
         network=network,
         input_signal=input_signal,
         ax=ax[2],
