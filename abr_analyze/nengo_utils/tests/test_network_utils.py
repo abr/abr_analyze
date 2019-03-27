@@ -69,15 +69,12 @@ def test_generate_scaled_inputs(q, dq, in_index):
     (DynamicsAdaptation(10, 1), 1),
     (DynamicsAdaptation(10, 10), 10)),
     )
-def test_raster_plot(network, num_ens_to_raster):
-    import matplotlib.pyplot as plt
+def test_raster_plot(network, num_ens_to_raster, plt):
 
     input_signal = np.sin(np.linspace(0, 2*np.pi, 100))
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     network_utils.raster_plot(network, input_signal, ax, num_ens_to_raster)
-    plt.savefig('results/test_raster_plot_%i_%i' %
-                (network.n_neurons, network.n_ensembles))
 
 
 @pytest.mark.parametrize('network, input_signal, answer', (
@@ -112,8 +109,10 @@ def test_get_spike_trains(network, input_signal, answer):
     spike_trains = network_utils.get_spike_trains(
         network, np.array(input_signal), dt)
 
+    # allowable error is 2.5% of max firing rate
+    threshold = np.ceil(network.adapt_ens[0].max_rates[0] * 0.025)
     # assert the result is within 1 of the expected spiking rate
-    assert abs(np.sum(spike_trains) - answer) <= 1
+    assert abs(np.sum(spike_trains) - answer) <= threshold
 
 
 @pytest.mark.parametrize('network, input_signal, answer', (
@@ -123,8 +122,7 @@ def test_get_spike_trains(network, input_signal, answer):
      np.ones((1000, 1)), .5),
     ))
 def test_proportion_neurons_responsive_to_input_signal(
-        network, input_signal, answer):
-    import matplotlib.pyplot as plt
+        network, input_signal, answer, plt):
 
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
@@ -134,12 +132,6 @@ def test_proportion_neurons_responsive_to_input_signal(
 
     assert np.all(prop_active == answer)
 
-    plt.savefig('results/test_proportion_neurons_responsive_to_input_signal_' +
-                '%i_%i_%i_%i' %
-                (network.adapt_ens[0].encoders[0],
-                 network.adapt_ens[0].max_rates[0],
-                 np.sum(input_signal),
-                 answer))
 
 # expected sum of proportion of total neurons active over time over 1 second
 # is n_neurons_active / n_neurons * max_rates
@@ -155,8 +147,7 @@ def test_proportion_neurons_responsive_to_input_signal(
     (DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[100]),
      np.ones((1000, 1)), 1 / 1 * 100),
     ))
-def test_proportion_neurons_active_over_time(network, input_signal, answer):
-    import matplotlib.pyplot as plt
+def test_proportion_neurons_active_over_time(network, input_signal, answer, plt):
 
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
@@ -165,12 +156,6 @@ def test_proportion_neurons_active_over_time(network, input_signal, answer):
             network, input_signal, ax))
 
     assert abs(np.sum(proportion_neurons_active) - answer) <= 1
-
-    plt.savefig('results/test_proportion_neurons_active_over_time_%i_%i_%i_%i' %
-        (network.adapt_ens[0].encoders[0],
-         network.adapt_ens[0].max_rates[0],
-         np.sum(input_signal),
-         answer))
 
 
 # expected sum of the proportion of time neurons are active over 1 second
@@ -186,8 +171,7 @@ def test_proportion_neurons_active_over_time(network, input_signal, answer):
     (DynamicsAdaptation(100, 1, encoders=[[1]]*100, max_rates=[100]*100),
      np.ones((1000, 1)), 100 * 100 / 1000),
     ))
-def test_proportion_time_neurons_active(network, input_signal, answer):
-    import matplotlib.pyplot as plt
+def test_proportion_time_neurons_active(network, input_signal, answer, plt):
 
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
@@ -198,12 +182,6 @@ def test_proportion_time_neurons_active(network, input_signal, answer):
     threshold = (np.ceil(network.adapt_ens[0].max_rates[0] * 0.025) /
                  input_signal.shape[0] * network.n_neurons)
     assert abs(np.sum(proportion_time_active) - answer) <= threshold
-
-    plt.savefig('results/test_proportion_time_neurons_active_%i_%i_%i_%i' %
-        (network.adapt_ens[0].encoders[0],
-         network.adapt_ens[0].max_rates[0],
-         np.sum(input_signal),
-         answer))
 
 
 @pytest.mark.parametrize('network, input_signal, answer', (

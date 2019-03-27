@@ -37,6 +37,7 @@ tests_require = [
     "pytest-xdist>=1.26.0",
     "pytest-cov>=2.6.0",
     "coverage>=4.5.0"
+    "pytest-plt"
     ]
 
 
