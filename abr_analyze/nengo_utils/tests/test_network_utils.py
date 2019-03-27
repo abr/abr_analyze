@@ -146,6 +146,8 @@ def test_proportion_neurons_responsive_to_input_signal(
 @pytest.mark.parametrize('network, input_signal, answer', (
     (DynamicsAdaptation(2, 1, encoders=[[1], [1]], max_rates=[10, 10]),
      np.ones((1000, 1)), 2 / 2 * 10),
+    (DynamicsAdaptation(2, 1, encoders=[[1], [1]], max_rates=[10, 100]),
+     np.ones((1000, 1)), 1 / 2 * 10 + 1 / 2 * 100),
     (DynamicsAdaptation(2, 1, encoders=[[1], [-1]], max_rates=[10, 10]),
      np.ones((1000, 1)), 1 / 2 * 10),
     (DynamicsAdaptation(2, 1, encoders=[[-1], [-1]], max_rates=[10, 10]),
@@ -177,6 +179,8 @@ def test_proportion_neurons_active_over_time(network, input_signal, answer):
 @pytest.mark.parametrize('network, input_signal, answer', (
     (DynamicsAdaptation(2, 1, encoders=[[1], [1]], max_rates=[10, 10]),
      np.ones((1000, 1)), 2 * 10 / 1000),
+    (DynamicsAdaptation(2, 1, encoders=[[1], [1]], max_rates=[10, 100]),
+     np.ones((1000, 1)), 1 * 10 / 1000 + 1 * 100 / 1000),
     (DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[100]),
      np.ones((1000, 1)), 1 * 100 / 1000),
     (DynamicsAdaptation(100, 1, encoders=[[1]]*100, max_rates=[100]*100),
@@ -190,8 +194,8 @@ def test_proportion_time_neurons_active(network, input_signal, answer):
     proportion_time_active, _ = network_utils.proportion_time_neurons_active(
         network, input_signal, ax)
 
-    # allowable error is 2% of max firing rate / s * # of neurons
-    threshold = (np.ceil(network.adapt_ens[0].max_rates[0] * 0.02) /
+    # allowable error is 2.5% of max firing rate / s * # of neurons
+    threshold = (np.ceil(network.adapt_ens[0].max_rates[0] * 0.025) /
                  input_signal.shape[0] * network.n_neurons)
     assert abs(np.sum(proportion_time_active) - answer) <= threshold
 
