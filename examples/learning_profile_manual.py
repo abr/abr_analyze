@@ -43,7 +43,8 @@ portion=0.2
 print('Original Input Signal Shape: ', np.array(input_signal).shape)
 input_signal = input_signal[-int(np.array(input_signal).shape[0]*portion):, :]
 print('Input Signal Shape from Selection: ', np.array(input_signal).shape)
-input_signal = nengolib.stats.spherical_transform(input_signal.reshape((1, -1)))
+input_signal = nengolib.stats.spherical_transform(input_signal)
+print('Input Signal Shape from Selection: ', np.array(input_signal).shape)
 
 # specify our network parameters
 backend = 'nengo_cpu'
@@ -66,8 +67,9 @@ intercepts = intercepts.sample(n_neurons, rng=rng)
 intercepts = np.array(intercepts)
 
 # ----------- Create your encoders ---------------
-encoders = network_utils.generate_encoders(input_signal=input_signal,
-        n_neurons=n_neurons*n_ensembles, n_dims=n_input)
+encoders = network_utils.generate_encoders(
+    input_signal=input_signal,
+    n_neurons=n_neurons*n_ensembles)
 
 encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
 
@@ -93,4 +95,4 @@ network_utils.gen_learning_profile(
     network=network,
     input_signal=input_signal,
     ax_list=None,
-    num_ens_to_raster=1)
+    n_ens_to_raster=1)

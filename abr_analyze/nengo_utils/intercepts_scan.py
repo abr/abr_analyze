@@ -51,14 +51,17 @@ def proportion_neurons_active(encoders, intercept_vals, input_signal, seed=1,
             dimensions=encoders.shape[1],
             base=signals.Triangular(intercept[0], intercept[2], intercept[1]))
         rng = np.random.RandomState(seed)
-        intercept_list = intercept_list.sample(encoders.shape[0], rng=rng)
+        intercept_list = intercept_list.sample(encoders.shape[1], rng=rng)
+
+        print('encoders shape: ', encoders.shape)
         intercept_list = np.array(intercept_list)
+        print('intercepts: ', intercept_list.shape)
 
         # create a network with the new intercepts
         network = signals.DynamicsAdaptation(
-            n_input=encoders.shape[1],
+            n_input=encoders.shape[2],
             n_output=1,  # number of output is irrelevant
-            n_neurons=encoders.shape[0],
+            n_neurons=encoders.shape[1],
             intercepts=intercept_list,
             probe_weights=True,
             seed=seed,
@@ -67,17 +70,15 @@ def proportion_neurons_active(encoders, intercept_vals, input_signal, seed=1,
 
         # get the proportion of neurons active
         proportion_active, activity = (
-            network_utils.prop_active_neurons_over_time(
+            network_utils.proportion_neurons_active_over_time(
                 network=network, input_signal=input_signal))
 
         # get the number of active and inactive neurons
         num_active, num_inactive = (
-            network_utils.num_neurons_active_and_inactive(
-                activity=activity))
+            network_utils.n_neurons_active_and_inactive(activity=activity))
 
         # save the data for the line plot of the histogram
         x = np.cumsum(np.ones(len(proportion_active)))
-        ideal = [ideal_function(x) for val in x]
         dat.save(
             data={'total_intercepts':len(intercept_vals), 'notes':notes},
             save_location='%s' % save_name,
@@ -109,19 +110,16 @@ def proportion_time_active(encoders, intercept_vals, input_signal, seed=1,
 
     PARAMETERS
     ----------
-    seed: int
-        the seed used for any randomization in the sim
     encoders: array of floats (n_neurons x n_inputs)
         the values that specify along what vector a neuron will be
         sensitive to
     input_signal: array of floats (n_timesteps x n_neurons)
         the input signal that we want to check our networks response to
-    ideal_fuinction: lambda function(0 to 1)
-        used as the desired profile to compare against. The review function
-        will use this to find the closest matching results
     intercept_vals: array of floats (n_intercepts to try x 3)
         the [left_bound, mode, right_bound] to pass on to the triangluar
         intercept function in network_utils
+    seed: int
+        the seed used for any randomization in the sim
     save_name: string, Optional (Default: proportion_neurons)
         the name to save the data under in the intercept_scan database
     n_bins: int, Optional (Default: 100)
@@ -142,18 +140,18 @@ def proportion_time_active(encoders, intercept_vals, input_signal, seed=1,
 
         # create our intercept distribution from the intercepts vals
         intercept_list = signals.AreaIntercepts(
-            dimensions=encoders.shape[1],
+            dimensions=encoders.shape[2],
             base=signals.Triangular(intercept[0], intercept[2],
                                     intercept[1]))
         rng = np.random.RandomState(seed)
-        intercept_list = intercept_list.sample(encoders.shape[0], rng=rng)
+        intercept_list = intercept_list.sample(encoders.shape[1], rng=rng)
         intercept_list = np.array(intercept_list)
 
         # create a network with the new intercepts
         network = signals.DynamicsAdaptation(
-            n_input=encoders.shape[1],
+            n_input=encoders.shape[2],
             n_output=1,  # number of output dimensions is irrelevant
-            n_neurons=encoders.shape[0],
+            n_neurons=encoders.shape[1],
             intercepts=intercept_list,
             probe_weights=True,
             seed=seed,
@@ -161,44 +159,36 @@ def proportion_time_active(encoders, intercept_vals, input_signal, seed=1,
             **kwargs)
 
         # get the time active
-        time_active, activity = network_utils.prop_time_neurons_active(
+        time_active, activity = network_utils.proportion_time_neurons_active(
             network=network, input_signal=input_signal)
 
         # get the number of active and inactive neurons
         num_active, num_inactive = (
-            network_utils.num_neurons_active_and_inactive(
+            network_utils.n_neurons_active_and_inactive(
                 activity=activity))
 
         # save the data for the line plot of the histogram
         y, bins_out = np.histogram(np.squeeze(time_active), bins=bins)
         centers = 0.5*(bins_out[1:]+bins_out[:-1])
-        ideal = [ideal_function(x) for x in centers]
         dat.save(
-            data={'ideal': ideal, 'total_intercepts': len(intercept_vals),
+            data={'total_intercepts': len(intercept_vals),
                   'notes': notes},
             save_location='%s' % save_name,
             overwrite=True)
 
-        diff_to_ideal = ideal - y
-        error = np.sum(np.abs(diff_to_ideal))
-
         # not saving activity because takes up a lot of disk space
         data = {'intercept_bounds':intercept[:2],
                 'intercept_mode':intercept[2],
-                'diff_to_ideal':diff_to_ideal,
                 'x':centers,
                 'y':y,
                 'num_active':num_active,
                 'num_inactive':num_inactive,
-                'error':error,
                 'xlabel':'proportion time active',
                 'ylabel':'num neurons active'}
         dat.save(data=data, save_location='%s/%05d' % (save_name, ii),
                  overwrite=True)
 
         loop_time = timeit.default_timer() - start
-
-    review(save_name=save_name, num_to_plot=10)
 
 
 def review(save_name, ideal_function, num_to_plot=10):
@@ -223,6 +213,9 @@ def review(save_name, ideal_function, num_to_plot=10):
     ideal = ideal_data['ideal']
     num = ideal_data['total_intercepts']
 
+    if num_to_plot > num:
+        num_to_plot = num
+
     run_data = []
     errors = []
     for ii in range(0, num):
@@ -232,8 +225,8 @@ def review(save_name, ideal_function, num_to_plot=10):
                         'num_inactive', 'xlabel', 'ylabel'],
             save_location='%s/%05d' % (save_name, ii))
 
-        ideal = [ideal_function(x) for val in x]
-        diff_to_ideal = ideal - y
+        ideal = [ideal_function(x) for x in data['x']]
+        diff_to_ideal = ideal - data['y']
         error = np.sum(np.abs(diff_to_ideal))
 
         run_data.append(data)

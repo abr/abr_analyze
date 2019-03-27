@@ -15,12 +15,12 @@ NOTE: see examples of running for a single profile, or looping through various
 intercepts to later view in the intercept_scan_viewer.py gui
 """
 
-import nengo
-from nengo.utils.matplotlib import rasterplot
-from nengolib.stats import ScatteredHypersphere
 import matplotlib.pyplot as plt
 import numpy as np
 
+import nengo
+from nengo.utils.matplotlib import rasterplot
+from nengolib.stats import ScatteredHypersphere
 
 def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
     """
@@ -49,85 +49,76 @@ def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
     depth : int
         how many times has this function been recursively called
     """
-    #TODO: scale thresh based on dimensionality of input, 0.008 for 2DOF
-    # and 10k neurons, 10DOF 10k use 0.08, for 10DOF 100 went up to 0.708 by end
-    # 0.3 works well for 1000
 
     # first run so we need to generate encoders for the sessions
-    if input_signal is not None:
-        ii = 0
-        iters_with_no_update = 0
-        prev_n_indices = 0
-        while input_signal.shape[0] > n_neurons:
+    ii = 0
+    iters_with_no_update = 0
+    prev_n_indices = 0
+    while input_signal.shape[0] > n_neurons:
 
-            ii += 1
-            if (ii % 1000) == 0:
-                print('Downsampled to %i encoders at iteration %i' %
-                      (input_signal.shape[0], ii))
-                print('Current threshold value: %.3f' % thresh)
+        ii += 1
+        if (ii % 1000) == 0:
+            print('Downsampled to %i encoders at iteration %i' %
+                  (input_signal.shape[0], ii))
+            print('Current threshold value: %.3f' % thresh)
 
-            # choose a random set of indices
-            n_indices = input_signal.shape[0]
+        # choose a random set of indices
+        n_indices = input_signal.shape[0]
 
-            # make sure we're dealing with an even number
-            n_indices -= int(n_indices % 2)
-            n_half = int(n_indices / 2)
+        # make sure we're dealing with an even number
+        n_indices -= int(n_indices % 2)
+        n_half = int(n_indices / 2)
 
-            # split data into two random groups
-            randomized_indices = np.random.permutation(range(n_indices))
-            a = randomized_indices[:n_half]
-            b = randomized_indices[n_half:]
-            data1 = input_signal[a]
-            data2 = input_signal[b]
+        # split data into two random groups
+        randomized_indices = np.random.permutation(range(n_indices))
+        a = randomized_indices[:n_half]
+        b = randomized_indices[n_half:]
+        data1 = input_signal[a]
+        data2 = input_signal[b]
 
-            # calculate the 2 norm between random pairs between data1 and 2
-            distances = np.linalg.norm(data1 - data2, axis=1)
-            # find any pairs within threshold distance of each other
-            under_thresh = distances > thresh
-            # remove the values from data2 within thresh of corresponding data1
-            input_signal = np.vstack([data1, data2[under_thresh]])
+        # calculate the 2 norm between random pairs between data1 and 2
+        distances = np.linalg.norm(data1 - data2, axis=1)
+        # find any pairs within threshold distance of each other
+        under_thresh = distances > thresh
+        # remove the values from data2 within thresh of corresponding data1
+        input_signal = np.vstack([data1, data2[under_thresh]])
 
-            if prev_n_indices == n_indices:
-                iters_with_no_update += 1
-            else:
-                iters_with_no_update = 0
+        if prev_n_indices == n_indices:
+            iters_with_no_update += 1
+        else:
+            iters_with_no_update = 0
 
-            # if we've run 50 iterations but we're still haven't downsampled
-            # enough, increase the threshold distance and keep going
-            if iters_with_no_update == 50:
-                iters_with_no_update = 0
-                thresh += .1 * thresh
-                print('All values within threshold, but not at target size.')
-                print('Increasing threshold to %.4f' % thresh)
-            prev_n_indices = n_indices
+        # if we've run 50 iterations but we're still haven't downsampled
+        # enough, increase the threshold distance and keep going
+        if iters_with_no_update == 50:
+            iters_with_no_update = 0
+            thresh += .1 * thresh
+            print('All values within threshold, but not at target size.')
+            print('Increasing threshold to %.4f' % thresh)
+        prev_n_indices = n_indices
 
-        if input_signal.shape[0] != n_neurons:
-            print('Too many indices removed, appending samples from ' +
-                  'ScatteredHypersphere')
-            length = n_neurons - input_signal.shape[0] + 1
-            hypersphere = ScatteredHypersphere(surface=True)
-            hyper_inputs = hypersphere.sample(length, input_signal.shape[1])
-            input_signal = np.vstack((input_signal, hyper_inputs))
-
-            # make sure that the new inputs meet threshold constraints
-            if depth < 10:
-                input_signal = generate_encoders(
-                    n_neurons,
-                    input_signal,
-                    thresh=thresh,
-                    depth=depth+1)
-            else:
-                # if we've tried several times to find input meeting
-                # outside threshold distance but failed, return with warning
-                # so we're not stuck in infinite loop
-                import warnings
-                warnings.warn(
-                    'Could not find set of encoders outside thresh distance')
-    else:
-        print('No input signal passed in, selected encoders randomly ' +
-              'from scattered hypersphere')
+    if input_signal.shape[0] != n_neurons:
+        print('Too many indices removed, appending samples from ' +
+              'ScatteredHypersphere')
+        length = n_neurons - input_signal.shape[0] + 1
         hypersphere = ScatteredHypersphere(surface=True)
-        input_signal = hypersphere.sample(n_neurons, input_signal.shape[1])
+        hyper_inputs = hypersphere.sample(length, input_signal.shape[1])
+        input_signal = np.vstack((input_signal, hyper_inputs))
+
+        # make sure that the new inputs meet threshold constraints
+        if depth < 10:
+            input_signal = generate_encoders(
+                n_neurons,
+                input_signal,
+                thresh=thresh,
+                depth=depth+1)
+        else:
+            # if we've tried several times to find input meeting
+            # outside threshold distance but failed, return with warning
+            # so we're not stuck in infinite loop
+            import warnings
+            warnings.warn(
+                'Could not find set of encoders outside thresh distance')
 
     return np.array(input_signal)
 
@@ -269,7 +260,7 @@ def get_spike_trains(network, input_signal, dt=0.001):
             network.probe_neurons = []
             for ens in network.adapt_ens:
                 network.probe_neurons.append(
-                    nengo.Probe(ens.neurons), synapse=None)
+                    nengo.Probe(ens.neurons, synapse=None))
         network.sim = nengo.Simulator(network.nengo_model)
 
     for in_sig in input_signal:

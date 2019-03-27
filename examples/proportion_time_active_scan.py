@@ -9,9 +9,10 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
 import nengolib
+from nengolib.stats import ScatteredHypersphere
 
 # get our saved q and dq values
-input_signal_file = 'cpu_1k_input_signal.npz'
+input_signal_file = 'cpu_53_input_signal.npz'
 data = np.load(input_signal_file)
 qs = data['qs']
 dqs = data['dqs']
@@ -19,7 +20,8 @@ dqs = data['dqs']
 # scale q-dq and convert to spherical, but only for the adapting joints
 adapt_input = np.array([True, True, True, True, True, False], dtype=bool)
 in_index = np.arange(6)[adapt_input]
-[qs, dqs] = network_utils.generate_scaled_inputs(q=qs, dq=dqs, in_index=in_index)
+qs, dqs = network_utils.generate_scaled_inputs(q=qs, dq=dqs, in_index=in_index)
+
 input_signal = np.hstack((qs, dqs))
 
 # set the decimal percent from the end of the run to use for input
@@ -28,22 +30,18 @@ input_signal = np.hstack((qs, dqs))
 # print('Original Input Signal Shape: ', np.array(input_signal).shape)
 # input_signal = input_signal[-int(np.array(input_signal).shape[0]*portion):, :]
 # print('Input Signal Shape from Selection: ', np.array(input_signal).shape)
-input_signal = nengolib.stats.spherical_transform(input_signal.reshape(-1, 1))
+input_signal = nengolib.stats.spherical_transform(input_signal)
 
 # specify our network parameters
-backend = 'nengo_cpu'
 seed = 0
-neuron_type = 'lif'
 n_neurons = 1000
 n_ensembles = 10
 test_name = '1k x %i: %s'%(n_ensembles, input_signal_file)
 n_input = 11
-n_output = 5
-seed = 0
 
 # ----------- Create your encoders ---------------
-encoders = network_utils.generate_encoders(input_signal=None,
-        n_neurons=n_neurons*n_ensembles, thresh=0.02, n_dims=n_input)
+hypersphere = ScatteredHypersphere(surface=True)
+encoders = hypersphere.sample(n_neurons*n_ensembles, n_input)
 
 encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
 
@@ -59,7 +57,25 @@ print('Input Signal Shape from Selection: ', np.array(input_signal).shape)
 
 # ----------- generate possible intercept bounds and modes ---------------
 intercept_vals = network_utils.gen_intercept_bounds_and_modes(
-        intercept_range=[-0.9, 0.0], mode_range=[-0.9,0])
+    intercept_step=0.2, mode_step=0.2)
+
+# ----------- Instantiate your nengo simulator ---------------
+# This example uses the network defined in
+# abr_control/controllers/signals/dynamics_adaptation.py
+save_name = 'proportion_time'
+intercepts_scan.proportion_time_active(
+    encoders=encoders,
+    intercept_vals=intercept_vals,
+    input_signal=input_signal,
+    seed=seed,
+    save_name=save_name,
+    pes_learning_rate=1e-6,
+    notes=
+    '''
+    - 10k ensemble size
+    - encoders selected from scattered hypersphere
+    ''',
+    )
 
 # ----------- create your ideal profile function ---------------
 # triangular distribution
@@ -68,27 +84,12 @@ intercept_vals = network_utils.gen_intercept_bounds_and_modes(
 # A == y peak, dependent on how many neurons in your network
 # mu == x offset
 # sig == std dev
-ideal_function = lambda x, A=400, mu=0.4, sig=0.025: A*np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
+def gauss(x):
+    return 400*np.exp(-np.power(x - 0.4, 2.) / (2 * 0.025**2))
 
-# ----------- Instantiate your nengo simulator ---------------
-# This example uses the network defined in
-# abr_control/controllers/signals/dynamics_adaptation.py
-intercepts_scan.proportion_time_active(
-    n_input=n_input,
-    n_output=n_output,
-    n_neurons=n_neurons,
-    n_ensembles=n_ensembles,
-    pes_learning_rate=1e-6,
-    intercept_vals=intercept_vals,
-    backend=backend,
-    seed=seed,
-    neuron_type=neuron_type,
-    encoders=encoders,
-    input_signal=input_signal,
-    ideal_function=ideal_function,
-    save_name='proportion_time_scat_hyp_10k',
-    notes=
-    '''
-    - 10k ensemble size
-    - encoders selected from scattered hypersphere
-    ''')
+# ----- compare generated data to ideal, plot 10 closest ----
+intercepts_scan.review(
+    save_name=save_name,
+    ideal_function=gauss,
+    num_to_plot=10,
+    )
