@@ -110,10 +110,10 @@ def test_get_spike_trains(network, input_signal, answer):
 
     dt = 0.001
     spike_trains = network_utils.get_spike_trains(
-        network, np.array(input_signal), dt) * dt
+        network, np.array(input_signal), dt)
 
     # assert the result is within 1 of the expected spiking rate
-    assert (np.sum(spike_trains) - answer) <= 1
+    assert abs(np.sum(spike_trains) - answer) <= 1
 
 
 @pytest.mark.parametrize('network, input_signal, answer', (
@@ -204,3 +204,25 @@ def test_proportion_time_neurons_active(network, input_signal, answer):
          network.adapt_ens[0].max_rates[0],
          np.sum(input_signal),
          answer))
+
+
+@pytest.mark.parametrize('network, input_signal, answer', (
+    (DynamicsAdaptation(2, 1, encoders=[[1], [1]], max_rates=[10, 10]),
+     np.ones((1000, 1)), (2, 0)),
+    (DynamicsAdaptation(2, 1, encoders=[[1], [1]], max_rates=[10, 100]),
+     np.ones((1000, 1)), (2, 0)),
+    (DynamicsAdaptation(2, 1, encoders=[[1], [-1]], max_rates=[10, 10]),
+     np.ones((1000, 1)), (1, 1)),
+    (DynamicsAdaptation(100, 1, encoders=[[1],[-1]]*50, max_rates=[100]*100),
+     np.ones((1000, 1)), (50, 50))
+    ))
+def test_n_neurons_active_and_inactive(network, input_signal, answer):
+
+    spike_train = network_utils.get_spike_trains(
+        network, np.array(input_signal))
+
+    n_active, n_inactive = network_utils.n_neurons_active_and_inactive(
+        spike_train)
+
+    assert n_active == answer[0]
+    assert n_inactive == answer[1]

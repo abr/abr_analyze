@@ -180,11 +180,11 @@ def generate_scaled_inputs(q, dq, in_index):
     return [scaled_q, scaled_dq]
 
 
-def raster_plot(network, input_signal, ax, num_ens_to_raster=None):
+def raster_plot(network, input_signal, ax, n_ens_to_raster=None):
     '''
     Accepts a Nengo network and runs a simulation with the provided input_signal
-    Plots rasterplot onto ax object up to num_ens_to_raster ensembles
-    if num_ens_to_raster is None, all ensembles will be plotted
+    Plots rasterplot onto ax object up to n_ens_to_raster ensembles
+    if n_ens_to_raster is None, all ensembles will be plotted
 
     PARAMETERS
     ----------
@@ -194,17 +194,17 @@ def raster_plot(network, input_signal, ax, num_ens_to_raster=None):
         the input used for the network sim
     ax: ax object
         used for the rasterplot
-    num_ens_to_raster: int, Optional (Default: None)
+    n_ens_to_raster: int, Optional (Default: None)
         the number of ensembles to plot in the raster, if None all will be plotted
     '''
-    if num_ens_to_raster is None:
-        num_ens_to_raster = len(network.adapt_ens)
+    if n_ens_to_raster is None:
+        n_ens_to_raster = len(network.adapt_ens)
 
     # create probes to get rasterplot
     with network.nengo_model:
         network.nengo_model.ens_probes = [
             nengo.Probe(network.adapt_ens[ii].neurons, synapse=None)
-            for ii in range(num_ens_to_raster)]
+            for ii in range(n_ens_to_raster)]
     sim = nengo.Simulator(network.nengo_model)
 
     print('Running sim...')
@@ -279,7 +279,6 @@ def get_spike_trains(network, input_signal, dt=0.001):
     spike_trains = []
     for probe in network.probe_neurons:
         spike_trains.append(network.sim.data[probe] * dt)
-        print('spike_trains: ', spike_trains[-1])
 
     return np.array(spike_trains)
 
@@ -388,7 +387,7 @@ def proportion_time_neurons_active(network, input_signal, ax=None):
     return proportion_time_active, spike_trains
 
 
-def num_neurons_active_and_inactive(activity):
+def n_neurons_active_and_inactive(activity):
     '''
     Accepts a list of activities set to 1's and 0's based on some
     thereshold in get_activities() and returns how many neurons are
@@ -402,19 +401,19 @@ def num_neurons_active_and_inactive(activity):
         ensemble of the network
     '''
     # check how many neurons are never active
-    num_inactive = 0
-    num_active = 0
+    n_inactive = 0
+    n_active = 0
     for ens in activity:
         ens = ens.T
         for nn, _ in enumerate(ens):
             if np.sum(ens[nn]) == 0:
-                num_inactive += 1
+                n_inactive += 1
             else:
-                num_active += 1
-    return [num_active, num_inactive]
+                n_active += 1
+    return n_active, n_inactive
 
 def gen_learning_profile(network, input_signal, ax=None,
-                         num_ens_to_raster=None, thresh=None,
+                         n_ens_to_raster=None, thresh=None,
                          show_plot=True):
     """
     Plots the networks neural activity onto three subplots, showing the rasterplot,
@@ -437,7 +436,7 @@ def gen_learning_profile(network, input_signal, ax=None,
         the input used for the network sim
     ax: ax object
         used for the rasterplot
-    num_ens_to_raster: int, Optional (Default: None)
+    n_ens_to_raster: int, Optional (Default: None)
         the number of ensembles to plot in the raster, if None all will be plotted
     thresh: float, Optional (Default: None)
         the values above and below which activities get set to 1 and 0, respectively
@@ -456,7 +455,7 @@ def gen_learning_profile(network, input_signal, ax=None,
         network=network,
         input_signal=input_signal,
         ax=ax[0],
-        num_ens_to_raster=num_ens_to_raster)
+        n_ens_to_raster=n_ens_to_raster)
 
     proportion_active, _ = proportion_neurons_active_over_time(
         network=network,
@@ -470,13 +469,13 @@ def gen_learning_profile(network, input_signal, ax=None,
         ax=ax[2],
         thresh=thresh)
 
-    num_active, num_inactive = num_neurons_active_and_inactive(
+    n_active, n_inactive = n_neurons_active_and_inactive(
         activity=activity)
 
-    print('Number of neurons inactive: ', num_inactive)
-    print('Number of neurons active: ', num_active)
+    print('Number of neurons inactive: ', n_inactive)
+    print('Number of neurons active: ', n_active)
     ax[1].legend(['Mean Prop Active: %.2f'%np.mean(proportion_active)])
-    ax[2].legend(['Active: %i  |  Inactive: %i'%(num_active, num_inactive)])
+    ax[2].legend(['Active: %i  |  Inactive: %i'%(n_active, n_inactive)])
 
     if show_plot:
         plt.tight_layout()
