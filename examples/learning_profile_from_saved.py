@@ -35,7 +35,7 @@ db_name = 'dewolf2018neuromorphic'
 dat = DataHandler(db_name=db_name)
 
 fig = plt.figure(figsize=(8,12))
-ax = [
+ax_list = [
       fig.add_subplot(311),
       fig.add_subplot(312),
       fig.add_subplot(313)
@@ -83,7 +83,7 @@ for test_name in test_names:
     network_utils.gen_learning_profile(
         network=network,
         input_signal=input_signal,
-        ax=ax,
+        ax_list=ax_list,
         num_ens_to_raster=1,
         show_plot=False)
 plt.show()

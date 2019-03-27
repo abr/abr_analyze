@@ -412,9 +412,8 @@ def n_neurons_active_and_inactive(activity):
                 n_active += 1
     return n_active, n_inactive
 
-def gen_learning_profile(network, input_signal, ax=None,
-                         n_ens_to_raster=None, thresh=None,
-                         show_plot=True):
+def gen_learning_profile(network, input_signal, ax_list=None,
+                         n_ens_to_raster=None, show_plot=True):
     """
     Plots the networks neural activity onto three subplots, showing the rasterplot,
     proportion of active neurons over time, and how many neurons were active over
@@ -438,44 +437,39 @@ def gen_learning_profile(network, input_signal, ax=None,
         used for the rasterplot
     n_ens_to_raster: int, Optional (Default: None)
         the number of ensembles to plot in the raster, if None all will be plotted
-    thresh: float, Optional (Default: None)
-        the values above and below which activities get set to 1 and 0, respectively
-        When None, the default of the function will be used
     show_plot: boolean, Optional (Default: True)
         whether to show the figure at the end of the script or not
     """
 
-    if ax is None:
+    if ax_list is None:
         plt.figure(figsize=(8, 15))
-        ax = []
+        ax_list = []
         for ii in range(0, 3):
-            ax.append(plt.subplot(3, 1, ii+1))
+            ax_list.append(plt.subplot(3, 1, ii+1))
 
     raster_plot(
         network=network,
         input_signal=input_signal,
-        ax=ax[0],
+        ax=ax_list[0],
         n_ens_to_raster=n_ens_to_raster)
 
     proportion_active, _ = proportion_neurons_active_over_time(
         network=network,
         input_signal=input_signal,
-        ax=ax[1],
-        thresh=thresh)
+        ax=ax_list[1])
 
     _, activity = proportion_time_neurons_active(
         network=network,
         input_signal=input_signal,
-        ax=ax[2],
-        thresh=thresh)
+        ax=ax_list[2])
 
     n_active, n_inactive = n_neurons_active_and_inactive(
         activity=activity)
 
     print('Number of neurons inactive: ', n_inactive)
     print('Number of neurons active: ', n_active)
-    ax[1].legend(['Mean Prop Active: %.2f'%np.mean(proportion_active)])
-    ax[2].legend(['Active: %i  |  Inactive: %i'%(n_active, n_inactive)])
+    ax_list[1].legend(['Mean Prop Active: %.2f'%np.mean(proportion_active)])
+    ax_list[2].legend(['Active: %i  |  Inactive: %i'%(n_active, n_inactive)])
 
     if show_plot:
         plt.tight_layout()

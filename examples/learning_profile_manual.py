@@ -92,5 +92,5 @@ network = signals.DynamicsAdaptation(
 network_utils.gen_learning_profile(
     network=network,
     input_signal=input_signal,
-    ax=None,
+    ax_list=None,
     num_ens_to_raster=1)
