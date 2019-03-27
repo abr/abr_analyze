@@ -219,3 +219,21 @@ def test_gen_learning_profile(network, input_signal, plt):
     ax_list = [fig.add_subplot(3, 1, ii+1) for ii in range(3)]
     network_utils.gen_learning_profile(
         network, input_signal, ax_list=ax_list, show_plot=False)
+
+
+@pytest.mark.parametrize(
+    'intercept_range, intercept_step, mode_range, mode_step', (
+        (None, 0.1, None, 0.2),
+        (None, 0.05, None, 0.01),
+        (None, 0.5, None, 0.7),
+        )
+    )
+def test_gen_intercept_bounds_and_modes(intercept_range, intercept_step,
+                                        mode_range, mode_step):
+
+
+    intercepts = network_utils.gen_intercept_bounds_and_modes(
+        intercept_range, intercept_step, mode_range, mode_step)
+
+    assert (np.all(intercepts[:, 0] <= intercepts[:, 2]) and
+            np.all(intercepts[:, 2] <= intercepts[:, 1]))
