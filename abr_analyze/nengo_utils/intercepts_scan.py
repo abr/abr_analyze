@@ -214,6 +214,7 @@ def review(save_name, ideal_function, num_to_plot=10):
     num = ideal_data['total_intercepts']
 
     if num_to_plot > num:
+        print('Only %i runs to plot' % num)
         num_to_plot = num
 
     run_data = []
@@ -230,8 +231,9 @@ def review(save_name, ideal_function, num_to_plot=10):
         error = np.sum(np.abs(diff_to_ideal))
 
         run_data.append(data)
-        errors.append(data['error'])
+        errors.append(error)
 
+    print('errors: ', errors)
     indices = np.array(errors).argsort()[:num_to_plot]
     print('Plotting...')
     plt.figure()
@@ -242,7 +244,7 @@ def review(save_name, ideal_function, num_to_plot=10):
         #          data['num_inactive']))
         plt.plot(np.squeeze(data['x']), np.squeeze(data['y']),
                  label='%i: err:%.2f \n%s: %s'%
-                 (ind, data['error'], data['intercept_bounds'],
+                 (ind, error, data['intercept_bounds'],
                   data['intercept_mode']))
 
     plt.xlabel(data['xlabel'])
@@ -250,4 +252,3 @@ def review(save_name, ideal_function, num_to_plot=10):
     plt.plot(np.squeeze(data['x']), ideal, c='k', lw=3, linestyle='--',
              label='ideal')
     plt.legend()
-    plt.show()

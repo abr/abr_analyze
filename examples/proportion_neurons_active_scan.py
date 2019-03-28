@@ -1,4 +1,7 @@
 """
+Run a parameter sweep across intercept values, looking at the proportion
+of neurons are active over time. Display the 10 results that are closest
+to the ideal function specified (y=0.3)
 """
 from abr_analyze.nengo_utils import network_utils, intercepts_scan
 from abr_control.controllers import signals
@@ -22,24 +25,14 @@ in_index = np.arange(6)[adapt_input]
 [qs, dqs] = network_utils.generate_scaled_inputs(q=qs, dq=dqs, in_index=in_index)
 input_signal = np.hstack((qs, dqs))
 
-# # set the decimal percent from the end of the run to use for input
-# # 1 == all runs, 0.1 = last 10% of runs
-# portion=0.1
-# print('Original Input Signal Shape: ', np.array(input_signal).shape)
-# input_signal = input_signal[-int(np.array(input_signal).shape[0]*portion):, :]
-# print('Input Signal Shape from Selection: ', np.array(input_signal).shape)
 input_signal = nengolib.stats.spherical_transform(input_signal)
 
 # specify our network parameters
-backend = 'nengo_cpu'
 seed = 0
-neuron_type = 'lif'
 n_neurons = 1000
 n_ensembles = 15
 test_name = '1k x %i: %s'%(n_ensembles, input_signal_file)
 n_input = 11
-n_output = 5
-seed = 0
 
 # ----------- Create your encoders ---------------
 encoders = network_utils.generate_encoders(
@@ -61,7 +54,7 @@ print('Input signal shape from selection: ', np.array(input_signal).shape)
 
 # ----------- generate possible intercept bounds and modes ---------------
 intercept_vals = network_utils.gen_intercept_bounds_and_modes(
-    intercept_step=1, mode_step=1)
+    intercept_step=0.5, mode_step=0.5)
 print('%i different combinations to be tested' % len(intercept_vals))
 
 # ----------- Instantiate your nengo simulator ---------------
@@ -75,6 +68,7 @@ intercepts_scan.proportion_neurons_active(
     seed=seed,
     save_name=save_name,
     pes_learning_rate=1e-6,
+    notes='',
     )
 
 # ----- compare generated data to ideal, plot 10 closest ----
@@ -83,3 +77,4 @@ intercepts_scan.review(
     ideal_function=lambda x: 0.3,
     num_to_plot=10,
     )
+plt.show()

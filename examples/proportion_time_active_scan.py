@@ -1,4 +1,8 @@
 """
+Run a parameter sweep across intercept values, looking at the proportion
+of time that neurons are active for and plot the histogram. Display the top
+10 results that lead to a distribution closest to the ideal function
+specified (y=gauss(x))
 """
 from abr_analyze.nengo_utils import network_utils, intercepts_scan
 from abr_control.controllers import signals
@@ -57,7 +61,8 @@ print('Input Signal Shape from Selection: ', np.array(input_signal).shape)
 
 # ----------- generate possible intercept bounds and modes ---------------
 intercept_vals = network_utils.gen_intercept_bounds_and_modes(
-    intercept_step=0.2, mode_step=0.2)
+    intercept_step=0.5, mode_step=0.5)
+print('%i different combinations to be tested' % len(intercept_vals))
 
 # ----------- Instantiate your nengo simulator ---------------
 # This example uses the network defined in
@@ -70,22 +75,18 @@ intercepts_scan.proportion_time_active(
     seed=seed,
     save_name=save_name,
     pes_learning_rate=1e-6,
-    notes=
-    '''
-    - 10k ensemble size
-    - encoders selected from scattered hypersphere
-    ''',
+    notes='',
     )
 
 # ----------- create your ideal profile function ---------------
 # triangular distribution
 # ideal_function = lambda x: -(100/.6)*x + 100 if x<0.6 else 0
 # gaussian distribution
-# A == y peak, dependent on how many neurons in your network
+# a == y peak, dependent on how many neurons in your network
 # mu == x offset
 # sig == std dev
-def gauss(x):
-    return 400*np.exp(-np.power(x - 0.4, 2.) / (2 * 0.025**2))
+def gauss(x, a=400, mu=0.4, sig=0.025):
+    return a*np.exp(-np.power(x - mu, 2.) / (2 * sig**2))
 
 # ----- compare generated data to ideal, plot 10 closest ----
 intercepts_scan.review(
@@ -93,3 +94,4 @@ intercepts_scan.review(
     ideal_function=gauss,
     num_to_plot=10,
     )
+plt.show()
