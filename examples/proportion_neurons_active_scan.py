@@ -6,6 +6,7 @@ to the ideal function specified (y=0.3)
 from abr_analyze.nengo_utils import network_utils, intercepts_scan
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir
+from abr_analyze import DataHandler
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
@@ -13,25 +14,23 @@ import matplotlib.pyplot as plt
 import os
 import nengolib
 
-# get our saved q and dq values
-input_signal_file = 'cpu_53_input_signal.npz'
-data = np.load(input_signal_file)
-qs = data['qs']
-dqs = data['dqs']
+runs = 10
+dat = DataHandler('abr_analyze')
+for ii in range(0, runs):
+    data = dat.load(parameters=['input_signal'],
+            save_location='examples/test_1/session000/run%03d'%ii)
+    if ii == 0:
+        input_signal = data['input_signal']
+    else:
+        input_signal = np.vstack((input_signal, data['input_signal']))
 
-# scale q-dq and convert to spherical, but only for the adapting joints
-adapt_input = np.array([True, True, True, True, True, False], dtype=bool)
-in_index = np.arange(6)[adapt_input]
-[qs, dqs] = network_utils.generate_scaled_inputs(q=qs, dq=dqs, in_index=in_index)
-input_signal = np.hstack((qs, dqs))
-
-input_signal = nengolib.stats.spherical_transform(input_signal)
+input_signal = np.squeeze(input_signal)
 
 # specify our network parameters
 seed = 0
 n_neurons = 1000
-n_ensembles = 15
-test_name = '1k x %i: %s'%(n_ensembles, input_signal_file)
+n_ensembles = 1
+test_name = 'proportion_neurons_active_example',
 n_input = 11
 
 # ----------- Create your encoders ---------------

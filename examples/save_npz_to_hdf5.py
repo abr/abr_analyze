@@ -7,5 +7,5 @@ np.savez_compressed(save_name, a=a, c=b)
 npz_to_hdf5.convert(
         npz_loc=save_name,
         db_name='abr_analyze',
-        save_location='my_converted_data/test1',
+        save_location='examples/my_converted_data/test1',
         overwrite=True)

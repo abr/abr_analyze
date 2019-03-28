@@ -6,7 +6,7 @@ This script shows how to use the hdf5 database structure, including saving,
 loading, renaming, and deleting data
 '''
 
-save_location = 'my_test_group/sub_test_name'
+save_location = 'examples/data_handling'
 recorded_time = np.linspace(0,1,100)
 recorded_data = np.random.rand(100,3)
 data_dict = {'trajectory': recorded_data, 'time': recorded_time}
@@ -29,7 +29,7 @@ trajectory = data['trajectory']
 time = data['time']
 
 # we can rename our save_location as well
-new_save_location = 'my_test_group/new_sub_test_name'
+new_save_location = 'examples/data_handling_rename'
 dat.rename(
     old_save_location=save_location,
     new_save_location=new_save_location,

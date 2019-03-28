@@ -9,8 +9,8 @@ A simple example of plotting parameters saved to the database on a 2d ax object
 interpolated_samples=100
 # list our tests and their relevant save locations
 db_name = 'abr_analyze'
-test = 'my_test_group/test1'
-baseline = 'my_test_group/baseline1'
+test = 'examples/test_1'
+baseline = 'examples/baseline_1'
 
 # Instantiate our arm drawing module
 draw_2d = Draw2dData(
@@ -22,12 +22,16 @@ ax = plt.subplot(111)
 draw_2d.plot(
     ax=ax,
     save_location='%s/session000/run000'%test,
-    parameters='u_base')
+    parameters='q',
+    label='test')
 draw_2d.plot(
     ax=ax,
     save_location='%s/session000/run000'%baseline,
     #NOTE: parameters can be a list
-    parameters=['u_base', 'error'])
+    parameters=['q'],
+    label='baseline',
+    linestyle='--')
+
 plt.title('My 2D Plot')
 
 save_loc='%s/examples/2d_plot.png'%(figures_dir)

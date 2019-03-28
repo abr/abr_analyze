@@ -424,7 +424,7 @@ def gen_learning_profile(network, input_signal, ax_list=None,
         'abr_control.controllers.signals.dynamics_adaptation'
     input_signal: np array shape of (time_steps x input_dim)
         the input used for the network sim
-    ax: ax object
+    ax_list: list of 3 ax objects
         used for the rasterplot
     n_ens_to_raster: int, Optional (Default: None)
         the number of ensembles to plot in the raster, if None all will be plotted

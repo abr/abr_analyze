@@ -9,9 +9,9 @@ import timeit
 import matplotlib.pyplot as plt
 import numpy as np
 
+from abr_control.controllers import signals
 from abr_analyze.data_handler import DataHandler
 import abr_analyze.nengo_utils.network_utils as network_utils
-from abr_control.controllers import signals
 
 def proportion_neurons_active(encoders, intercept_vals, input_signal, seed=1,
                               save_name='proportion_neurons', notes='',
@@ -222,7 +222,7 @@ def review(save_name, ideal_function, num_to_plot=10):
     for ii in range(0, num):
         data = dat.load(
             parameters=['intercept_bounds', 'intercept_mode',
-                        'diff_to_ideal', 'x', 'y', 'error', 'num_active',
+                        'x', 'y', 'error', 'num_active',
                         'num_inactive', 'xlabel', 'ylabel'],
             save_location='%s/%05d' % (save_name, ii))
 

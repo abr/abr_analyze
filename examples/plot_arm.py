@@ -17,8 +17,8 @@ key 'q'
 interpolated_samples=100
 # list our tests and their relevant save locations
 db_name = 'abr_analyze'
-test = 'my_test_group/test1'
-baseline = 'my_test_group/baseline1'
+test = 'examples/test_1'
+baseline = 'examples/baseline_1'
 
 # instantiate our robot config
 robot_config = abr_jaco2.Config(use_cython=True, hand_attached=True)
@@ -37,13 +37,29 @@ ax = plt.subplot(111, projection='3d')
 draw_3d.plot(
         ax=ax,
         save_location='%s/session000/run000'%baseline,
-        parameters='ee_xyz')
+        parameters='ee_xyz',
+        label='baseline')
 
 draw_arm.plot(
         ax=ax,
         save_location='%s/session000/run000'%test)
 
-plt.title('My 3D Arm Plot')
+draw_3d.plot(
+        ax=ax,
+        save_location='%s/session000/run000'%test,
+        parameters='ideal_trajectory',
+        label='ideal',
+        c='g',
+        linestyle='--')
+
+draw_3d.plot(
+        ax=ax,
+        save_location='%s/session000/run000'%test,
+        parameters='ee_xyz',
+        label='test',
+        c='b')
+
+plt.title('3D Arm Plot')
 ax.set_xlim(-0.5, 0.5)
 ax.set_ylim(-0.5, 0.5)
 ax.set_zlim(0.0, 1.2)

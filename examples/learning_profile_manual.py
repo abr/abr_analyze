@@ -17,7 +17,7 @@ Plots
 from abr_analyze import DataHandler
 from abr_analyze.nengo_utils import network_utils
 from abr_control.controllers import signals
-from abr_analyze.paths import cache_dir
+from abr_analyze.paths import cache_dir, figures_dir
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
@@ -25,26 +25,24 @@ import matplotlib.pyplot as plt
 import os
 import nengolib
 
-# get our saved q and dq values
-input_signal_file = 'cpu_53_input_signal.npz'
-data = np.load(input_signal_file)
-qs = data['qs']
-dqs = data['dqs']
+dat = DataHandler('abr_analyze')
+fig = plt.figure(figsize=(8,12))
+ax_list = [
+      fig.add_subplot(311),
+      fig.add_subplot(312),
+      fig.add_subplot(313)
+     ]
 
-# scale q-dq and convert to spherical, but only for the adapting joints
-adapt_input = np.array([True, True, True, True, True, False], dtype=bool)
-in_index = np.arange(6)[adapt_input]
-[qs, dqs] = network_utils.generate_scaled_inputs(q=qs, dq=dqs, in_index=in_index)
-input_signal = np.hstack((qs, dqs))
+runs = 10
+for ii in range(0, runs):
+    data = dat.load(parameters=['input_signal'],
+            save_location='examples/test_1/session000/run%03d'%ii)
+    if ii == 0:
+        input_signal = data['input_signal']
+    else:
+        input_signal = np.vstack((input_signal, data['input_signal']))
 
-# set the decimal percent from the end of the run to use for input
-# 1 == all runs, 0.1 = last 10% of runs
-portion=0.2
-print('Original Input Signal Shape: ', np.array(input_signal).shape)
-input_signal = input_signal[-int(np.array(input_signal).shape[0]*portion):, :]
-print('Input Signal Shape from Selection: ', np.array(input_signal).shape)
-input_signal = nengolib.stats.spherical_transform(input_signal)
-print('Input Signal Shape from Selection: ', np.array(input_signal).shape)
+input_signal = np.squeeze(input_signal)
 
 # specify our network parameters
 backend = 'nengo_cpu'
@@ -52,7 +50,7 @@ seed = 0
 neuron_type = 'lif'
 n_neurons = 1000
 n_ensembles = 1
-test_name = '1k x %i: %s'%(n_ensembles, input_signal_file)
+test_name = 'learning_profile_example',
 n_input = 11
 n_output = 5
 seed = 0
@@ -94,5 +92,11 @@ network = signals.DynamicsAdaptation(
 network_utils.gen_learning_profile(
     network=network,
     input_signal=input_signal,
-    ax_list=None,
-    n_ens_to_raster=1)
+    ax_list=ax_list,
+    n_ens_to_raster=1,
+    show_plot=False)
+
+loc = '%s/examples/learning_profile_manual'%figures_dir
+plt.savefig(loc)
+print('Figure saved to %s'%loc)
+plt.show()

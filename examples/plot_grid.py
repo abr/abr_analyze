@@ -12,8 +12,8 @@ a gridspec grid
 interpolated_samples=100
 # list our tests and their relevant save locations
 db_name = 'abr_analyze'
-test = 'my_test_group/test1/session000'
-baseline = 'my_test_group/baseline1/session000'
+test = 'examples/test_1/session000'
+baseline = 'examples/baseline_1/session000'
 
 # instantiate our robot config
 robot_config = abr_jaco2.Config(use_cython=True, hand_attached=True)
@@ -59,6 +59,14 @@ cells.add_cell(
 cells.add_cell(
     cell=cell1,
     function=draw_3d,
+    save_location='%s/run%03d'%(test, 0),
+    parameters=['ee_xyz'],
+    animate=True
+    )
+
+cells.add_cell(
+    cell=cell1,
+    function=draw_3d,
     save_location='%s/run%03d'%(baseline, 0),
     parameters=['ee_xyz'],
     animate=True
@@ -99,7 +107,7 @@ cells.add_cell(
     cell=cell4,
     function=draw_2d,
     save_location='%s/run%03d'%(test, 0),
-    parameters=['u_base'],
+    parameters=['q'],
     subplot=[6,1]
     )
 
@@ -109,7 +117,7 @@ cells.add_cell(
     cell=cell4,
     function=draw_2d,
     save_location='%s/run%03d'%(baseline, 0),
-    parameters=['u_base'],
+    parameters=['q'],
     subplot=[3,2]
     )
 
@@ -118,15 +126,15 @@ cells.add_cell(
     cell=cell5,
     function=draw_2d,
     save_location='%s/run%03d'%(test, 9),
-    parameters=['u_base'],
+    parameters=['ideal_trajectory'],
     )
 cells.add_cell(
     cell=cell5,
     function=draw_2d,
     save_location='%s/run%03d'%(baseline, 9),
-    parameters=['u_base'],
+    parameters=['ideal_trajectory'],
     )
 
 # Once we have passed all of our data to our organizational layer,
 # run generate to create the plot
-cells.generate()
+cells.generate(save_loc='examples')

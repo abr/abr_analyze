@@ -103,6 +103,8 @@ ENV/
 
 *.swo
 
+# ignore databases
+/databases
 =======
 paths.py
 =======
