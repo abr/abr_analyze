@@ -163,8 +163,11 @@ class DataHandler():
         '''
         #TODO: incoprorate KBHit to get user to verify deleting location and
         # print the keys so they are aware of what will be deleted
-        db = h5py.File(self.db_loc, 'a')
-        del db[save_location]
+        try:
+            db = h5py.File(self.db_loc, 'a')
+            del db[save_location]
+        except KeyError:
+            print('No entry for %s' % save_location)
 
     def rename(self, old_save_location, new_save_location, delete_old=True):
         '''
