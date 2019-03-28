@@ -2,8 +2,9 @@
 simple function for taking in an npz file location and saving it's keys and
 corresponding data to a specified save location in the database
 '''
-from abr_analyze.data_handler import DataHandler
 import numpy as np
+
+from abr_analyze.data_handler import DataHandler
 
 def convert(npz_loc, db_name, save_location, overwrite=False):
     '''
