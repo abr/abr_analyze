@@ -94,46 +94,17 @@ def test_load_no_group():
                           save_location=save_location)
 
 
-# # test getting keys
-# def test_get_keys():
-#     results = {}
-#     test = 'test_get_keys()'
-#     results[test] = {}
-#     print('\n%s----------%s----------%s'%(BLUE, test, ENDC))
-#
-#     def get_keys(save_location, test, label,
-#                  default_pass, results):
-#         try:
-#             passed = default_pass
-#             keys = dat.get_keys(
-#                 save_location=save_location)
-#         except Exception as e:
-#             print('TEST: %s | SUBTEST: %s'%(test, label))
-#             print('%s%s%s'%(RED,e,ENDC))
-#             passed = not default_pass
-#
-#         results[test]['%s'%label] = passed
-#         return results
-#
-#     # location exists
-#     results = get_keys(
-#         save_location='test_loading',
-#         test=test,
-#         label='location exists',
-#         default_pass=True,
-#         results=results)
-#
-#     # location doesn't exists
-#     results = get_keys(
-#         save_location='fake location',
-#         test=test,
-#         label='location doesn\'t exist',
-#         default_pass=False,
-#         results=results)
-#     ascii_table.print_params(title=None, data={'test': results[test]},
-#             invert=True)
-#
-#
+def test_get_keys():
+    dat = DataHandler('tests')
+
+    # location exists
+    keys = dat.get_keys(save_location='test_loading')
+    # location doesn't exist
+    dat.delete(save_location='fake_location')
+    with pytest.raises(KeyError):
+        keys = dat.get_keys(save_location='fake_location')
+
+
 # # test checking if group exists
 # def test_group_exists():
 #     results = {}
