@@ -49,6 +49,7 @@ def test_save(data, overwrite):
              save_location=save_location,
              overwrite=overwrite)
 
+
 # test not passing data as dict
 def test_save_type_error():
     dat = DataHandler('tests')
@@ -57,6 +58,7 @@ def test_save_type_error():
                  save_location='test_saving',
                  overwrite=True)
 
+
 # test not passing data as dict
 def test_save_error():
     dat = DataHandler('tests')
@@ -64,6 +66,7 @@ def test_save_error():
         dat.save(data={'bool': True},
                  save_location='test_saving',
                  overwrite=False)
+
 
 @pytest.mark.parametrize('parameters, compare_to, key', (
     (['test_data'], np.ones(3), 'test_data'),
@@ -85,6 +88,7 @@ def test_load(parameters, compare_to, key):
 
     assert np.all(loaded[key] == compare_to)
 
+
 def test_load_no_group():
     dat = DataHandler('tests')
     save_location = 'not_a_location'
@@ -105,71 +109,25 @@ def test_get_keys():
         keys = dat.get_keys(save_location='fake_location')
 
 
-# # test checking if group exists
-# def test_group_exists():
-#     results = {}
-#     test = 'test_group_exists()'
-#     results[test]  = {}
-#     print('\n%s----------%s----------%s'%(BLUE, test, ENDC))
-#
-#     def group_exists(location, create, test, label,
-#                      default_pass, results, compare_to):
-#         try:
-#             passed = default_pass
-#             exists = dat.check_group_exists(
-#                 location=location,
-#                 create=create)
-#         except Exception as e:
-#             print('TEST: %s | SUBTEST: %s'%(test, label))
-#             print('%s%s%s'%(RED,e,ENDC))
-#             passed = not default_pass
-#             results[test]['%s'%label] = passed
-#             return results
-#
-#         if exists != compare_to:
-#             passed = not default_pass
-#         results[test]['%s'%label] = passed
-#         return results
-#
-#     # exists and create False
-#     results = group_exists(
-#         location='test_loading',
-#         create=False,
-#         test=test,
-#         label='exists and create=False',
-#         default_pass=True,
-#         results=results,
-#         compare_to=True)
-#     # exists and create True
-#     results = group_exists(
-#         location='test_loading',
-#         create=True,
-#         test=test,
-#         label='exists and create=True',
-#         default_pass=True,
-#         results=results,
-#         compare_to=True)
-#     # doesn't exist and create False
-#     results = group_exists(
-#         location='fake_location',
-#         create=False,
-#         test=test,
-#         label='doesn\'t exist and create=False',
-#         default_pass=True,
-#         results=results,
-#         compare_to=False)
-#     # doesn't exist and create True
-#     results = group_exists(
-#         location='fake_location_now_real',
-#         create=True,
-#         test=test,
-#         label='exists and create=True',
-#         default_pass=True,
-#         results=results,
-#         compare_to=True)
-#     ascii_table.print_params(title=None, data={'test': results[test]},
-#             invert=True)
-#
+@pytest.mark.parametrize('location, create, compare_to', (
+    # exists and create False
+    ('test_loading', False, True),
+    # exists and create True
+    ('test_loading', True, True),
+    # doesn't exist and create False
+    ('fake_location', False, False),
+    # doesn't exist and create True
+    ('fake_location_now_real', True, True)
+    )
+)
+def test_group_exists(location, create, compare_to):
+    dat = DataHandler('tests')
+
+    exists = dat.check_group_exists(
+        location=location,
+        create=create)
+    assert exists == compare_to
+
 # # test deleting data
 # def test_delete():
 #     results = {}
