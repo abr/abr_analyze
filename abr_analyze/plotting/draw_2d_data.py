@@ -4,7 +4,7 @@ a class for loading, interpolating, and plotting 2d data onto ax objects
 import numpy as np
 
 from abr_analyze.data_visualizer import DataVisualizer
-from abr_analyze.data_processor import DataProcessor
+import abr_analyze.data_processor as proc
 from .draw_data import DrawData
 
 class Draw2dData(DrawData):
@@ -25,7 +25,6 @@ class Draw2dData(DrawData):
         # create a dict to store processed data
         self.data = {}
         # instantiate our process and visualize modules
-        self.proc = DataProcessor()
         self.vis = DataVisualizer()
 
     def plot(self, ax, save_location, parameters, step=-1, c=None,
@@ -63,7 +62,7 @@ class Draw2dData(DrawData):
         # a different step or onto a different axis
         save_name = '%s-%s'%(save_location, parameters)
         if save_name not in self.data:
-            self.data[save_name] = self.proc.load_and_process(
+            self.data[save_name] = proc.load_and_process(
                 db_name=self.db_name,
                 save_location=save_location,
                 parameters=parameters,

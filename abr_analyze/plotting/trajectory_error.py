@@ -18,7 +18,7 @@ minimum
 
 import numpy as np
 from abr_analyze.data_handler import DataHandler
-from abr_analyze.data_processor import DataProcessor
+import abr_analyze.data_processor as proc
 from abr_analyze.data_visualizer import DataVisualizer
 
 class TrajectoryError():
@@ -43,7 +43,6 @@ class TrajectoryError():
             errors
         '''
         # instantiate our data processor
-        self.proc = DataProcessor()
         self.vis = DataVisualizer()
         self.dat = DataHandler(db_name)
         self.db_name = db_name
@@ -106,7 +105,7 @@ class TrajectoryError():
                     session_error.append(np.sum(data['error']))
                 errors.append(session_error)
 
-            ci_errors = self.proc.get_mean_and_ci(raw_data=errors)
+            ci_errors = proc.get_mean_and_ci(raw_data=errors)
             ci_errors['time_derivative'] = self.time_derivative
             ci_errors['filter_const'] = self.filter_const
 
@@ -154,7 +153,7 @@ class TrajectoryError():
         parameters = ['ee_xyz', 'time', ideal]
 
         # load and interpolate data
-        data = self.proc.load_and_process(
+        data = proc.load_and_process(
             db_name=self.db_name,
             save_location=save_location,
             parameters=parameters,
@@ -184,7 +183,7 @@ class TrajectoryError():
         if self.filter_const is not None:
             for key in data:
                 if key != 'time':
-                    data[key] = self.proc.filter_data(
+                    data[key] = proc.filter_data(
                         data=data[key],
                         alpha=self.filter_const)
 
@@ -192,7 +191,7 @@ class TrajectoryError():
         data['filter_const'] = self.filter_const
         data['read_location'] = save_location
 
-        error = self.proc.two_norm_error(
+        error = proc.two_norm_error(
             trajectory=data['ee_xyz'],
             ideal_trajectory=data[ideal],
             dt=dt)

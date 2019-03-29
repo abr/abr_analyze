@@ -2,7 +2,7 @@
     A class for plotting a stick arm onto a 3d ax object
 '''
 from abr_analyze.data_visualizer import DataVisualizer
-from abr_analyze.data_processor import DataProcessor
+import abr_analyze.data_processor as proc
 from .draw_data import DrawData
 
 class DrawArm(DrawData):
@@ -29,7 +29,6 @@ class DrawArm(DrawData):
         self.data = {}
         # instantiate our process and visualize modules
         self.vis = DataVisualizer()
-        self.proc = DataProcessor()
 
     def plot(self, ax, save_location, step=-1, parameters=None, c='b',
              linestyle=None, label=None, title=None):
@@ -60,13 +59,13 @@ class DrawArm(DrawData):
         if save_location not in self.data:
             # create a dictionary with our test data interpolated to the same
             # number of steps
-            self.data[save_location] = self.proc.load_and_process(
+            self.data[save_location] = proc.load_and_process(
                 db_name=self.db_name,
                 save_location=save_location,
                 interpolated_samples=self.interpolated_samples,
                 parameters=['time', 'q'])
             # get our joint and link positions
-            [joints, links, ee_xyz] = self.proc.calc_cartesian_points(
+            [joints, links, ee_xyz] = proc.calc_cartesian_points(
                 robot_config=self.robot_config,
                 q=self.data[save_location]['q'])
             self.data[save_location]['joints_xyz'] = joints

@@ -103,6 +103,7 @@ def test_get_keys():
 
     # location exists
     keys = dat.get_keys(save_location='test_loading')
+
     # location doesn't exist
     dat.delete(save_location='fake_location')
     with pytest.raises(KeyError):
