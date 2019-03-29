@@ -20,6 +20,7 @@ However, this convention does not have to be used. Any save name can be passed
 in and data will be saved there, and can later be loaded.
 """
 import time
+import warnings
 
 import numpy as np
 import h5py
@@ -167,7 +168,7 @@ class DataHandler():
             db = h5py.File(self.db_loc, 'a')
             del db[save_location]
         except KeyError:
-            print('No entry for %s' % save_location)
+            warnings.warn('No entry for %s' % save_location)
 
     def rename(self, old_save_location, new_save_location, delete_old=True):
         '''

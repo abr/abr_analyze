@@ -128,68 +128,21 @@ def test_group_exists(location, create, compare_to):
         create=create)
     assert exists == compare_to
 
-# # test deleting data
-# def test_delete():
-#     results = {}
-#     test = 'test_delete()'
-#     results[test]  = {}
-#     print('\n%s----------%s----------%s'%(BLUE, test, ENDC))
-#
-#     def delete(save_location, test, label,
-#                default_pass, results, compare_to):
-#         try:
-#             passed = default_pass
-#             dat.delete(save_location=save_location)
-#         except Exception as e:
-#             print('TEST: %s | SUBTEST: %s'%(test, label))
-#             print('%s%s%s'%(RED,e,ENDC))
-#             passed = not default_pass
-#             results[test]['%s'%label] = passed
-#             return results
-#
-#         exists = dat.check_group_exists(
-#             location=save_location,
-#             create=False)
-#         if compare_to is not None:
-#             if exists != compare_to:
-#                 passed = not default_pass
-#
-#         results[test]['%s'%label] = passed
-#         return results
-#
-#     # delete group that exists
-#     results = delete(
-#         save_location='fake_location_now_real',
-#         test=test,
-#         label='delete group that exists',
-#         default_pass=True,
-#         results=results,
-#         compare_to=False)
-#     # delete group that  doesn't exist
-#     results = delete(
-#         save_location='fake_location',
-#         test=test,
-#         label='delete group that doesn\'t exists',
-#         default_pass=False,
-#         results=results,
-#         compare_to=None)
-#     # delete dataset that exists
-#     results = delete(
-#         save_location='test_saving/bool',
-#         test=test,
-#         label='delete dataset that exists',
-#         default_pass=True,
-#         results=results,
-#         compare_to=None)
-#     # delete dataset that doesn't exists
-#     results = delete(
-#         save_location='test_saving/bool',
-#         test=test,
-#         label='delete dataset that doesn\'t exists',
-#         default_pass=False,
-#         results=results,
-#         compare_to=None)
-#
+@pytest.mark.parametrize('save_location, compare_to', (
+    # delete group that exists
+    ('fake_location_now_real', False),
+    # delete dataset that exists
+    ('test_saving/bool', False),
+    )
+)
+def test_delete(save_location, compare_to):
+    dat = DataHandler('tests')
+
+    dat.delete(save_location=save_location)
+
+    exists = dat.check_group_exists(location=save_location, create=False)
+    assert exists == compare_to
+
 
 @pytest.mark.parametrize('old_save_location, new_save_location, delete_old,' +
                          'compare_to', (
