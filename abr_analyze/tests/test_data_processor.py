@@ -85,67 +85,34 @@ def test_interpolate_data_2D(plt):
     plt.show()
 
 
-# def test_scale_data():
-#     results = {}
-#     test = 'test_scale_data()'
-#     results[test] = {}
-#     print('\n%s----------%s----------%s'%(BLUE, test, ENDC))
-#
-#     def scale_data(data, baseline_low, baseline_high, scaling_factor,
-#             test, label, default_pass, results):
-#         try:
-#             passed = default_pass
-#             scaled = proc.scale_data(
-#                 data=data,
-#                 baseline_low=baseline_low,
-#                 baseline_high=baseline_high,
-#                 scaling_factor=scaling_factor)
-#
-#         except Exception as e:
-#             print('TEST: %s | SUBTEST: %s'%(test, label))
-#             print('%s%s%s'%(RED,e,ENDC))
-#             passed = not default_pass
-#             func = None
-#         results[test]['%s'%label] = passed
-#         return results, scaled
-#
-#     fig = plt.figure()
-#     ax = []
-#     for ii in range(0,2):
-#         ax.append(fig.add_subplot(2, 1, ii+1))
-#
-#     # passing in 1D list
-#     y_low = np.random.uniform(2, 4, 100)
-#     y_high = np.random.uniform(7, 9, 100)
-#     y = np.random.uniform(4, 7, 100)
-#     scale = 1
-#     results, y_scaled = scale_data(
-#         data=y,
-#         baseline_low=y_low,
-#         baseline_high=y_high,
-#         scaling_factor=scale,
-#         test=test,
-#         default_pass=True,
-#         results=results,
-#         label='Scale wrt to baselines')
-#
-#     ax[0].set_title('Raw data')
-#     ax[0].plot(y, label='data')
-#     ax[0].plot(y_low, label='low baseline')
-#     ax[0].plot(y_high, label='high baseline')
-#     ax[0].legend()
-#
-#     ax[1].set_title('Scaled data')
-#     ax[1].plot(y_scaled, label='scaled data')
-#     ax[1].legend()
-#     plt.tight_layout()
-#
-#     ascii_table.print_params(title=None, data={'test': results[test]},
-#             invert=True)
-#
-#     plt.show()
-#
-#
+def test_scale_data(plt):
+    y_low = np.random.uniform(2, 4, 100)
+    y_high = np.random.uniform(7, 9, 100)
+    y = np.random.uniform(4, 7, 100)
+    scale = 1
+
+    y_scaled = proc.scale_data(
+        data=y,
+        baseline_low=y_low,
+        baseline_high=y_high,
+        scaling_factor=scale)
+
+    plt.figure()
+    plt.subplot(2, 1, 1)
+    plt.title('Raw data')
+    plt.plot(y, label='data')
+    plt.plot(y_low, label='low baseline')
+    plt.plot(y_high, label='high baseline')
+    plt.legend()
+
+    plt.subplot(2, 1, 2)
+    plt.title('Scaled data')
+    plt.plot(y_scaled, label='scaled data')
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
 # def test_filter_data():
 #     results = {}
 #     test = 'test_filter_data()'
