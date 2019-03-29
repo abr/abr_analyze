@@ -16,11 +16,6 @@ import numpy as np
 
 from abr_analyze.data_handler import DataHandler
 
-BLUE = '\033[94m'
-GREEN = '\033[92m'
-YELLOW= '\033[93m'
-RED = '\033[91m'
-ENDC = '\033[0m'
 
 @pytest.mark.parametrize('data, overwrite', (
     # test saving bool
@@ -70,70 +65,35 @@ def test_save_error():
                  save_location='test_saving',
                  overwrite=False)
 
-# def test_load():
-#     results = {}
-#     test = 'test_load()'
-#     results[test] = {}
-#     print('\n%s----------%s----------%s'%(BLUE, test, ENDC))
-#
-#     def load(parameters, save_location, test, label,
-#              default_pass, results, compare_to, key):
-#         try:
-#             passed = default_pass
-#             loaded = dat.load(parameters=parameters,
-#                               save_location=save_location)
-#         except Exception as e:
-#             print('TEST: %s | SUBTEST: %s'%(test, label))
-#             print('%s%s%s'%(RED,e,ENDC))
-#             passed = not default_pass
-#             results[test]['%s'%label] = passed
-#             return results
-#
-#         if compare_to is not None:
-#             if np.array(loaded[key]).all() != np.array(compare_to).all():
-#                 passed = not default_pass
-#         results[test]['%s'%label] = passed
-#         return results
-#
-#     test_data = {'test_data': np.ones(3)}
-#     dat.save(
-#         data=test_data,
-#         save_location='test_loading',
-#         overwrite=True)
-#     # test loading group and key exist
-#     results = load(
-#         parameters=['test_data'],
-#         save_location='test_loading',
-#         test=test,
-#         label='loading correctly',
-#         default_pass=True,
-#         results=results,
-#         compare_to=test_data['test_data'],
-#         key='test_data')
-#     # test loading group exists, key doesn't
-#     # this should not fail, simply return a blank values entry
-#     results = load(
-#         parameters=['test_data2'],
-#         save_location='test_loading',
-#         test=test,
-#         label='key doesn\'t exist',
-#         default_pass=True,
-#         results=results,
-#         compare_to=None,
-#         key='test_data2')
-#     # test loading group doesn't exist
-#     results = load(
-#         parameters=['test_data'],
-#         save_location='not_a_location',
-#         test=test,
-#         label='group doesn\'t exist',
-#         default_pass=False,
-#         results=results,
-#         compare_to=None,
-#         key=None)
-#     ascii_table.print_params(title=None, data={'test': results[test]},
-#             invert=True)
-#
+@pytest.mark.parametrize('parameters, compare_to, key', (
+    (['test_data'], np.ones(3), 'test_data'),
+    (['test_data2'], None, 'test_data2'),
+    )
+)
+def test_load(parameters, compare_to, key):
+    dat = DataHandler('tests')
+    save_location = 'test_loading'
+    test_data = {'test_data': np.ones(3)}
+
+    dat.save(
+        data=test_data,
+        save_location='test_loading',
+        overwrite=True)
+
+    loaded = dat.load(parameters=parameters,
+                      save_location=save_location)
+
+    assert np.all(loaded[key] == compare_to)
+
+def test_load_no_group():
+    dat = DataHandler('tests')
+    save_location = 'not_a_location'
+
+    with pytest.raises(NameError):
+        loaded = dat.load(parameters=parameters,
+                          save_location=save_location)
+
+
 # # test getting keys
 # def test_get_keys():
 #     results = {}
@@ -384,4 +344,3 @@ def test_rename_dataset():
     # check if the new location exists
     exists = dat.check_group_exists(location=new_save_location, create=False)
     assert exists is True
-
