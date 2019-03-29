@@ -87,26 +87,23 @@ def interpolate_data(data, time_intervals, interpolated_samples):
     data = np.asarray(data)
     time_intervals = np.asarray(time_intervals)
 
-    if interpolated_samples is not None:
-        run_time = sum(time_intervals)
-        sample_times = np.cumsum(time_intervals)
-        # interpolate to even samples out
-        data_interp = []
-        # if our array is one dimensional, make sure to add a second
-        # dimension to avoid errors in our loop
-        if data.ndim == 1:
-            data = data.reshape(len(data), 1)
-        for kk in range(data.shape[1]):
-            interp = scipy.interpolate.interp1d(
-                sample_times, data[:, kk])
-            data_interp.append(np.array([
-                interp(t) for t in np.linspace(
-                    sample_times[0],
-                    run_time,
-                    interpolated_samples)]))
-        data_interp = np.array(data_interp).T
-    else:
-        data_interp = data
+    run_time = sum(time_intervals)
+    sample_times = np.cumsum(time_intervals)
+    # interpolate to even samples out
+    data_interp = []
+    # if our array is one dimensional, make sure to add a second
+    # dimension to avoid errors in our loop
+    if data.ndim == 1:
+        data = data.reshape(len(data), 1)
+    for kk in range(data.shape[1]):
+        interp = scipy.interpolate.interp1d(
+            sample_times, data[:, kk])
+        data_interp.append(np.array([
+            interp(t) for t in np.linspace(
+                sample_times[0],
+                run_time,
+                interpolated_samples)]))
+    data_interp = np.array(data_interp).T
 
     return data_interp
 

@@ -32,111 +32,59 @@ import abr_analyze.data_processor as proc
 def test_list_to_function(functions, plt):
     samples = 44
     x = np.linspace(0, 6.28, 100)
-    x_step = x[-1]/100 * np.ones(100)
+    time_intervals = x[-1]/100 * np.ones(100)
     ys = np.array([func(x) for func in functions]).T
 
-    funcs = proc.list_to_function(data=ys, time_intervals=x_step)
+    funcs = proc.list_to_function(data=ys, time_intervals=time_intervals)
 
-    x_new = np.linspace(x_step[0], x[-1], samples)
+    x_new = np.linspace(time_intervals[0], x[-1], samples)
     for y, func in zip(ys.T, funcs):
-        plt.plot(x, y, 'o')
-        plt.plot(x_new, func(x_new))
+        plt.plot(x, y, 'o', label='raw')
+        plt.plot(x_new, func(x_new), label='interpolated')
     plt.legend()
     plt.tight_layout()
     plt.show()
 
 
-# def test_interpolate_data(data, time_intervals, interpolated_samples, axis):
-#     dat = DataHandler('tests')
-#     proc = DataProcessor()
-#
-#     y2 = proc.interpolate_data(
-#         data=data,
-#         time_intervals=time_intervals,
-#         interpolated_samples=interpolated_samples,
-#         axis=axis)
-#         except Exception as e:
-#             print('TEST: %s | SUBTEST: %s'%(test, label))
-#             print('%s%s%s'%(RED,e,ENDC))
-#             passed = not default_pass
-#         results[test]['%s'%label] = passed
-#         return results, y2
-#
-#     fig = plt.figure()
-#     ax = []
-#     for ii in range(0,4):
-#         ax.append(fig.add_subplot(2,2,ii+1))
-#
-#     # passing in 1D list
-#     y = [1, 2, 3.2, 5.5, 12, 20, 32]
-#     x = np.ones(len(y))
-#     samples = 30
-#     results, y2 = interpolate_data(
-#                     data=y,
-#                     time_intervals=x,
-#                     interpolated_samples=samples,
-#                     axis=0,
-#                     default_pass=True,
-#                     results=results,
-#                     label='1D list')
-#     ax[0].plot(np.cumsum(x), y, 'o', label='raw')
-#     ax[0].plot(np.linspace(x[0], np.sum(x), samples), y2)
-#     ax[0].set_title('Data as 1D list')
-#     ax[0].legend()
-#     # passing in 2D list
-#     y = ([[1, 2, 3.2, 5.5, 12, 20, 32],
-#           [44, 54, 63, 77, 92, 111, 140]])
-#     x = np.ones(len(y[0]))
-#     results, y2 = interpolate_data(
-#                     data=y,
-#                     time_intervals=x,
-#                     interpolated_samples=samples,
-#                     axis=1,
-#                     default_pass=True,
-#                     results=results,
-#                     label='2D list')
-#     ax[1].plot(np.cumsum(x), y[0], 'o', label='raw')
-#     ax[1].plot(np.cumsum(x), y[1], 'o', label='raw')
-#     ax[1].plot(np.linspace(x[0], np.sum(x), samples), y2[ 0])
-#     ax[1].plot(np.linspace(x[0], np.sum(x), samples), y2[ 1])
-#     ax[1].set_title('Data as 2D list')
-#     ax[1].legend()
-#     # passing in 1D array
-#     y = np.array([1, 2, 3.2, 5.5, 12, 20, 32])
-#     x = np.ones(len(y))
-#     results, y2 = interpolate_data(
-#                     data=y,
-#                     time_intervals=x,
-#                     interpolated_samples=samples,
-#                     axis=0,
-#                     default_pass=True,
-#                     results=results,
-#                     label='1D array')
-#     ax[2].plot(np.cumsum(x), y, 'o', label='raw')
-#     ax[2].plot(np.linspace(x[0], np.sum(x), samples), y2)
-#     ax[2].set_title('Data as 1D array')
-#     ax[2].legend()
-#     # passing in 2D array
-#     y = np.array([[1, 2, 3.2, 5.5, 12, 20, 32],
-#           [44, 54, 63, 77, 92, 111, 140]])
-#     x = np.ones(len(y[0]))
-#     results, y2 = interpolate_data(
-#                     data=y,
-#                     time_intervals=x,
-#                     interpolated_samples=samples,
-#                     axis=1,
-#                     default_pass=True,
-#                     results=results,
-#                     label='2D array')
-#     ax[3].plot(np.cumsum(x), y[0], 'o', label='raw')
-#     ax[3].plot(np.cumsum(x), y[1], 'o', label='raw')
-#     ax[3].plot(np.linspace(x[0], np.sum(x), samples), y2[0])
-#     ax[3].plot(np.linspace(x[0], np.sum(x), samples), y2[1])
-#     ax[3].set_title('Data as 2D array')
-#     ax[3].legend()
-#     plt.tight_layout()
+def test_interpolate_data_1D(plt):
+    data = np.array([1, 2, 3.2, 5.5, 12, 20, 32])
+    time_intervals = np.ones(data.shape[0])
 
-#
+    samples = 30
+    interp_data = proc.interpolate_data(
+        data=data,
+        time_intervals=time_intervals,
+        interpolated_samples=samples)
+
+    plt.figure()
+    plt.plot(np.cumsum(time_intervals), data, 'o', label='raw')
+    plt.plot(np.linspace(time_intervals[0], np.sum(time_intervals), samples),
+                         interp_data, label='interpolated')
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def test_interpolate_data_2D(plt):
+    data = np.array([[1, 2, 3.2, 5.5, 12, 20, 32],
+                     [44, 54, 63, 77, 92, 111, 140]])
+    time_intervals = np.ones(data.shape[1])
+    samples = 30
+    interp_data = proc.interpolate_data(
+        data=data.T,
+        time_intervals=time_intervals,
+        interpolated_samples=samples)
+
+    x2 = np.linspace(time_intervals[0], np.sum(time_intervals), samples)
+    plt.figure()
+    for d, y, in zip(data, interp_data.T):
+        plt.plot(np.cumsum(time_intervals), d, 'o', label='raw')
+        plt.plot(x2, y, label='interpolated')
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
 # def test_scale_data():
 #     results = {}
 #     test = 'test_scale_data()'
