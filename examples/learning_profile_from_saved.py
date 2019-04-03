@@ -18,6 +18,7 @@ from abr_analyze import DataHandler
 from abr_analyze.nengo_utils import network_utils
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir, figures_dir
+from download_examples_db import check_exists as examples_db
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
@@ -25,7 +26,8 @@ import matplotlib.pyplot as plt
 import os
 import nengolib
 
-dat = DataHandler('abr_analyze')
+examples_db()
+dat = DataHandler('abr_analyze_examples')
 fig = plt.figure(figsize=(8,12))
 ax_list = [
       fig.add_subplot(311),
@@ -34,7 +36,7 @@ ax_list = [
      ]
 data = dat.load(parameters=['n_input', 'n_output', 'n_neurons', 'n_ensembles',
     'pes', 'intercepts', 'backend', 'seed', 'neuron_type', 'encoders'],
-    save_location='examples/nengo_data')
+    save_location='nengo_data')
 
 n_input = int(data['n_input'])
 n_output = int(data['n_output'])
@@ -50,7 +52,7 @@ encoders = data['encoders']
 runs = 10
 for ii in range(0, runs):
     data = dat.load(parameters=['input_signal'],
-            save_location='examples/test_1/session000/run%03d'%ii)
+            save_location='test_1/session000/run%03d'%ii)
     if ii == 0:
         input_signal = data['input_signal']
     else:

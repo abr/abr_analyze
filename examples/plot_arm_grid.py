@@ -11,10 +11,11 @@ import os
 from abr_analyze.paths import figures_dir
 from abr_analyze.plotting import DrawCells, Draw3dData, DrawArm
 import abr_jaco2
+from download_examples_db import check_exists as examples_db
 
+examples_db()
 interpolated_samples = 100
-db_name='abr_analyze'
-group = 'examples'
+db_name='abr_analyze_examples'
 animate = False
 # assert animate is True and interpolated_samples is None, (
 #         "You must interpolate data for animation")
@@ -57,8 +58,8 @@ for ii in range(0, len(runs)):
     draw_cells.add_cell(
             cell=cells[ii],
             function=draw_3d,
-            save_location=('%s/%s/session%03d/run%03d'
-                %(group, tests[1], session, runs[ii])),
+            save_location=('%s/session%03d/run%03d'
+                %(tests[1], session, runs[ii])),
             parameters=['ee_xyz'],
             c='tab:red',
             label=tests[1],
@@ -68,8 +69,8 @@ for ii in range(0, len(runs)):
     draw_cells.add_cell(
             cell=cells[ii],
             function=draw_arm,
-            save_location=('%s/%s/session%03d/run%03d'
-                %(group, tests[0], session, runs[ii])),
+            save_location=('%s/session%03d/run%03d'
+                %(tests[0], session, runs[ii])),
             c='tab:blue',
             label=None,
             animate=animate
@@ -77,8 +78,8 @@ for ii in range(0, len(runs)):
     draw_cells.add_cell(
             cell=cells[ii],
             function=draw_3d,
-            save_location=('%s/%s/session%03d/run%03d'
-                %(group, tests[0], session, runs[ii])),
+            save_location=('%s/session%03d/run%03d'
+                %(tests[0], session, runs[ii])),
             parameters=['ideal_trajectory'],
             c='tab:green',
             linestyle='--',
@@ -88,8 +89,8 @@ for ii in range(0, len(runs)):
     draw_cells.add_cell(
             cell=cells[ii],
             function=draw_3d,
-            save_location=('%s/%s/session%03d/run%03d'
-                %(group, tests[0], session, runs[ii])),
+            save_location=('%s/session%03d/run%03d'
+                %(tests[0], session, runs[ii])),
             parameters=['ee_xyz'],
             c='tab:blue',
             linestyle='-',

@@ -8,6 +8,7 @@ from abr_analyze.nengo_utils import network_utils, intercepts_scan
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir
 from abr_analyze import DataHandler
+from download_examples_db import check_exists as examples_db
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
@@ -16,11 +17,12 @@ import os
 import nengolib
 from nengolib.stats import ScatteredHypersphere
 
+examples_db()
 runs = 10
-dat = DataHandler('abr_analyze')
+dat = DataHandler('abr_analyze_examples')
 for ii in range(0, runs):
     data = dat.load(parameters=['input_signal'],
-            save_location='examples/test_1/session000/run%03d'%ii)
+            save_location='test_1/session000/run%03d'%ii)
     if ii == 0:
         input_signal = data['input_signal']
     else:

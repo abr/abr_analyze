@@ -1,18 +1,19 @@
 from abr_analyze import DataHandler
+from download_examples_db import check_exists as examples_db
 import numpy as np
 
 '''
 This script shows how to use the hdf5 database structure, including saving,
 loading, renaming, and deleting data
 '''
-
-save_location = 'examples/data_handling'
+examples_db()
+save_location = 'data_handling'
 recorded_time = np.linspace(0,1,100)
 recorded_data = np.random.rand(100,3)
 data_dict = {'trajectory': recorded_data, 'time': recorded_time}
 
 # instantiate a database with your desired name
-dat = DataHandler(db_name='abr_analyze')
+dat = DataHandler(db_name='abr_analyze_examples')
 
 # save our data
 dat.save(
@@ -29,7 +30,7 @@ trajectory = data['trajectory']
 time = data['time']
 
 # we can rename our save_location as well
-new_save_location = 'examples/data_handling_rename'
+new_save_location = 'data_handling_rename'
 dat.rename(
     old_save_location=save_location,
     new_save_location=new_save_location,

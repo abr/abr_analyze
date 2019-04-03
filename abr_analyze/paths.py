@@ -23,13 +23,6 @@ else:
         os.makedirs(cache_dir)
     if not os.path.exists(database_dir):
         os.makedirs(database_dir)
-        from urllib.request import urlretrieve
-        print('First time running...Downloading examples database')
-        db_loc = "https://drive.google.com/uc?export=download&id=1gL1oVmbeMnbj-iN2GqacRT3c3_-pvc_a"
-        urlretrieve(
-            url=db_loc,
-            filename='%s/abr_analyze.h5'%database_dir)
-        print('Examples database saved to %s'%database_dir)
     if not os.path.exists(figures_dir):
         os.makedirs(figures_dir)
     if not os.path.exists('%s/examples'%figures_dir):

@@ -1,12 +1,13 @@
 from abr_analyze.plotting import TrajectoryError
 from abr_analyze.paths import figures_dir
+from download_examples_db import check_exists as examples_db
 import numpy as np
 import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 
-db_name = 'abr_analyze'
-test_group = 'examples'
+examples_db()
+db_name = 'abr_analyze_examples'
 test_list = [
              'test_1',
              'baseline_1',
@@ -35,12 +36,12 @@ for jj, td in enumerate(time_derivatives):
                         interpolated_samples=interpolated_samples)
     for ii, test in enumerate(test_list):
         print('Processing test %i/%i: %s'%(ii+1, len(test_list), test))
-        traj.statistical_error(save_location='%s/%s'%(test_group, test),
+        traj.statistical_error(save_location='%s'%(test),
                 sessions=sessions, runs=runs, regen=True)
     print('Plotting...')
     c = ['b', 'r']
     for ii, test in enumerate(test_list):
-        traj.plot(ax=ax, save_location='%s/%s'%(test_group, test), label=test+label[ii],
+        traj.plot(ax=ax, save_location='%s'%(test), label=test+label[ii],
                 c=c[ii], loc=0, title=title)
         ax.legend()
 loc = '%s/examples/trajectory_error.png'%(figures_dir)

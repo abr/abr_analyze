@@ -30,6 +30,7 @@ install_requires = [
     "scipy>=1.1.0",
     "nengo>=2.8.0",
     "nengolib>=0.4.1",
+    "nengo_extras>=0.3.0"
     ]
 
 tests_require = [
