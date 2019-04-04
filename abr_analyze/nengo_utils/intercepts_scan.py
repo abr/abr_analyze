@@ -15,7 +15,7 @@ import abr_analyze.nengo_utils.network_utils as network_utils
 
 def proportion_neurons_active(encoders, intercept_vals, input_signal, seed=1,
                               save_name='proportion_neurons', notes='',
-                              **kwargs):
+                              prop_neurons=True, prop_time=True, **kwargs):
     '''
     runs a scan for the proportion of neurons that are active over time
 
@@ -35,6 +35,10 @@ def proportion_neurons_active(encoders, intercept_vals, input_signal, seed=1,
         the name to save the data under in the intercept_scan database
     notes: string, Optional (Default: '')
         any additional notes to save with the scan
+    prop_neurons: Boolean, Optional (Default: True)
+        True to get the proportion of neurons active over time in the scan
+    prop_time: Boolean, Optional (Default: True)
+        True to get the proportion of time neurons are active for in the scan
     '''
     dat = DataHandler('intercepts_scan')
 
@@ -48,14 +52,11 @@ def proportion_neurons_active(encoders, intercept_vals, input_signal, seed=1,
 
         # create our intercept distribution from the intercepts vals
         intercept_list = signals.AreaIntercepts(
-            dimensions=encoders.shape[1],
+            dimensions=encoders.shape[2],
             base=signals.Triangular(intercept[0], intercept[2], intercept[1]))
         rng = np.random.RandomState(seed)
         intercept_list = intercept_list.sample(encoders.shape[1], rng=rng)
-
-        print('encoders shape: ', encoders.shape)
         intercept_list = np.array(intercept_list)
-        print('intercepts: ', intercept_list.shape)
 
         # create a network with the new intercepts
         network = signals.DynamicsAdaptation(
@@ -98,8 +99,6 @@ def proportion_neurons_active(encoders, intercept_vals, input_signal, seed=1,
                  overwrite=True)
         loop_time = timeit.default_timer() - start
 
-    # review(save_name=save_name, num_to_plot=10)
-
 
 def proportion_time_active(encoders, intercept_vals, input_signal, seed=1,
                            save_name='proportion_time', n_bins=100, notes='',
@@ -141,8 +140,7 @@ def proportion_time_active(encoders, intercept_vals, input_signal, seed=1,
         # create our intercept distribution from the intercepts vals
         intercept_list = signals.AreaIntercepts(
             dimensions=encoders.shape[2],
-            base=signals.Triangular(intercept[0], intercept[2],
-                                    intercept[1]))
+            base=signals.Triangular(intercept[0], intercept[2], intercept[1]))
         rng = np.random.RandomState(seed)
         intercept_list = intercept_list.sample(encoders.shape[1], rng=rng)
         intercept_list = np.array(intercept_list)
