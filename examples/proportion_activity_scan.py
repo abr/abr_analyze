@@ -1,8 +1,7 @@
 """
 Run a parameter sweep across intercept values, looking at the proportion
-of time that neurons are active for and plot the histogram. Display the top
-10 results that lead to a distribution closest to the ideal function
-specified (y=gauss(x))
+of neurons are active over time and the proportion of time neurons are active.
+Display the 10 results that are closest to the ideal function specified
 """
 from abr_analyze.nengo_utils import network_utils, intercepts_scan
 from abr_control.controllers import signals
@@ -15,7 +14,6 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
 import nengolib
-from nengolib.stats import ScatteredHypersphere
 
 examples_db()
 runs = 10
@@ -37,8 +35,10 @@ n_ensembles = 1
 n_input = 11
 
 # ----------- Create your encoders ---------------
-hypersphere = ScatteredHypersphere(surface=True)
-encoders = hypersphere.sample(n_neurons*n_ensembles, n_input)
+encoders = network_utils.generate_encoders(
+    input_signal=input_signal,
+    n_neurons=n_neurons*n_ensembles,
+    thresh=0.01)
 
 encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
 
@@ -46,10 +46,10 @@ encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
 # entire list for encoder selection
 # set the decimal percent from the end of the run to use for input
 # 1 == all runs, 0.1 = last 10% of runs
-portion=1
-print('Original Input Signal Shape: ', np.array(input_signal).shape)
+portion=0.1
+print('Original input signal shape: ', np.array(input_signal).shape)
 input_signal = input_signal[-int(np.array(input_signal).shape[0]*portion):, :]
-print('Input Signal Shape from Selection: ', np.array(input_signal).shape)
+print('Input signal shape from selection: ', np.array(input_signal).shape)
 
 
 # ----------- generate possible intercept bounds and modes ---------------
@@ -61,7 +61,9 @@ print('%i different combinations to be tested' % len(intercept_vals))
 # This example uses the network defined in
 # abr_control/controllers/signals/dynamics_adaptation.py
 save_name = 'proportion_activity'
-analysis_fncs = network_utils.proportion_time_neurons_active
+analysis_fncs = [
+    network_utils.proportion_neurons_active_over_time,
+    network_utils.proportion_time_neurons_active]
 intercepts_scan.run(
     encoders=encoders,
     intercept_vals=intercept_vals,
@@ -72,19 +74,21 @@ intercepts_scan.run(
     notes='',
     analysis_fncs=analysis_fncs)
 
-# ----------- create your ideal profile function ---------------
-# gaussian distribution
-# a == y peak, dependent on how many neurons in your network
-# mu == x offset
-# sig == std dev
+# ----- compare generated data to ideal, plot 10 closest ----
+save_name0 = '%s/%s'%(save_name, analysis_fncs[0].__name__)
+intercepts_scan.review(
+    save_name=save_name0,
+    ideal_function=lambda x: 0.3,
+    num_to_plot=10,
+    )
+
 def gauss(x, a=400, mu=0.4, sig=0.025):
     return a*np.exp(-np.power(x - mu, 2.) / (2 * sig**2))
-
-# ----- compare generated data to ideal, plot 10 closest ----
-save_name += '/%s'%analysis_fncs.__name__
+save_name1 = '%s/%s'%(save_name, analysis_fncs[1].__name__)
 intercepts_scan.review(
-    save_name=save_name,
+    save_name=save_name1,
     ideal_function=gauss,
     num_to_plot=10,
     )
+
 plt.show()

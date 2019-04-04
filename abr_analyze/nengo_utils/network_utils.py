@@ -59,8 +59,8 @@ def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
         ii += 1
         if (ii % 1000) == 0:
             print('Downsampled to %i encoders at iteration %i' %
-                  (input_signal.shape[0], ii))
-            print('Current threshold value: %.3f' % thresh)
+                  (input_signal.shape[0], ii),
+                  'Current threshold value: %.3f' % thresh, end='\r')
 
         # choose a random set of indices
         n_indices = input_signal.shape[0]
@@ -93,8 +93,8 @@ def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
         if iters_with_no_update == 50:
             iters_with_no_update = 0
             thresh += .1 * thresh
-            print('All values within threshold, but not at target size.')
-            print('Increasing threshold to %.4f' % thresh)
+            # print('All values within threshold, but not at target size.')
+            # print('Increasing threshold to %.4f' % thresh)
         prev_n_indices = n_indices
 
     if input_signal.shape[0] != n_neurons:
@@ -120,6 +120,8 @@ def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
             warnings.warn(
                 'Could not find set of encoders outside thresh distance')
 
+    # clear the previous recurrent print
+    print('\n')
     return np.array(input_signal)
 
 
@@ -315,8 +317,8 @@ def proportion_neurons_responsive_to_input_signal(
     return proportion_active, activities
 
 
-def proportion_neurons_active_over_time(input_signal, network=None,
-        spike_trains=None, ax=None):
+def proportion_neurons_active_over_time(
+        input_signal, network=None, spike_trains=None, ax=None):
     '''
     Accepts a Nengo network and simulates its response to a given input
     Plots the proportion of active neurons vs run time onto the ax object
@@ -337,8 +339,8 @@ def proportion_neurons_active_over_time(input_signal, network=None,
         "Either a network object or an array of spike trains must be provided")
 
     if spike_trains is None:
-        spike_trains = get_spike_trains(network=network,
-            input_signal=input_signal)
+        spike_trains = get_spike_trains(
+            network=network, input_signal=input_signal)
 
     proportion_active = []
     for spike_train in spike_trains:
@@ -358,8 +360,8 @@ def proportion_neurons_active_over_time(input_signal, network=None,
     return proportion_active, spike_trains
 
 
-def proportion_time_neurons_active(input_signal, network=None,
-        spike_trains=None, ax=None):
+def proportion_time_neurons_active(
+        input_signal, network=None, spike_trains=None, ax=None):
     '''
     Accepts a Nengo network andsimulates its response to a given input
     Plots a histogram of neuron activity relative to run time onto ax
@@ -380,8 +382,8 @@ def proportion_time_neurons_active(input_signal, network=None,
         "Either a network object or an array of spike trains must be provided")
 
     if spike_trains is None:
-        spike_trains = get_spike_trains(network=network,
-            input_signal=input_signal)
+        spike_trains = get_spike_trains(
+            network=network, input_signal=input_signal)
 
     proportion_time_active = []
     for spike_train in spike_trains:

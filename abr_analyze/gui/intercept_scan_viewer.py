@@ -439,11 +439,11 @@ class InterceptScanViewer(tk.Frame):
             function=lambda: self.button.clear_plot(self),
             row=1, col=0)
 
-        ideal_button = self.create.button(
-            frame=frame_plot_buttons,
-            text='Toggle Ideal',
-            function=lambda: self.button.toggle_ideal(self),
-            row=2, col=0)
+        # ideal_button = self.create.button(
+        #     frame=frame_plot_buttons,
+        #     text='Toggle Ideal',
+        #     function=lambda: self.button.toggle_ideal(self),
+        #     row=2, col=0)
 
         save_button = self.create.button(
             frame=frame_plot_buttons,
@@ -610,20 +610,20 @@ class LiveFigure():
                 if data is not None:
                     a = self.fig.add_subplot(111)
                     a.clear()
-                    label = '(%.1f, %.1f), %.1f\nerror: %.2f\nACTV:%i | INACTV:%i'%(
+                    label = '(%.1f, %.1f), %.1f\nACTV:%i | INACTV:%i'%(
                         data['intercept_bounds'][0],
                         data['intercept_bounds'][1],
                         data['intercept_mode'],
-                        data['error'],
                         data['num_active'],
                         data['num_inactive']
                         )
-                    length = len(data['x'])
-                    s = length - int(length*0.1)
-                    s = 0
-                    a.plot(data['x'][s:-1], data['y'][s:-1], label=label)
-                    a.set_xlabel(data['xlabel'])
-                    a.set_ylabel(data['ylabel'])
+                    # length = len(data['x'])
+                    # s = length - int(length*0.1)
+                    # s = 0
+                    a.plot(data['x'], data['y'], label=label)
+                    a.set_title(data['title'])
+                    # a.set_xlabel(data['xlabel'])
+                    # a.set_ylabel(data['ylabel'])
 
                     if keep_test_val:
                         current_test = {'label': label, 'y': data['y'],
@@ -633,16 +633,17 @@ class LiveFigure():
 
                     if self.test_que:
                         for test in self.test_que:
-                            a.plot(test['x'][s:-1], test['y'][s:-1], label=test['label'])
+                            a.plot(test['x'], test['y'], label=test['label'])
 
-                    if toggle_ideal_val:
-                        a.plot(data['x'][s:-1], self.ideal[s:-1], label='ideal',
-                                c='k', lw=3)
+                    # if toggle_ideal_val:
+                    #     a.plot(data['x'], self.ideal, label='ideal',
+                    #             c='k', lw=3)
                     a.legend(loc=legend_loc_val%4+1)
 
                     if save_val:
                         #global valid_val
-                        a.figure.savefig('%s/intercept_scan_viewer.png'%figures_dir)
+                        a.figure.savefig('%s/intercept_scan_viewer.png'
+                                         %figures_dir)
                         msg = ('Figure saved to:'
                                 + ' %s/intercept_scan_viewer.png'%figures_dir)
                         print(msg)
@@ -679,9 +680,15 @@ class LiveFigure():
         try:
             test_num = int(key_dict[keys[0]][keys[1]][keys[2]])
             data = self.dat.load(
-                    parameters=['intercept_bounds', 'intercept_mode', 'x', 'y',
-                        'error', 'xlabel', 'ylabel', 'num_active', 'num_inactive'],
+                    parameters=['intercept_bounds', 'intercept_mode', 'y',
+                        'title', 'num_active', 'num_inactive'],
                     save_location='%s/%05d'%(self.save_location, test_num))
+            if data['title'] == 'proportion_time_neurons_active':
+                y, bins_out = np.histogram(np.squeeze(data['y']), bins=100)
+                data['x'] = 0.5*(bins_out[1:]+bins_out[:-1])
+                data['y'] = y
+            else:
+                data['x'] = np.cumsum(np.ones(len(data['y'])))
             valid_val.set('Valid')
             return data
         except:
@@ -692,7 +699,8 @@ class LiveFigure():
 # the database to load data from
 db_name = 'intercepts_scan'
 # the name of the intercept scan to look at
-save_location='proportion_time_scat_hyp_1k'
+# save_location = 'proportion_activity/proportion_neurons_active_over_time'
+save_location = 'proportion_activity/proportion_time_neurons_active'
 live = LiveFigure(db_name=db_name, save_location=save_location)
 app = MasterPage(db_name=db_name, save_location=save_location)#, fig=ani_plot.fig)
 ani = animation.FuncAnimation(live.fig, live.plot, interval=1000)

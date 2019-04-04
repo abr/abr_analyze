@@ -105,6 +105,8 @@ ENV/
 
 # ignore databases
 /databases
+# ignore figures
+*/Figures
 =======
 paths.py
 =======

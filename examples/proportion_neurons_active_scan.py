@@ -32,7 +32,6 @@ input_signal = np.squeeze(input_signal)
 seed = 0
 n_neurons = 1000
 n_ensembles = 1
-test_name = 'proportion_neurons_active_example',
 n_input = 11
 
 # ----------- Create your encoders ---------------
@@ -61,8 +60,9 @@ print('%i different combinations to be tested' % len(intercept_vals))
 # ----------- Instantiate your nengo simulator ---------------
 # This example uses the network defined in
 # abr_control/controllers/signals/dynamics_adaptation.py
-save_name = 'proportion_neurons'
-intercepts_scan.proportion_neurons_active(
+save_name = 'proportion_activity'
+analysis_fncs = network_utils.proportion_neurons_active_over_time
+intercepts_scan.run(
     encoders=encoders,
     intercept_vals=intercept_vals,
     input_signal=input_signal,
@@ -70,9 +70,10 @@ intercepts_scan.proportion_neurons_active(
     save_name=save_name,
     pes_learning_rate=1e-6,
     notes='',
-    )
+    analysis_fncs=analysis_fncs)
 
 # ----- compare generated data to ideal, plot 10 closest ----
+save_name += '/%s'%analysis_fncs.__name__
 intercepts_scan.review(
     save_name=save_name,
     ideal_function=lambda x: 0.3,
