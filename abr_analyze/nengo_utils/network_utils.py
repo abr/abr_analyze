@@ -333,9 +333,7 @@ def proportion_neurons_active_over_time(
 
     if spike_trains is None:
         spike_trains = get_spike_trains(
-            network=network,
-            input_signal=input_signal,
-            synapse=network.tau_output)
+            network=network, input_signal=input_signal)
 
     n_neurons_active = np.zeros(spike_trains.shape[0])
     for ii, timestep in enumerate(spike_trains):

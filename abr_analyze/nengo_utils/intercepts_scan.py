@@ -108,17 +108,6 @@ def run(encoders, intercept_vals, input_signal, seed=1,
 
             loop_time = timeit.default_timer() - start
 
-        # clear memory
-        start = None
-        intercept_list = None
-        network = None
-        spike_trains = None
-        y = None
-        activity = None
-        num_active = None
-        num_inactive = None
-        gc.collect()
-
 def review(save_name, ideal_function, num_to_plot=10):
     '''
     loads the data from save name and gets num_to_plot tests that most
