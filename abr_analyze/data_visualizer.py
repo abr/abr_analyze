@@ -1,7 +1,11 @@
 '''
 A class for plotting data onto ax objects
 '''
+import matplotlib
+import matplotlib.colors as colors
+import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d  # pylint: disable=W0611
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
 class DataVisualizer():
@@ -214,3 +218,132 @@ class DataVisualizer():
         if not isinstance(param, list):
             param = [param]
         return param
+
+
+    def project_data(self, data, n_dims_project):
+        '''
+        perform SVD and project the data into its top n_dims_project
+        principle components
+
+        PARAMETERS
+        ----------
+        data: np.array
+            a timesteps x dimensions array of data
+        n_dims_project: int
+            the number of principle components to plot into
+        '''
+        U, S, _ = np.linalg.svd(data.T)
+        PCs = np.dot(U, np.diag(S))
+
+        return np.dot(data, PCs[:, :n_dims_project])
+
+
+    def plot_against_projection_2d(self, ax, data_project, data_plot):
+        '''
+        accepts a T x d project array, and a T x 1 plot array. Performs SVD on
+        the data_project array, projects the data into the top n_projected_dims
+        principle component, and plots against data_plot
+
+        PARAMETERS
+        ----------
+        ax: axis object
+            allows for control of the plot from outside of this function
+        data_project: np.array
+            the data to perform SVD on and project into its top PC
+        data_plot: np.array
+            the data to plot the projected data against (y-axis)
+        '''
+        projected = self.project_data(data_project, 1)
+
+        ax.plot(projected, data_plot)
+
+        return ax
+
+
+    def make_axes_for_3d_plots(self, ax, colorbar_ax=False):
+        '''
+        accepts in an axis, in the same space adds two more axes.
+        The intention is to use this to plot a 3D plot as 3 plots:
+        (x, y), (y, z), (z, y), and optionally a 4th axis for the colorbar.
+
+        PARAMETERS
+        ----------
+        ax: axis object
+        colorbar_ax: boolean, Option (Default: False)
+        '''
+        # make the subplots in this axis
+        divider = make_axes_locatable(ax)
+        axes = [ax]
+        axes.append(divider.append_axes('right', size='100%', pad='40%'))
+        axes.append(divider.append_axes('right', size='100%', pad='40%'))
+        if colorbar_ax:
+            axes.append(divider.append_axes('right', size='7%', pad='10%'))
+
+        return axes
+
+
+    def plot_against_projection_3d(self, ax, data_project, data_plot):
+        '''
+        accepts a T x d project array, and a T x 1 plot array. Performs SVD on
+        the data_project array, projects the data into the top 2 principle
+        components, and plots against data_plot on the z axis
+
+        PARAMETERS
+        ----------
+        ax: axis object
+            allows for control of the plot from outside of this function
+        data_project: np.array
+            the data to perform SVD on and project into its top PCs
+        data_plot: np.array
+            the data to plot the projected data against (z-axis)
+        '''
+        projected = self.project_data(data_project, 2)
+        axes = self.make_axes_for_3d_plot(ax)
+
+        axes[0].plot(projected[:, 0], projected[:, 1])
+        axes[1].plot(projected[:, 0], data_plot)
+        axes[2].plot(projected[:, 1], data_plot)
+
+        axes[0].update({'title':'XY'})
+        axes[1].update({'title':'XZ'})
+        axes[2].update({'title':'YZ'})
+
+        return axes
+
+
+    def plot_against_projection_4d(self, ax, data_project, data_plot):
+        '''
+        accepts a T x d project array, and a T x 1 plot array. Performs SVD on
+        the data_project array, projects the data into the top three
+        principle components, and uses data_plot to determine the color of
+        each point
+
+        PARAMETERS
+        ----------
+        ax: axis object
+            allows for control of the plot from outside of this function
+        data_project: np.array
+            the data to perform SVD on and project into its top PCs
+        data_plot: np.array
+            specifies the colors of the projected data points
+        '''
+        projected = self.project_data(data_project, 3)
+        axes = self.make_axes_for_3d_plot(ax, colorbar_ax=True)
+
+        jet = plt.get_cmap('jet')
+        cNorm = colors.Normalize(
+            vmin=min(data_plot), vmax=max(data_plot))
+
+        axes[0].scatter(
+            projected[:, 0], projected[:, 1], c=data_plot, cmap='jet')
+        axes[1].scatter(
+            projected[:, 0], projected[:, 2], c=data_plot, cmap='jet')
+        axes[2].scatter(
+            projected[:, 1], projected[:, 2], c=data_plot, cmap='jet')
+        matplotlib.colorbar.ColorbarBase(axes[3], cmap=jet, norm=cNorm)
+
+        axes[0].update({'title':'XY'})
+        axes[1].update({'title':'XZ'})
+        axes[2].update({'title':'YZ'})
+
+        return axes
