@@ -5,6 +5,7 @@ possible intercept is run, passing in the input signal, to generate a neural
 profile for each sim. The profiles can be viewed using the
 intercept_scan_viewer.py gui
 '''
+import gc
 import timeit
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,11 +43,16 @@ def run(encoders, intercept_vals, input_signal, seed=1,
         analysis_fncs = [analysis_fncs]
 
     loop_time = 0
+    elapsed_time = 0
     for ii, intercept in enumerate(intercept_vals):
         start = timeit.default_timer()
-        print('%.2f%% Complete, ~%.2f min remaining...' %
-              (ii/len(intercept_vals)*100,
-               (len(intercept_vals)-ii)*loop_time/60))
+        elapsed_time += loop_time
+        print('%i/%i | '%(ii+1, len(intercept_vals))
+              + '%.2f%% Complete | '%(ii/len(intercept_vals)*100)
+              + '%.2f min elapsed | '%(elapsed_time/60)
+              + '~%.2f min remaining...'
+              %((len(intercept_vals)-ii)*loop_time/60),
+              end='\r')
 
         # create our intercept distribution from the intercepts vals
         intercept_list = signals.AreaIntercepts(
@@ -101,6 +107,17 @@ def run(encoders, intercept_vals, input_signal, seed=1,
                      (save_name, func_name, ii), overwrite=True)
 
             loop_time = timeit.default_timer() - start
+
+        # clear memory
+        start = None
+        intercept_list = None
+        network = None
+        spike_trains = None
+        y = None
+        activity = None
+        num_active = None
+        num_inactive = None
+        gc.collect()
 
 def review(save_name, ideal_function, num_to_plot=10):
     '''
