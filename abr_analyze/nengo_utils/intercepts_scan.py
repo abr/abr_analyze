@@ -14,7 +14,6 @@ from abr_control.controllers import signals
 from abr_analyze.data_handler import DataHandler
 import abr_analyze.nengo_utils.network_utils as network_utils
 
-@profile
 def run(encoders, intercept_vals, input_signal, seed=1,
         save_name='example', notes='', analysis_fncs=None, **kwargs):
     '''

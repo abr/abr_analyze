@@ -332,12 +332,10 @@ def proportion_neurons_active_over_time(
         "Either a network object or an array of spike trains must be provided")
 
     if spike_trains is None:
-        if network.tau_output is None:
-            synapse = None
-        else:
-            synapse = network.tau_output
         spike_trains = get_spike_trains(
-            network=network, input_signal=input_signal, synapse=synapse)
+            network=network,
+            input_signal=input_signal,
+            synapse=network.tau_output)
 
     n_neurons_active = np.zeros(spike_trains.shape[0])
     for ii, timestep in enumerate(spike_trains):
@@ -379,12 +377,10 @@ def proportion_time_neurons_active(
         "Either a network object or an array of spike trains must be provided")
 
     if spike_trains is None:
-        if network.tau_output is None:
-            synapse = None
-        else:
-            synapse = network.tau_output
         spike_trains = get_spike_trains(
-            network=network, input_signal=input_signal, synapse=synapse)
+            network=network,
+            input_signal=input_signal,
+            synapse=network.tau_output)
 
     # for spike_train in spike_trains:
     n_timesteps_active = np.zeros(spike_trains.shape[1])
