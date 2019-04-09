@@ -3,7 +3,7 @@ a class for loading, interpolating, and plotting 3d data onto ax objects
 '''
 import numpy as np
 
-from abr_analyze.data_visualizer import DataVisualizer
+import abr_analyze.data_visualizer as vis
 import abr_analyze.data_processor as proc
 from .draw_data import DrawData
 
@@ -26,8 +26,6 @@ class Draw3dData(DrawData):
         self.interpolated_samples = interpolated_samples
         # create a dict to store processed data
         self.data = {}
-        # instantiate our process and visualize modules
-        self.vis = DataVisualizer()
 
     def plot(self, ax, save_location, parameters, step=-1, c='tab:purple',
              linestyle='--', label=None, title=None):
@@ -79,7 +77,7 @@ class Draw3dData(DrawData):
                     y=self.data[save_name][param][:, 1],
                     z=self.data[save_name][param][:, 2])
 
-            ax = self.vis.plot_3d_data(
+            ax = vis.plot_3d_data(
                 ax=ax, data=self.data[save_name][param][:step], c=c,
                 linestyle=linestyle, label=label, title=title)
 

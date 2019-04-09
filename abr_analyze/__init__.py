@@ -6,4 +6,3 @@ from . import nengo_utils
 from . import gui
 
 from .data_handler import DataHandler
-from .data_visualizer import DataVisualizer

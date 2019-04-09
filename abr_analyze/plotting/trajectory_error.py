@@ -15,7 +15,7 @@ minimum
 import numpy as np
 from abr_analyze.data_handler import DataHandler
 import abr_analyze.data_processor as proc
-from abr_analyze.data_visualizer import DataVisualizer
+import abr_analyze.data_visualizer as vis
 
 class TrajectoryError():
     def __init__(self, db_name, time_derivative=0, interpolated_samples=100):
@@ -35,7 +35,6 @@ class TrajectoryError():
             3: jerk
         '''
         # instantiate our data processor
-        self.vis = DataVisualizer()
         self.dat = DataHandler(db_name)
         self.db_name = db_name
         self.time_derivative = time_derivative
@@ -182,6 +181,6 @@ class TrajectoryError():
             parameters=['mean', 'upper_bound', 'lower_bound'],
             save_location='%s/statistical_error_%i'%(
                 save_location, self.time_derivative))
-        self.vis.plot_mean_and_ci(
+        vis.plot_mean_and_ci(
             ax=ax, data=data, c=c, linestyle=linestyle,
             label=label, loc=loc, title=title)

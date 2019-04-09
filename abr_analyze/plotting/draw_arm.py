@@ -1,7 +1,7 @@
 '''
     A class for plotting a stick arm onto a 3d ax object
 '''
-from abr_analyze.data_visualizer import DataVisualizer
+import abr_analyze.data_visualizer as vis
 import abr_analyze.data_processor as proc
 from .draw_data import DrawData
 
@@ -27,8 +27,6 @@ class DrawArm(DrawData):
         self.interpolated_samples = interpolated_samples
         # create a dict to store processed data
         self.data = {}
-        # instantiate our process and visualize modules
-        self.vis = DataVisualizer()
 
     def plot(self, ax, save_location, step=-1, parameters=None, c='b',
              linestyle=None, label=None, title=None):
@@ -75,7 +73,7 @@ class DrawArm(DrawData):
         data = self.data[save_location]
 
         # plot our arm figure
-        self.vis.plot_arm(
+        vis.plot_arm(
             ax=ax,
             joints_xyz=data['joints_xyz'][step],
             links_xyz=data['links_xyz'][step],
