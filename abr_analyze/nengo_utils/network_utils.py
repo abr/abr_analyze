@@ -459,6 +459,7 @@ def gen_learning_profile(network, input_signal, ax_list=None,
         for ii in range(0, 3):
             ax_list.append(plt.subplot(3, 1, ii+1))
 
+    print('Getting rasterplot...')
     raster_plot(
         network=network,
         input_signal=input_signal,
@@ -466,12 +467,14 @@ def gen_learning_profile(network, input_signal, ax_list=None,
         n_ens_to_raster=n_ens_to_raster,
         n_neurons_per_ens_to_plot=n_neurons_per_ens_to_plot)
 
+    print('Getting neuron activity over time...')
     proportion_active, spike_trains = proportion_neurons_active_over_time(
         input_signal=input_signal,
         network=network,
         # spike_trains=spike_trains,
         ax=ax_list[1])
 
+    print('Getting proportion of time neurons are active...')
     proportion_time_neurons_active(
         # input_signal=input_signal,
         network=network,

@@ -610,13 +610,18 @@ class LiveFigure():
                 if data is not None:
                     a = self.fig.add_subplot(111)
                     a.clear()
-                    label = '(%.1f, %.1f), %.1f\nACTV:%i | INACTV:%i'%(
+                    label = '(%.1f, %.1f), %.1f\nACTV:%i | INACTV:%i | %.2f'%(
                         data['intercept_bounds'][0],
                         data['intercept_bounds'][1],
                         data['intercept_mode'],
                         data['num_active'],
-                        data['num_inactive']
+                        data['num_inactive'],
+                        data['y_mean']
                         )
+                    if data['title'] == 'proportion_time_neurons_active':
+                        a.set_xlim(0, 1)
+                    else:
+                        a.set_ylim(0, 1)
                     # length = len(data['x'])
                     # s = length - int(length*0.1)
                     # s = 0
@@ -683,6 +688,8 @@ class LiveFigure():
                     parameters=['intercept_bounds', 'intercept_mode', 'y',
                         'title', 'num_active', 'num_inactive'],
                     save_location='%s/%05d'%(self.save_location, test_num))
+            # get the mean before converting y to a histogram
+            data['y_mean'] = np.mean(data['y'])
             if data['title'] == 'proportion_time_neurons_active':
                 y, bins_out = np.histogram(np.squeeze(data['y']), bins=100)
                 data['x'] = 0.5*(bins_out[1:]+bins_out[:-1])

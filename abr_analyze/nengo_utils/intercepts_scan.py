@@ -75,7 +75,8 @@ def run(encoders, intercept_vals, input_signal, seed=1,
 
         # get the spike trains from the sim
         spike_trains = network_utils.get_spike_trains(
-            network=network, input_signal=input_signal)
+            network=network, input_signal=input_signal,
+            synapse=network.tau_output)
 
         # loop through the analysis functions
         for func in analysis_fncs:
