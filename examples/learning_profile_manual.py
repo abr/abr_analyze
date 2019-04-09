@@ -101,7 +101,7 @@ network_utils.gen_learning_profile(
     n_ens_to_raster=1,
     show_plot=False)
 
-loc = '%s/examples/learning_profile_manual'%figures_dir
+loc = '%s/learning_profile_manual'%figures_dir
 plt.savefig(loc)
 print('Figure saved to %s'%loc)
 plt.show()

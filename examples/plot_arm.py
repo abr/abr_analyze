@@ -10,7 +10,8 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
 
-import abr_jaco2
+from abr_control.arms import jaco2
+
 from abr_analyze.plotting import DrawArm, Draw3dData
 from abr_analyze.paths import figures_dir
 from download_examples_db import check_exists as examples_db
@@ -26,7 +27,7 @@ test = 'test_1'
 baseline = 'baseline_1'
 
 # instantiate our robot config
-robot_config = abr_jaco2.Config(use_cython=True, hand_attached=True)
+robot_config = jaco2.Config(use_cython=True, hand_attached=True)
 
 # Instantiate our arm drawing module
 draw_arm = DrawArm(db_name=db_name, robot_config=robot_config,
@@ -69,7 +70,7 @@ ax.set_xlim(-0.5, 0.5)
 ax.set_ylim(-0.5, 0.5)
 ax.set_zlim(0.0, 1.2)
 
-save_loc='%s/examples/3d_arm_plot.png'%(figures_dir)
+save_loc='%s/3d_arm_plot.png'%(figures_dir)
 plt.savefig(save_loc)
 plt.show()
 print('Saved to %s'%save_loc)

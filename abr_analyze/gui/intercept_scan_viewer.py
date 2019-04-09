@@ -654,14 +654,9 @@ class LiveFigure():
                             else:
                                 a.plot(test['x'], test['y'],
                                         label=test['label'], c=plt_col[aa+1])
-
-                    # if toggle_ideal_val:
-                    #     a.plot(data['x'], self.ideal, label='ideal',
-                    #             c='k', lw=3)
                     a.legend(loc=legend_loc_val%4+1)
 
                     if save_val:
-                        #global valid_val
                         a.figure.savefig('%s/intercept_scan_%s.png'
                                          % (figures_dir, data['title']))
                         msg = ('Figure saved to:'
@@ -669,8 +664,6 @@ class LiveFigure():
                                 % (figures_dir, data['title']))
                         print(msg)
                         #TODO: make the font smaller while this is printed out
-                        #valid_val.set(msg)
-                        #time.sleep(1)
                         save_val = False
 
 
@@ -708,8 +701,8 @@ class LiveFigure():
             # get the mean before converting y to a histogram
             data['y_mean'] = np.mean(data['y'])
             if data['title'] == 'proportion_time_neurons_active':
-                y, bins_out = np.histogram(np.squeeze(data['y']),
-                                           bins=np.linspace(0, 1, self.bins))
+                y, bins_out = np.histogram(
+                    np.squeeze(data['y']), bins=np.linspace(0, 1, self.bins))
                 data['x'] = 0.5*(bins_out[1:]+bins_out[:-1])
                 data['y'] = y
             else:

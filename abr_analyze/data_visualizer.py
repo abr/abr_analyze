@@ -300,7 +300,7 @@ def plot_against_projection_3d(ax, data_project, data_plot):
         the data to plot the projected data against (z-axis)
     '''
     projected = project_data(data_project, 2)
-    axes = make_axes_for_3d_plot(ax)
+    axes = make_axes_for_3d_plots(ax)
 
     axes[0].plot(projected[:, 0], projected[:, 1])
     axes[1].plot(projected[:, 0], data_plot)
@@ -330,7 +330,7 @@ def plot_against_projection_4d(ax, data_project, data_plot):
         specifies the colors of the projected data points
     '''
     projected = project_data(data_project, 3)
-    axes = make_axes_for_3d_plot(ax, colorbar_ax=True)
+    axes = make_axes_for_3d_plots(ax, colorbar_ax=True)
 
     jet = plt.get_cmap('jet')
     cNorm = colors.Normalize(

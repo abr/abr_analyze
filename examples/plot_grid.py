@@ -142,4 +142,4 @@ cells.add_cell(
 
 # Once we have passed all of our data to our organizational layer,
 # run generate to create the plot
-cells.generate(save_loc='examples')
+cells.generate()

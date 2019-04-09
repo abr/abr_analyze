@@ -128,7 +128,7 @@ class DrawCells():
             self.data[cell_id][param_id] = param_dict
             self.data[cell_id]['param_ids'].append(param_id)
 
-    def generate(self, save_loc=None, save_name='draw_cells'):
+    def generate(self, save_name='draw_cells'):
         '''
         Takes all of the saved cells, functions and parameters, that were
         passed in to add_cell() and creates the figure, placing the plots from
@@ -136,12 +136,9 @@ class DrawCells():
 
         PARAMETERS
         ----------
-        save_loc: string, Optional (Default: None)
-            the save location for the final figure
         save_name: string, Optional (Default: draw_cells)
             the name to save the figure under
         '''
-        save_loc = 'examples' if save_loc is None else save_loc
 
         cell_ids = self.data['cell_ids']
         # this will only be greater than one if the cell is being animated
@@ -205,14 +202,13 @@ class DrawCells():
                     for a in ax:
                         a.clear()
             else:
-                plt.savefig('%s/%s/%s' % (figures_dir, save_loc, save_name))
-                print('Figure saved to %s/%s/%s' %
-                      (figures_dir, save_loc, save_name))
+                plt.savefig('%s/%s' % (figures_dir, save_name))
+                print('Figure saved to %s/%s' % (figures_dir, save_name))
                 plt.show()
 
         if self.animate_steps > 1:
             gif.create(fig_loc=fig_cache,
-                       save_loc='%s/%s' % (figures_dir, save_loc),
+                       save_loc='%s' % figures_dir,
                        save_name=save_name,
                        delay=5,
                        res=[1920, 1080])

@@ -36,7 +36,7 @@ draw_3d.plot(
         label='baseline')
 plt.title('My 3D Plot')
 
-save_loc='%s/examples/3d_plot.png'%(figures_dir)
+save_loc='%s/3d_plot.png'%(figures_dir)
 plt.savefig(save_loc)
 plt.show()
 print('Saved to %s'%save_loc)

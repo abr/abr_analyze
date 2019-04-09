@@ -39,7 +39,7 @@ draw_2d.plot(
 
 plt.title('My 2D Plot')
 
-save_loc='%s/examples/2d_plot.png'%(figures_dir)
+save_loc='%s/2d_plot.png'%(figures_dir)
 plt.savefig(save_loc)
 plt.show()
 print('Saved to %s'%save_loc)

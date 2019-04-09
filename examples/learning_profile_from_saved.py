@@ -57,8 +57,9 @@ encoders = data['encoders']
 
 runs = 10
 for ii in range(0, runs):
-    data = dat.load(parameters=['input_signal'],
-            save_location='test_1/session000/run%03d'%ii)
+    data = dat.load(
+        parameters=['input_signal'],
+        save_location='test_1/session000/run%03d'%ii)
     if ii == 0:
         input_signal = data['input_signal']
     else:
@@ -86,7 +87,7 @@ network_utils.gen_learning_profile(
     n_ens_to_raster=1,
     show_plot=False)
 
-loc = '%s/examples/learning_profile_from_saved'%figures_dir
+loc = '%s/learning_profile_from_saved'%figures_dir
 plt.savefig(loc)
 print('Figure saved to %s'%loc)
 plt.show()

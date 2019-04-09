@@ -22,4 +22,4 @@ else:
     os.makedirs(cache_dir, exist_ok=True)
     os.makedirs(database_dir, exist_ok=True)
     os.makedirs(figures_dir, exist_ok=True)
-    os.makedirs('%s/examples'%figures_dir, exist_ok=True)
+    os.makedirs('%s'%figures_dir, exist_ok=True)

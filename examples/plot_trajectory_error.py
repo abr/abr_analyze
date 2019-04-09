@@ -48,7 +48,7 @@ for jj, td in enumerate(time_derivatives):
         traj.plot(ax=ax, save_location='%s'%(test), label=test+label[ii],
                 c=c[ii], loc=0, title=title)
         ax.legend()
-loc = '%s/examples/trajectory_error.png'%(figures_dir)
+loc = '%s/trajectory_error.png'%(figures_dir)
 print('Figure saved to %s'%(loc))
 plt.savefig(loc)
 plt.show()

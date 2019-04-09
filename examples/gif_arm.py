@@ -83,7 +83,7 @@ for ii in range(1, interpolated_samples):
     plt.savefig(save_loc)
     ax.clear()
 
-save_loc='%s/examples'%(figures_dir)
+save_loc='%s'%(figures_dir)
 gif.create(fig_loc=fig_cache,
             save_loc=save_loc,
             save_name='gif_arm',
