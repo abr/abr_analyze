@@ -1,10 +1,12 @@
-from abr_analyze.plotting import TrajectoryError
-from abr_analyze.paths import figures_dir
-from download_examples_db import check_exists as examples_db
 import numpy as np
 import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
+
+from abr_analyze.plotting import TrajectoryError
+from abr_analyze.paths import figures_dir
+from download_examples_db import check_exists as examples_db
+
 
 examples_db()
 db_name = 'abr_analyze_examples'
@@ -21,6 +23,7 @@ runs = 10
 time_derivatives = [0,1,2,3]
 derivative_print = ['0th', '1st', '2nd', '3rd']
 interpolated_samples=400
+
 if len(time_derivatives)>3:
     plt_dims = [2,int(np.ceil(len(time_derivatives))/2)]
 else:
@@ -28,7 +31,8 @@ else:
 
 fig = plt.figure(figsize=(12,8))
 for jj, td in enumerate(time_derivatives):
-    print('-- Processing %s derivative trajectory error --'%derivative_print[td])
+    print('-- Processing %s derivative trajectory error --' %
+          derivative_print[td])
     title = 'trajectory_error_%i'%(td)
     ax = fig.add_subplot(plt_dims[0], plt_dims[1], jj+1)
     traj = TrajectoryError(db_name=db_name,

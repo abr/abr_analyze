@@ -1,10 +1,13 @@
-from abr_analyze.plotting import Draw3dData
-from abr_analyze.paths import figures_dir
-from download_examples_db import check_exists as examples_db
-import matplotlib.pyplot as plt
 """
 A simple example of plotting parameters saved to the database on a 3d ax object
 """
+import matplotlib.pyplot as plt
+
+from abr_analyze.plotting import Draw3dData
+from abr_analyze.paths import figures_dir
+from download_examples_db import check_exists as examples_db
+
+
 examples_db()
 # the number of samples to interpolate our data to, set to None for no
 # interpolation

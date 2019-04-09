@@ -164,7 +164,6 @@ def review(save_name, ideal_function, num_to_plot=10):
         run_data.append(data)
         errors.append(error)
 
-    print('errors: ', errors)
     indices = np.array(errors).argsort()[:num_to_plot]
     print('Plotting...')
     plt.figure()

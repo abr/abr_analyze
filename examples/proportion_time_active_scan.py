@@ -4,18 +4,21 @@ of time that neurons are active for and plot the histogram. Display the top
 10 results that lead to a distribution closest to the ideal function
 specified (y=gauss(x))
 """
-from abr_analyze.nengo_utils import network_utils, intercepts_scan
-from abr_control.controllers import signals
-from abr_analyze.paths import cache_dir
-from abr_analyze import DataHandler
-from download_examples_db import check_exists as examples_db
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
+
 import nengolib
 from nengolib.stats import ScatteredHypersphere
+
+from abr_analyze.nengo_utils import network_utils, intercepts_scan
+from abr_control.controllers import signals
+from abr_analyze.paths import cache_dir
+from abr_analyze import DataHandler
+from download_examples_db import check_exists as examples_db
+
 
 examples_db()
 runs = 10

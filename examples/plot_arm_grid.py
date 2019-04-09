@@ -8,10 +8,12 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import os
 
+from abr_control.arms import jaco2
+
 from abr_analyze.paths import figures_dir
 from abr_analyze.plotting import DrawCells, Draw3dData, DrawArm
-import abr_jaco2
 from download_examples_db import check_exists as examples_db
+
 
 examples_db()
 interpolated_samples = 100
@@ -32,7 +34,7 @@ while rows*cols < len(runs):
     rows += 1
 
 # instantiate our robot config
-robot_config = abr_jaco2.Config(use_cython=True, hand_attached=True)
+robot_config = jaco2.Config(use_cython=True, hand_attached=True)
 
 # Instantiate our arm drawing module
 draw_arm = DrawArm(

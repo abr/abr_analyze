@@ -14,17 +14,20 @@ Plots
    of run time
 3. proportion of neurons that are active over time
 """
-from abr_analyze import DataHandler
-from abr_analyze.nengo_utils import network_utils
-from abr_control.controllers import signals
-from abr_analyze.paths import cache_dir, figures_dir
-from download_examples_db import check_exists as examples_db
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
+
 import nengolib
+
+from abr_analyze import DataHandler
+from abr_analyze.nengo_utils import network_utils
+from abr_control.controllers import signals
+from abr_analyze.paths import cache_dir, figures_dir
+from download_examples_db import check_exists as examples_db
+
 
 examples_db()
 dat = DataHandler('abr_analyze_examples')
@@ -34,8 +37,11 @@ ax_list = [
       fig.add_subplot(312),
       fig.add_subplot(313)
      ]
-data = dat.load(parameters=['n_input', 'n_output', 'n_neurons', 'n_ensembles',
-    'pes', 'intercepts', 'backend', 'seed', 'neuron_type', 'encoders'],
+data = dat.load(
+    parameters=[
+        'n_input', 'n_output', 'n_neurons', 'n_ensembles',
+        'pes', 'intercepts', 'backend', 'seed', 'neuron_type', 'encoders'
+        ],
     save_location='nengo_data')
 
 n_input = int(data['n_input'])

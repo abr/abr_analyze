@@ -1,12 +1,15 @@
-import abr_jaco2
-from abr_analyze.plotting import DrawCells, Draw2dData, Draw3dData, DrawArm
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from download_examples_db import check_exists as examples_db
 """
 An example combining the different plotting subclasses and plotting them onto
 a gridspec grid
 """
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+
+from abr_control.arms import jaco2
+
+from abr_analyze.plotting import DrawCells, Draw2dData, Draw3dData, DrawArm
+from download_examples_db import check_exists as examples_db
+
 
 examples_db()
 # the number of samples to interpolate our data to, set to None for no
@@ -18,7 +21,7 @@ test = 'test_1/session000'
 baseline = 'baseline_1/session000'
 
 # instantiate our robot config
-robot_config = abr_jaco2.Config(use_cython=True, hand_attached=True)
+robot_config = jaco2.Config(use_cython=True, hand_attached=True)
 
 # Instantiate our arm drawing module
 draw_arm = DrawArm(

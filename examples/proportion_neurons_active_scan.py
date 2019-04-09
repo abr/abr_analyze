@@ -3,17 +3,20 @@ Run a parameter sweep across intercept values, looking at the proportion
 of neurons are active over time. Display the 10 results that are closest
 to the ideal function specified (y=0.3)
 """
-from abr_analyze.nengo_utils import network_utils, intercepts_scan
-from abr_control.controllers import signals
-from abr_analyze.paths import cache_dir
-from abr_analyze import DataHandler
-from download_examples_db import check_exists as examples_db
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
+
 import nengolib
+
+from abr_analyze.nengo_utils import network_utils, intercepts_scan
+from abr_control.controllers import signals
+from abr_analyze.paths import cache_dir
+from abr_analyze import DataHandler
+from download_examples_db import check_exists as examples_db
+
 
 examples_db()
 runs = 10

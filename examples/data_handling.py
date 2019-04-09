@@ -1,11 +1,13 @@
-from abr_analyze import DataHandler
-from download_examples_db import check_exists as examples_db
-import numpy as np
-
 '''
 This script shows how to use the hdf5 database structure, including saving,
 loading, renaming, and deleting data
 '''
+import numpy as np
+
+from abr_analyze import DataHandler
+from download_examples_db import check_exists as examples_db
+
+
 examples_db()
 save_location = 'data_handling'
 recorded_time = np.linspace(0,1,100)

@@ -1,6 +1,9 @@
+import numpy as np
+
 from abr_analyze.utils import npz_to_hdf5
 from download_examples_db import check_exists as examples_db
-import numpy as np
+
+
 examples_db()
 a = np.ones(11)
 b = np.zeros(4)
