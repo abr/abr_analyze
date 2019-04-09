@@ -19,12 +19,6 @@ from abr_analyze.data_handler import DataHandler
 import abr_analyze.data_processor as proc
 
 
-# def test_get_mean_and_ci():
-#     results = {}
-#     test = 'test_get_mean_and_ci()'
-#     results[test] = {}
-
-
 @pytest.mark.parametrize('functions', (
     [np.sin], [np.sin, np.cos],
     )
@@ -113,21 +107,113 @@ def test_scale_data(plt):
     plt.show()
 
 
-# def test_filter_data():
-#     results = {}
-#     test = 'test_filter_data()'
-#     results[test] = {}
-#     print('\n%s----------%s----------%s'%(BLUE, test, ENDC))
+@pytest.mark.parametrize('interpolated_samples, parameters, expected', (
+    # cycle through to test with and without interpolated_samples
+    # param doesn't exist
+    (50, ['ee', 'ideal', 'time'], TypeError),
+    (None, ['ee', 'ideal', 'time'], TypeError),
+    # pass without time
+    (50, ['ee_xyz'], None),
+    (None, ['ee_xyz'], None),
+    # pass with time
+    (50, ['ee_xyz', 'time'], None),
+    (None, ['ee_xyz', 'time'], None),
+    # pass multiple with time
+    (50, ['ee_xyz', 'ideal_trajectory', 'time'], None),
+    (None, ['ee_xyz', 'ideal_trajectory', 'time'], None),
+    # pass multiple without time
+    (50, ['ee_xyz', 'ideal_trajectory'], None),
+    (None, ['ee_xyz', 'ideal_trajectory'], None),
+    ))
+def test_load_and_process(interpolated_samples, parameters, expected):
+    dat = DataHandler('tests')
+    loc = 'fake_trajectory'
+    steps = 147
+    generate_random_traj(dat, steps=steps, plot=False)
+
+    try:
+        data = proc.load_and_process(
+            db_name='tests',
+            save_location=loc,
+            parameters=parameters,
+            interpolated_samples=interpolated_samples,
+            )
+
+        if interpolated_samples is None:
+            interpolated_samples = steps
+
+        for key in parameters:
+            if key == 'time':
+                key = 'cumulative_time'
+            assert len(data[key]) == interpolated_samples
+    except expected:
+        pass
+    except Exception as e:
+        pytest.fail('Unexpected Exception: ', e)
+
+
+@ pytest.mark.parametrize('n_joints, expected', (
+    (3, None),
+    (4, AssertionError)))
+def test_calc_cartesian_points(n_joints, expected):
+    db = 'tests'
+    dat = DataHandler(db)
+
+    class fake_robot_config():
+        def __init__(self):
+            self.N_JOINTS = 3
+            self.N_LINKS = 2
+        def Tx(self, name, q):
+            assert len(q) == self.N_JOINTS
+            return [1, 2, 3]
+
+    robot_config = fake_robot_config()
+
+    # number of time steps
+    steps = 10
+
+    # passing in the right dimensions of joint angles
+    q = np.zeros((steps, n_joints))
+    expected_shape = [
+                      [steps, robot_config.N_JOINTS, 3],
+                      [steps, robot_config.N_LINKS, 3],
+                      [steps, 3]
+                     ]
+
+    # catch the assertion error in the function call
+    try:
+        data = proc.calc_cartesian_points(
+            robot_config=robot_config, q=q)
+
+        # catch error in the assertion of the functions output's shape
+        for ii in range(0, len(expected_shape)):
+            for jj in range(0, len(np.array(data[ii]).shape)):
+                try:
+                    assert (
+                        np.array(data[ii]).shape[jj] == expected_shape[ii][jj],
+                        ('Expected %i Received %i'
+                         % (expected_shape[ii][jj],
+                            np.asarray(data[ii]).shape[jj])))
+                except expected:
+                    pass
+
+                except Error as e:
+                    pytest.fail('Unexpected Exception: ', e)
+
+    except expected:
+        pass
+
+    except Error as e:
+        pytest.fail('Unexpected Exception: ', e)
 
 
 def generate_random_traj(dat, steps, plot=False):
-    steps = steps
     alpha = 0.7
     ee_xyz = [[np.random.uniform(0.05, 0.2, 1),
                np.random.uniform(0.05, 0.2, 1),
                np.random.uniform(0.5, 1.0, 1)]]
 
-    for ii in range(0,steps):
+    for ii in range(steps-1):
 
         if ii == 0:
             xx = np.random.uniform(-2, 2, 1)/100
@@ -146,11 +232,10 @@ def generate_random_traj(dat, steps, plot=False):
             z = ee_xyz[-1][2] + zz
 
         ee_xyz.append([x, y, z])
-
     ee_xyz = np.squeeze(np.array(ee_xyz))
 
     alpha = 0.2
-    ideal = np.zeros((steps+1, 3))
+    ideal = np.zeros((steps, 3))
     for ii, val in enumerate(ee_xyz.tolist()):
 
         if ii == 0:
@@ -162,7 +247,7 @@ def generate_random_traj(dat, steps, plot=False):
             ideal[ii][2] = alpha*val[2] + (1-alpha)*ideal[ii-1][2]
 
     ideal = np.array(ideal)
-    times = np.ones(steps+1) * 0.03 + np.random.rand(steps+1)/50
+    times = np.ones(steps) * 0.03 + np.random.rand(steps)/50
 
     data = {'ee_xyz': ee_xyz, 'ideal_trajectory': ideal, 'time': times}
     dat.save(data=data, save_location='fake_trajectory', overwrite=True)
@@ -176,43 +261,3 @@ def generate_random_traj(dat, steps, plot=False):
         ax.plot(ideal[:,0], ideal[:,1], ideal[:,2], label='ideal')
         ax.legend()
         plt.show()
-
-
-def test_load_and_process():
-    dat = DataHandler('tests')
-
-    interpolated_samples = 50
-    parameters = ['ee_xyz', 'ideal_trajectory', 'time']
-    data = proc.load_and_process(
-        db_name='tests',
-        save_location='fake_trajectory',
-        parameters=parameters,
-        interpolated_samples=interpolated_samples,
-        )
-
-    for key in parameters:
-        if key == 'time':
-            key = 'cumulative_time'
-        assert len(data[key]) == interpolated_samples
-
-
-    generate_random_traj(dat, steps=147, plot=True)
-
-    # cycle through to test with and without interpolated_samples
-    # param doesn't exist
-    # pass without time
-    # pass with time
-    # pass multiple with time
-
-
-# def test_calc_cartesian_points():
-#     results = {}
-#     test = 'test_test_calc_cartesian_points()'
-#     results[test] = {}
-#     print('\n%s----------%s----------%s'%(BLUE, test, ENDC))
-#
-# def test_two_norm_error():
-#     results = {}
-#     test = 'test_two_norm_error()'
-#     results[test] = {}
-#     print('\n%s----------%s----------%s'%(BLUE, test, ENDC))

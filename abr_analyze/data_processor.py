@@ -9,10 +9,9 @@ import scipy.interpolate
 from abr_analyze.data_handler import DataHandler
 
 
-def get_mean_and_ci(raw_data):
+def get_mean_and_ci(raw_data, n=3000, p=0.95):
     '''
     gets the mean and 95% confidence intervals of data *see Note
-
     NOTE: data has to be grouped along rows, for example: having 5 sets of
     100 data points would be a list of shape (5,100)
     '''
@@ -26,7 +25,11 @@ def get_mean_and_ci(raw_data):
     raw_data = np.array(raw_data)
     for i in range(data_pts):
         data = raw_data[:, i]
-        ci = bootstrapci(data, np.mean)
+        index = int(n*(1-p)/2)
+        samples = np.random.choice(data, size=(n, len(data)))
+        r = [np.mean(s) for s in samples]
+        r.sort()
+        ci = r[index], r[-index]
         sample.append(np.mean(data))
         lower_bound.append(ci[0])
         upper_bound.append(ci[1])
@@ -34,14 +37,6 @@ def get_mean_and_ci(raw_data):
     data = {'mean': sample, 'lower_bound': lower_bound, 'upper_bound':
             upper_bound}
     return data
-
-
-def bootstrapci(data, func, n=3000, p=0.95):
-    index = int(n*(1-p)/2)
-    samples = np.random.choice(data, size=(n, len(data)))
-    r = [func(s) for s in samples]
-    r.sort()
-    return r[index], r[-index]
 
 
 def list_to_function(data, time_intervals):
@@ -108,8 +103,7 @@ def interpolate_data(data, time_intervals, interpolated_samples):
     return data_interp
 
 
-def scale_data(data, baseline_low, baseline_high,
-        scaling_factor=1):
+def scale_data(data, baseline_low, baseline_high, scaling_factor=1):
     """
     scale data to some baseline to get values from 0-1 relative
     to baseline times the scaling factor
@@ -135,26 +129,6 @@ def scale_data(data, baseline_low, baseline_high,
     scaled_data *= scaling_factor
 
     return scaled_data
-
-
-def filter_data(data, alpha=0.2):
-    '''
-    accepts data in a list and returns it low pass filtered
-
-    PARAMETERS:
-    data: list of floats
-        the data to be filtered
-    alpha: float, Optional (Default: 0.2)
-        the filter constant
-    '''
-    data_filtered = np.zeros(len(data))
-    for ii, val in enumerate(data):
-        if ii == 0:
-            data_filtered[ii] = alpha*val
-        else:
-            data_filtered[ii] = alpha*val + (1-alpha)*data_filtered[ii-1]
-
-    return data_filtered
 
 
 def load_and_process(db_name, save_location, parameters,
@@ -245,7 +219,6 @@ def calc_cartesian_points(robot_config, q):
         # loop through the kinematic chain of joints
         for ii in range(0, robot_config.N_JOINTS):
             joints_t_xyz.append(robot_config.Tx('joint%i'%ii, q=q_t))
-        joints_t_xyz.append(robot_config.Tx('EE', q=q_t))
         ee_t_xyz.append(robot_config.Tx('EE', q=q_t))
 
         # loop through the kinematic chain of links
@@ -258,26 +231,3 @@ def calc_cartesian_points(robot_config, q):
         ee_xyz.append(ee_t_xyz)
 
     return [np.array(joints_xyz), np.array(links_xyz), np.squeeze(ee_xyz)]
-
-
-def two_norm_error(trajectory, ideal_trajectory, dt=1):
-    """
-    accepts two nx3 arrays of xyz cartesian coordinates and returns the
-    2norm error of traj to baseline_traj
-
-    PARAMETERS
-    ----------
-    baseline_traj: nx3 array
-        coordinates of ideal trajectory over time
-    traj: nx3 array
-        coordinates of trajectory to compare to baseline
-    dt: float, Optional (Default: 1)
-        average timestep
-    """
-    # error relative to ideal path
-    error = np.sqrt(np.sum(
-        (ideal_trajectory - trajectory)**2,
-        axis=1)) *dt
-    #TODO: confirm whether or not we should be multiplying by dt
-
-    return error

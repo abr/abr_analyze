@@ -2,11 +2,7 @@
 Loads the data from the specified save location (see Note) for the provided
 test and returns a dict of data, used to plot the error in trajectory,
 interpolated and sampled to the specified number of interpolated_samples,
-differentiated to the the order specified by time_derivative, and low pass
-filtered with alpha=filter_const.
-
-NOTE: it is recommended to have some filtering if differentiating data to
-help smooth out peaks
+differentiated to the the order specified by time_derivative
 
 NOTE: the location passed in must have data with the following keys at
 minimum
@@ -22,8 +18,7 @@ import abr_analyze.data_processor as proc
 from abr_analyze.data_visualizer import DataVisualizer
 
 class TrajectoryError():
-    def __init__(self, db_name, time_derivative=0, filter_const=None,
-                 interpolated_samples=100):
+    def __init__(self, db_name, time_derivative=0, interpolated_samples=100):
         '''
         PARAMETERS
         ----------
@@ -38,16 +33,12 @@ class TrajectoryError():
             1: velocity
             2: acceleration
             3: jerk
-        filter_const: float, Optional, (Default: None)
-            None for no filtering, it is recommended to filter higher order
-            errors
         '''
         # instantiate our data processor
         self.vis = DataVisualizer()
         self.dat = DataHandler(db_name)
         self.db_name = db_name
         self.time_derivative = time_derivative
-        self.filter_const = filter_const
         self.interpolated_samples = interpolated_samples
 
     def statistical_error(self, save_location, ideal=None, sessions=1, runs=1,
@@ -83,7 +74,7 @@ class TrajectoryError():
                 ci_errors = self.dat.load(
                     parameters=['mean', 'upper_bound', 'lower_bound', 'ee_xyz',
                                 'ideal_trajectory', 'time', 'time_derivative',
-                                'filter_const', 'read_location', 'error'],
+                                'read_location', 'error'],
                     save_location='%s/statistical_error_%i' % (
                         save_location, self.time_derivative))
 
@@ -100,14 +91,14 @@ class TrajectoryError():
                     print('%.3f processing complete...' %
                           (100*((run+1)+(session*runs)) / (sessions*runs)),
                           end='\r')
-                    loc = '%s/session%03d/run%03d' % (save_location, session, run)
+                    loc = ('%s/session%03d/run%03d'
+                           % (save_location, session, run))
                     data = self.calculate_error(save_location=loc, ideal=ideal)
                     session_error.append(np.sum(data['error']))
                 errors.append(session_error)
 
             ci_errors = proc.get_mean_and_ci(raw_data=errors)
             ci_errors['time_derivative'] = self.time_derivative
-            ci_errors['filter_const'] = self.filter_const
 
             if save_data:
                 self.dat.save(
@@ -122,18 +113,17 @@ class TrajectoryError():
         '''
         loads the ee_xyz data from save_location and compares it to ideal. If
         ideal is not passed in, it is assuemed that a filtered path planner is
-        saved in save_location under the key 'ideal_trajectory' and will be used
-        as the reference for the error calculation. The data is loaded, interpolated,
-        differentiated, and filtered based on the parameters. The two norm
-        error over time is returned.
+        saved in save_location under the key 'ideal_trajectory' and will be
+        used as the reference for the error calculation. The data is loaded,
+        interpolated, and differentiated. The two norm error is returned.
 
         the following dict is returned
         data = {
             'ee_xyz': list of end-effector positions (n_timesteps, xyz),
-            'ideal_trajectory': list of path planner positions (n_timesteps, xyz),
+            'ideal_trajectory': list of path planner positions
+                shape of (n_timesteps, xyz)
             'time': list of timesteps (n_timesteps),
             'time_derivative': int, the order of differentiation applied,
-            'filter_const': float or None, the filter value used,
             'read_location': string, the location the raw data was loaded from,
             'error': the two-norm error between the end-effector trajectory and
                 the path planner followed that run
@@ -179,23 +169,9 @@ class TrajectoryError():
                         data[key][:, 1] = np.gradient(data[key][:, 1], dt)
                         data[key][:, 2] = np.gradient(data[key][:, 2], dt)
 
-        # filter data
-        if self.filter_const is not None:
-            for key in data:
-                if key != 'time':
-                    data[key] = proc.filter_data(
-                        data=data[key],
-                        alpha=self.filter_const)
-
         data['time_derivative'] = self.time_derivative
-        data['filter_const'] = self.filter_const
         data['read_location'] = save_location
-
-        error = proc.two_norm_error(
-            trajectory=data['ee_xyz'],
-            ideal_trajectory=data[ideal],
-            dt=dt)
-        data['error'] = error
+        data['error'] = np.linalg.norm((data['ee_xyz'] - data[ideal]), axis=1)
 
         return data
 
