@@ -707,7 +707,8 @@ class LiveFigure():
 db_name = 'intercepts_scan'
 # the name of the intercept scan to look at
 # save_location = 'proportion_activity/proportion_neurons_active_over_time'
-save_location = 'proportion_activity/proportion_time_neurons_active'
+test = 'BF2_nengo_cpu_friction_126_0_[-9to9_step2]'
+save_location = '%s/proportion_time_neurons_active'%test
 live = LiveFigure(db_name=db_name, save_location=save_location)
 app = MasterPage(db_name=db_name, save_location=save_location)#, fig=ani_plot.fig)
 ani = animation.FuncAnimation(live.fig, live.plot, interval=1000)

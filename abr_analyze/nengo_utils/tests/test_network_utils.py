@@ -10,6 +10,7 @@ class DynamicsAdaptation:
         self.n_neurons = n_neurons
         self.n_ensembles = n_ensembles
         self.input_signal = 0
+        self.tau_output = 0.2
 
         self.nengo_model = nengo.Network()
         with self.nengo_model:
@@ -88,7 +89,7 @@ def test_raster_plot(network, num_ens_to_raster, plt):
 def test_get_activities(network, input_signal, answer):
 
     activities = network_utils.get_activities(
-        network, np.array(input_signal))
+        network=network, input_signal=np.array(input_signal), synapse=None)
 
     assert np.sum(activities) == answer
 
@@ -106,31 +107,13 @@ def test_get_activities(network, input_signal, answer):
 def test_get_spike_trains(network, input_signal, answer):
 
     dt = 0.001
-    spike_trains = network_utils.get_spike_trains(
-        network, np.array(input_signal), dt)
+    spike_trains = network_utils.get_activities(
+        network=network, input_signal=np.array(input_signal), dt, synapse=None)
 
     # allowable error is 2.5% of max firing rate
     threshold = np.ceil(network.adapt_ens[0].max_rates[0] * 0.025)
     # assert the result is within 1 of the expected spiking rate
     assert abs(np.sum(spike_trains) - answer) <= threshold
-
-
-@pytest.mark.parametrize('network, input_signal, answer', (
-    (DynamicsAdaptation(2, 1, encoders=[[1], [1]], max_rates=[10, 10]),
-     np.ones((1000, 1)), 1),
-    (DynamicsAdaptation(2, 1, encoders=[[1], [-1]], max_rates=[10, 10]),
-     np.ones((1000, 1)), .5),
-    ))
-def test_proportion_neurons_responsive_to_input_signal(
-        network, input_signal, answer, plt):
-
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-    prop_active, _ = (
-        network_utils.proportion_neurons_responsive_to_input_signal(
-            network, input_signal, ax))
-
-    assert np.all(prop_active == answer)
 
 
 # expected sum of proportion of total neurons active over time over 1 second
@@ -153,7 +136,7 @@ def test_proportion_neurons_active_over_time(network, input_signal, answer, plt)
     ax = fig.add_subplot(1, 1, 1)
     proportion_neurons_active, _ = (
         network_utils.proportion_neurons_active_over_time(
-            network, input_signal, ax))
+            input_signal=input_signal, network=network, synapse=None, ax=ax))
 
     assert abs(np.sum(proportion_neurons_active) - answer) <= 1
 
@@ -176,7 +159,7 @@ def test_proportion_time_neurons_active(network, input_signal, answer, plt):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     proportion_time_active, _ = network_utils.proportion_time_neurons_active(
-        network, input_signal, ax)
+        input_signal=input_signal, network=network, synapse=None, ax=ax)
 
     # allowable error is 2.5% of max firing rate / s * # of neurons
     threshold = (np.ceil(network.adapt_ens[0].max_rates[0] * 0.025) /
@@ -196,8 +179,8 @@ def test_proportion_time_neurons_active(network, input_signal, answer, plt):
     ))
 def test_n_neurons_active_and_inactive(network, input_signal, answer):
 
-    spike_train = network_utils.get_spike_trains(
-        network, np.array(input_signal))
+    spike_train = network_utils.get_activities(
+        network=network, input_signal=np.array(input_signal), synapse=None)
 
     n_active, n_inactive = network_utils.n_neurons_active_and_inactive(
         spike_train)

@@ -197,13 +197,14 @@ def raster_plot(network, input_signal, ax, n_ens_to_raster=None,
     if n_ens_to_raster is None:
         n_ens_to_raster = len(network.adapt_ens)
 
-    spike_trains = get_spike_trains(network, input_signal)
+    spike_trains = get_activities(network, input_signal, synapse=0.005)
 
     time = np.ones(len(input_signal))
-    ax = rasterplot(np.cumsum(time),
-                    spike_trains[:, :n_neurons_per_ens_to_plot],
-                    ax=ax)
-
+    # ax = rasterplot(np.cumsum(time),
+    #                 spike_trains[:, :n_neurons_per_ens_to_plot],
+    #                 ax=ax)
+    #
+    ax.plot(spike_trains)
     ax.set_ylabel('Neuron')
     ax.set_xlabel('Time [sec]')
     ax.set_title('Spiking Activity')
@@ -211,35 +212,10 @@ def raster_plot(network, input_signal, ax, n_ens_to_raster=None,
     return spike_trains
 
 
-def get_activities(network, input_signal):
-    '''
-    Accepts a Nengo network and input signal and returns a list of the neural
-    activities based on the encoders, does not incorporate neural dynamics
-
-    PARAMETERS
-    ----------
-    network: .DynamicsAdaptation
-        'abr_control.controllers.signals.dynamics_adaptation'
-    input_signal: np array shape of (time_steps x input_dim)
-        the input used for the network sim
-    '''
-
-    thresh = 1e-5
-    activities = []
-    for ens in network.adapt_ens:
-        _, activity = nengo.utils.ensemble.tuning_curves(
-            ens, network.sim, input_signal)
-        activity[activity > thresh] = 1
-        activity[activity <= thresh] = 0
-        activities.append(np.copy(activity))
-
-    return np.array(activities)
-
-
-def get_spike_trains(network, input_signal, dt=0.001, synapse=None):
+def get_activities(network, input_signal, dt=0.001, synapse=None):
     '''
     Accepts a Nengo network and input signal and simulates it, returns the
-    spike trains
+    activities. If synapse is None, it returns the spike trains
 
     PARAMETERS
     ----------
@@ -262,60 +238,20 @@ def get_spike_trains(network, input_signal, dt=0.001, synapse=None):
         network.input_signal = in_sig
         network.sim.run(dt, progress_bar=False)
 
-    spike_trains = []
+    activities = []
     for probe in network.probe_neurons:
-        spike_trains.append(network.sim.data[probe] * dt)
-    spike_trains = np.hstack(spike_trains)
+        activities.append(network.sim.data[probe] * dt)
+    activities = np.hstack(activities)
 
-    return np.array(spike_trains)
-
-
-def proportion_neurons_responsive_to_input_signal(
-        network, input_signal, ax=None):
-    '''
-    Accepts a Nengo network and checks the tuning curve responses to the input
-    Plots the proportion of active neurons vs run time onto the ax object if
-    provided
-
-    Returns the proportion active and the activities
-
-    PARAMETERS
-    ----------
-    network: .DynamicsAdaptation
-        'abr_control.controllers.signals.dynamics_adaptation'
-    input_signal: np array shape of (time_steps x input_dim)
-        the input used for the network sim
-    ax: ax object
-        used for the rasterplot
-    '''
-    activities = get_activities(network=network, input_signal=input_signal)
-
-    proportion_active = []
-    for activity in activities:
-        proportion_active.append(np.sum(activity, axis=1) /
-                                 network.n_neurons)
-    proportion_active = np.sum(
-        proportion_active, axis=0) / len(proportion_active)
-
-    if ax is not None:
-        print('Plotting proportion of active neurons over time...')
-        ax.plot(proportion_active, label='proportion active')
-
-        ax.set_title('Proportion of active neurons over time')
-        ax.set_ylabel('Proportion Active')
-        ax.set_xlabel('Time steps')
-        ax.set_ylim(0, 1)
-        plt.legend()
-
-    return proportion_active, activities
+    return np.array(activities)
 
 
 def proportion_neurons_active_over_time(
-        input_signal=None, network=None, spike_trains=None, ax=None):
+        input_signal=None, network=None, pscs=None, synapse=0.005, ax=None):
     '''
     Accepts a Nengo network and simulates its response to a given input
     Plots the proportion of active neurons vs run time onto the ax object
-    Returns the proportion active and the spike trains
+    Returns the proportion active and the post-synaptic currents
 
     PARAMETERS
     ----------
@@ -323,23 +259,24 @@ def proportion_neurons_active_over_time(
         the input used for the network sim
     network: .DynamicsAdaptation
         'abr_control.controllers.signals.dynamics_adaptation'
-    spike_trains: np.array (timesteps x n_neurons), Optional (Default: None)
-        the output from get_spike_trains()
+    pscs: np.array (timesteps x n_neurons), Optional (Default: None)
+        the output from get_activities(synapse)
+        where 0.005 is the default pre_synapse time constant in PES
     ax: ax object
         for plotting the output
     '''
-    assert not (network is None and spike_trains is None), (
+    assert not (network is None and pscs is None), (
         "Either a network object or an array of spike trains must be provided")
 
-    if spike_trains is None:
-        spike_trains = get_spike_trains(
+    if pscs is None:
+        pscs = get_activities(
             network=network,
             input_signal=input_signal,
-            synapse=network.tau_output)
+            synapse=synapse)
 
-    n_neurons_active = np.zeros(spike_trains.shape[0])
-    for ii, timestep in enumerate(spike_trains):
-        n_neurons_active[ii] = len(np.where(timestep)[0])
+    n_neurons_active = np.zeros(pscs.shape[0])
+    for ii, timestep in enumerate(pscs):
+        n_neurons_active[ii] = len(np.where(timestep > 1e-2)[0])
     proportion_neurons_active = n_neurons_active / network.n_neurons
 
     if ax is not None:
@@ -349,18 +286,17 @@ def proportion_neurons_active_over_time(
         ax.set_title('Proportion of active neurons over time')
         ax.set_ylabel('Proportion Active')
         ax.set_xlabel('Time steps')
-        # ax.set_ylim(0, 1)
         plt.legend()
 
-    return proportion_neurons_active, spike_trains
+    return proportion_neurons_active, pscs
 
 
 def proportion_time_neurons_active(
-        input_signal=None, network=None, spike_trains=None, ax=None):
+        input_signal=None, network=None, pscs=None, synapse=0.005, ax=None):
     '''
     Accepts a Nengo network andsimulates its response to a given input
     Plots a histogram of neuron activity relative to run time onto ax
-    Returns the time active and the spike trains
+    Returns the time active and the post-synaptic currents
 
     PARAMETERS
     ----------
@@ -368,25 +304,29 @@ def proportion_time_neurons_active(
         the input used for the network sim
     network: .DynamicsAdaptation, Optional, (Default: None)
         'abr_control.controllers.signals.dynamics_adaptation'
-    spike_trains: np.array (timesteps x n_neurons), Optional (Default: None)
-        the output from get_spike_trains()
+    pscs: np.array (timesteps x n_neurons), Optional (Default: None)
+        the output from get_activities(synapse)
+        where 0.005 is the default pre_synapse time constant in PES
     ax: ax object
         for plotting the output
     '''
-    assert not (network is None and spike_trains is None), (
+    assert not (network is None and pscs is None), (
         "Either a network object or an array of spike trains must be provided")
 
-    if spike_trains is None:
-        spike_trains = get_spike_trains(
+    if pscs is None:
+        pscs = get_activities(
             network=network,
             input_signal=input_signal,
-            synapse=network.tau_output)
+            synapse=synapse)
 
-    # for spike_train in spike_trains:
-    n_timesteps_active = np.zeros(spike_trains.shape[1])
-    for ii, timestep in enumerate(spike_trains.T):
-        n_timesteps_active[ii] = len(np.where(timestep > 1e-5)[0])
-    proportion_time_active = n_timesteps_active / spike_trains.shape[0]
+    # for spike_train in pscs:
+    print(pscs.shape[1])
+    n_timesteps_active = np.zeros(pscs.shape[1])
+    for ii, timestep in enumerate(pscs.T):
+        print(timestep)
+        n_timesteps_active[ii] = len(np.where(timestep > 1e-2)[0])
+        print(n_timesteps_active[ii])
+    proportion_time_active = n_timesteps_active / pscs.shape[0]
 
     if ax is not None:
         plt.hist(proportion_time_active, bins=np.linspace(0, 1, 100))
@@ -394,21 +334,18 @@ def proportion_time_neurons_active(
         ax.set_xlabel('Proportion of Time')
         ax.set_title('Proportion of time neurons are active')
 
-    return proportion_time_active, spike_trains
+    return proportion_time_active, pscs
 
 
 def n_neurons_active_and_inactive(activity):
     '''
-    Accepts a list of activities set to 1's and 0's based on some
-    thereshold in get_activities() and returns how many neurons are
+    Accepts a list of neural activities and returns how many neurons are
     active and never active
 
     PARAMETERS
     ----------
     activity: int list of shape (n_timesteps x n_neurons)
-        a list of activities represented as 1 for spiking and 0 for not
-        spiking over all inputs passed to the nengo simulator, for each
-        ensemble of the network
+        a list of the neural activity over time
     '''
     activity = np.asarray(activity)
     if activity.ndim != 2:
@@ -468,20 +405,20 @@ def gen_learning_profile(network, input_signal, ax_list=None,
         n_neurons_per_ens_to_plot=n_neurons_per_ens_to_plot)
 
     print('Getting neuron activity over time...')
-    proportion_active, spike_trains = proportion_neurons_active_over_time(
+    proportion_active, pscs = proportion_neurons_active_over_time(
         input_signal=input_signal,
         network=network,
-        # spike_trains=spike_trains,
+        # pscs=pscs,
         ax=ax_list[1])
 
     print('Getting proportion of time neurons are active...')
     proportion_time_neurons_active(
         # input_signal=input_signal,
         network=network,
-        spike_trains=spike_trains,
+        pscs=pscs,
         ax=ax_list[2])
 
-    n_active, n_inactive = n_neurons_active_and_inactive(activity=spike_trains)
+    n_active, n_inactive = n_neurons_active_and_inactive(activity=pscs)
 
     print('Number of neurons inactive: ', n_inactive)
     print('Number of neurons active: ', n_active)
