@@ -74,7 +74,7 @@ def run(encoders, intercept_vals, input_signal, seed=1,
             **kwargs)
 
         # get the spike trains from the sim
-        spike_trains = network_utils.get_spike_trains(
+        spike_trains = network_utils.get_activities(
             network=network, input_signal=input_signal,
             synapse=network.tau_output)
 
@@ -82,7 +82,7 @@ def run(encoders, intercept_vals, input_signal, seed=1,
         for func in analysis_fncs:
             func_name = func.__name__
             y, activity = func(network=network, input_signal=input_signal,
-                               spike_trains=spike_trains)
+                               pscs=spike_trains)
 
             # get the number of active and inactive neurons
             num_active, num_inactive = (
