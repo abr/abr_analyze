@@ -120,7 +120,7 @@ def run(encoders, intercept_vals, input_signal, seed=1,
         num_inactive = None
         gc.collect()
 
-def review(save_name, ideal_function, num_to_plot=10):
+def review(save_name, ideal_function, num_to_plot=3):
     '''
     loads the data from save name and gets num_to_plot tests that most
     closley match the ideal function that was passed in during the scan
@@ -148,6 +148,7 @@ def review(save_name, ideal_function, num_to_plot=10):
 
     run_data = []
     errors = []
+    n_bins = 30
     for ii in range(0, num):
         data = dat.load(
             parameters=['intercept_bounds', 'intercept_mode',
@@ -155,7 +156,14 @@ def review(save_name, ideal_function, num_to_plot=10):
                         'num_inactive', 'title'],
             save_location='%s/%05d' % (save_name, ii))
 
-        data['x'] = np.cumsum(np.ones(len(data['y'])))
+        if data['title'] == 'proportion_time_neurons_active':
+            y, bins_out = np.histogram(np.squeeze(data['y']),
+                                        bins=np.linspace(0, 1, n_bins))
+            data['x'] = 0.5*(bins_out[1:]+bins_out[:-1])
+            data['y'] = y
+        else:
+            data['x'] = np.cumsum(np.ones(len(data['y'])))
+
         ideal = [ideal_function(x) for x in data['x']]
         diff_to_ideal = ideal - data['y']
         error = np.sum(np.abs(diff_to_ideal))
@@ -172,10 +180,17 @@ def review(save_name, ideal_function, num_to_plot=10):
         data = run_data[ind]
         #plt.title('Active: %i | Inactive: %i' % (data['num_active'],
         #          data['num_inactive']))
-        plt.plot(np.squeeze(data['x']), np.squeeze(data['y']),
-                 label='%i: err:%.2f \n%s: %s'%
-                 (ind, error, data['intercept_bounds'],
-                  data['intercept_mode']))
+        if data['title'] == 'proportion_time_neurons_active':
+            plt.bar(data['x'], data['y'], width=1/(2*n_bins),
+                    edgecolor='white', alpha=0.5,
+                    label='%i: err:%.2f \n%s: %s'%
+                    (ind, error, data['intercept_bounds'],
+                    data['intercept_mode']))
+        else:
+            plt.plot(np.squeeze(data['x']), np.squeeze(data['y']),
+                    label='%i: err:%.2f \n%s: %s'%
+                    (ind, error, data['intercept_bounds'],
+                    data['intercept_mode']))
 
     plt.title(data['title'])
     plt.plot(np.squeeze(data['x']), ideal, c='k', lw=3, linestyle='--',

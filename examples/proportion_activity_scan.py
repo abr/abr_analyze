@@ -63,7 +63,8 @@ print('%i different combinations to be tested' % len(intercept_vals))
 save_name = 'proportion_activity'
 analysis_fncs = [
     network_utils.proportion_neurons_active_over_time,
-    network_utils.proportion_time_neurons_active]
+    network_utils.proportion_time_neurons_active
+    ]
 intercepts_scan.run(
     encoders=encoders,
     intercept_vals=intercept_vals,

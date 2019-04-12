@@ -20,7 +20,7 @@ def get_params():
 
 
 
-def run():
+def test_run():
     encoders, intercept_vals, input_signal = get_params()
 
     intercepts_scan.run(

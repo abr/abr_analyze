@@ -93,8 +93,6 @@ def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
         if iters_with_no_update == 50:
             iters_with_no_update = 0
             thresh += .1 * thresh
-            # print('All values within threshold, but not at target size.')
-            # print('Increasing threshold to %.4f' % thresh)
         prev_n_indices = n_indices
 
     if input_signal.shape[0] != n_neurons:
@@ -173,8 +171,7 @@ def generate_scaled_inputs(q, dq, in_index):
     return [scaled_q, scaled_dq]
 
 
-def raster_plot(network, input_signal, ax, n_ens_to_raster=None,
-                n_neurons_per_ens_to_plot=-1):
+def raster_plot(network, input_signal, ax, n_ens_to_raster=None):
     '''
     Accepts a Nengo network and runs a simulation with the input_signal
     Plots rasterplot onto ax object up to n_ens_to_raster ensembles
@@ -191,20 +188,16 @@ def raster_plot(network, input_signal, ax, n_ens_to_raster=None,
     n_ens_to_raster: int, Optional (Default: None)
         the number of ensembles to plot in the raster,
         if None all will be plotted
-    n_neurons_per_ens_to_plot: int, Optional (Default: -1)
-        the number of neurons to plot per ensemble, -1 will plot all
     '''
     if n_ens_to_raster is None:
         n_ens_to_raster = len(network.adapt_ens)
 
-    spike_trains = get_activities(network, input_signal, synapse=0.005)
+    spike_trains = get_activities(network, input_signal)
 
     time = np.ones(len(input_signal))
-    # ax = rasterplot(np.cumsum(time),
-    #                 spike_trains[:, :n_neurons_per_ens_to_plot],
-    #                 ax=ax)
-    #
-    ax.plot(spike_trains)
+    print('spike trains: ', spike_trains.T)
+    ax = rasterplot(np.cumsum(time), spike_trains, ax=ax)
+
     ax.set_ylabel('Neuron')
     ax.set_xlabel('Time [sec]')
     ax.set_title('Spiking Activity')
@@ -320,12 +313,9 @@ def proportion_time_neurons_active(
             synapse=synapse)
 
     # for spike_train in pscs:
-    print(pscs.shape[1])
     n_timesteps_active = np.zeros(pscs.shape[1])
     for ii, timestep in enumerate(pscs.T):
-        print(timestep)
         n_timesteps_active[ii] = len(np.where(timestep > 1e-2)[0])
-        print(n_timesteps_active[ii])
     proportion_time_active = n_timesteps_active / pscs.shape[0]
 
     if ax is not None:
@@ -358,8 +348,7 @@ def n_neurons_active_and_inactive(activity):
 
 
 def gen_learning_profile(network, input_signal, ax_list=None,
-                         n_ens_to_raster=None, show_plot=True,
-                         n_neurons_per_ens_to_plot=-1):
+                         n_ens_to_raster=None, show_plot=True):
     """
     Plots the networks neural activity onto three subplots, the rasterplot,
     proportion of active neurons over time, and how many neurons were active
@@ -386,8 +375,6 @@ def gen_learning_profile(network, input_signal, ax_list=None,
         if None all will be plotted
     show_plot: boolean, Optional (Default: True)
         whether to show the figure at the end of the script or not
-    n_neurons_per_ens_to_plot: int, Optional (Default: -1)
-        the number of neurons to plot per ensemble, -1 will plot all
     """
 
     if ax_list is None:
@@ -401,19 +388,18 @@ def gen_learning_profile(network, input_signal, ax_list=None,
         network=network,
         input_signal=input_signal,
         ax=ax_list[0],
-        n_ens_to_raster=n_ens_to_raster,
-        n_neurons_per_ens_to_plot=n_neurons_per_ens_to_plot)
+        n_ens_to_raster=n_ens_to_raster)
 
     print('Getting neuron activity over time...')
+    # use the input signal to generate the pscs
     proportion_active, pscs = proportion_neurons_active_over_time(
         input_signal=input_signal,
         network=network,
-        # pscs=pscs,
         ax=ax_list[1])
 
+    # use the same pscs here rather than rerunning simulation
     print('Getting proportion of time neurons are active...')
     proportion_time_neurons_active(
-        # input_signal=input_signal,
         network=network,
         pscs=pscs,
         ax=ax_list[2])

@@ -176,14 +176,15 @@ def test_n_neurons_active_and_inactive(network, input_signal, answer):
     assert n_inactive == answer[1]
 
 
-@pytest.mark.parametrize('network, input_signal', (
-    (DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[10]),
-     np.ones((1000, 1))),
-    ))
-def test_gen_learning_profile(network, input_signal, plt):
+def test_gen_learning_profile(plt):
 
     # test without ax provided
-    network_utils.gen_learning_profile(network, input_signal, show_plot=False)
+    network=DynamicsAdaptation(1, 1, encoders=[[1]], max_rates=[10])
+    input_signal=np.ones((1000, 1))
+    network_utils.gen_learning_profile(
+        network=network,
+        input_signal=input_signal,
+        show_plot=False)
     # and with ax provided
     fig = plt.figure()
     ax_list = [fig.add_subplot(3, 1, ii+1) for ii in range(3)]

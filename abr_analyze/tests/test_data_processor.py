@@ -107,55 +107,58 @@ def test_scale_data(plt):
     plt.show()
 
 
-@pytest.mark.parametrize('interpolated_samples, parameters, expected', (
-    # cycle through to test with and without interpolated_samples
-    # param doesn't exist
-    (50, ['ee', 'ideal', 'time'], TypeError),
-    (None, ['ee', 'ideal', 'time'], TypeError),
-    # pass without time
-    (50, ['ee_xyz'], None),
-    (None, ['ee_xyz'], None),
-    # pass with time
-    (50, ['ee_xyz', 'time'], None),
-    (None, ['ee_xyz', 'time'], None),
-    # pass multiple with time
-    (50, ['ee_xyz', 'ideal_trajectory', 'time'], None),
-    (None, ['ee_xyz', 'ideal_trajectory', 'time'], None),
-    # pass multiple without time
-    (50, ['ee_xyz', 'ideal_trajectory'], None),
-    (None, ['ee_xyz', 'ideal_trajectory'], None),
-    ))
-def test_load_and_process(interpolated_samples, parameters, expected):
+def load_and_process(interpolated_samples, parameters):
     dat = DataHandler('tests')
     loc = 'fake_trajectory'
     steps = 147
     generate_random_traj(dat, steps=steps, plot=False)
 
-    try:
-        data = proc.load_and_process(
-            db_name='tests',
-            save_location=loc,
-            parameters=parameters,
-            interpolated_samples=interpolated_samples,
-            )
+    data = proc.load_and_process(
+        db_name='tests',
+        save_location=loc,
+        parameters=parameters,
+        interpolated_samples=interpolated_samples,
+        )
 
-        if interpolated_samples is None:
-            interpolated_samples = steps
+    if interpolated_samples is None:
+        interpolated_samples = steps
 
-        for key in parameters:
-            if key == 'time':
-                key = 'cumulative_time'
-            assert len(data[key]) == interpolated_samples
-    except expected:
-        pass
-    except Exception as e:
-        pytest.fail('Unexpected Exception: ', e)
+    for key in parameters:
+        if key == 'time':
+            key = 'cumulative_time'
+        assert len(data[key]) == interpolated_samples
 
 
-@ pytest.mark.parametrize('n_joints, expected', (
-    (3, None),
-    (4, AssertionError)))
-def test_calc_cartesian_points(n_joints, expected):
+@pytest.mark.parametrize('interpolated_samples, parameters, expected', (
+    # cycle through to test with and without interpolated_samples
+    # param doesn't exist
+    (50, ['ee', 'ideal', 'time']),
+    (None, ['ee', 'ideal', 'time'])
+    )
+)
+def test_load_and_process(interpolated_samples, parameters):
+    with pytest.raises(TypeError):
+        load_and_process(interpolated_samples, parameters)
+
+@pytest.mark.parametrize('interpolated_samples, parameters', (
+    # pass without time
+    (50, ['ee_xyz']),
+    (None, ['ee_xyz']),
+    # pass with time
+    (50, ['ee_xyz', 'time']),
+    (None, ['ee_xyz', 'time']),
+    # pass multiple with time
+    (50, ['ee_xyz', 'ideal_trajectory', 'time']),
+    (None, ['ee_xyz', 'ideal_trajectory', 'time']),
+    # pass multiple without time
+    (50, ['ee_xyz', 'ideal_trajectory']),
+    (None, ['ee_xyz', 'ideal_trajectory']),
+    ))
+def test_load_and_process(interpolated_samples, parameters):
+    load_and_process(interpolated_samples, parameters)
+
+
+def test_calc_cartesion_points():
     db = 'tests'
     dat = DataHandler(db)
 
@@ -173,38 +176,24 @@ def test_calc_cartesian_points(n_joints, expected):
     steps = 10
 
     # passing in the right dimensions of joint angles
-    q = np.zeros((steps, n_joints))
+    q = np.zeros((steps, robot_config.N_JOINTS))
     expected_shape = [
                       [steps, robot_config.N_JOINTS, 3],
                       [steps, robot_config.N_LINKS, 3],
                       [steps, 3]
                      ]
 
-    # catch the assertion error in the function call
-    try:
-        data = proc.calc_cartesian_points(
-            robot_config=robot_config, q=q)
+    data = proc.calc_cartesian_points(
+        robot_config=robot_config, q=q)
 
-        # catch error in the assertion of the functions output's shape
-        for ii in range(0, len(expected_shape)):
-            for jj in range(0, len(np.array(data[ii]).shape)):
-                try:
-                    assert (
-                        np.array(data[ii]).shape[jj] == expected_shape[ii][jj],
-                        ('Expected %i Received %i'
-                         % (expected_shape[ii][jj],
-                            np.asarray(data[ii]).shape[jj])))
-                except expected:
-                    pass
-
-                except Error as e:
-                    pytest.fail('Unexpected Exception: ', e)
-
-    except expected:
-        pass
-
-    except Error as e:
-        pytest.fail('Unexpected Exception: ', e)
+    # catch error in the assertion of the functions output's shape
+    for ii in range(0, len(expected_shape)):
+        for jj in range(0, len(np.array(data[ii]).shape)):
+            assert (
+                np.array(data[ii]).shape[jj] == expected_shape[ii][jj],
+                ('Expected %i Received %i'
+                 % (expected_shape[ii][jj],
+                    np.asarray(data[ii]).shape[jj])))
 
 
 def generate_random_traj(dat, steps, plot=False):
