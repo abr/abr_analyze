@@ -82,5 +82,4 @@ class DrawArm(DrawData):
             ee_xyz=data['ee_xyz'][step],
             title=title)
 
-        # ax.set_title(save_location)
-        return [ax, [self.xlimit, self.ylimit, self.zlimit]]
+        return ax, [self.xlimit, self.ylimit, self.zlimit]

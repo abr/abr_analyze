@@ -40,17 +40,16 @@ class DataVisualizer():
 
         for xyz in joints_xyz:
             # plot joint location
-            ax.scatter(xyz[0], xyz[1], xyz[2], c=joint_color)#, marker=marker, s=s,
+            ax.scatter(xyz[0], xyz[1], xyz[2], c=joint_color)
 
         for xyz in links_xyz:
             # plot joint location
-            ax.scatter(xyz[0], xyz[1], xyz[2], c=link_color)#, marker=marker, s=s,
+            ax.scatter(xyz[0], xyz[1], xyz[2], c=link_color)
 
         origin = [0, 0, 0]
         joints_xyz = np.vstack((origin, joints_xyz))
 
-        ax.plot(joints_xyz.T[0], joints_xyz.T[1], joints_xyz.T[2],
-                c=arm_color)
+        ax.plot(joints_xyz.T[0], joints_xyz.T[1], joints_xyz.T[2], c=arm_color)
 
         ax.set_xlim3d(-0.5, 0.5)
         ax.set_ylim3d(-0.5, 0.5)
@@ -155,8 +154,7 @@ class DataVisualizer():
         ax.plot(data[:, 0], data[:, 1], data[:, 2],
                 color=c, linestyle=linestyle, label=label)
         if emphasize_end:
-            ax.scatter(data[-1, 0], data[-1, 1], data[-1, 2],
-                       color=c)
+            ax.scatter(data[-1, 0], data[-1, 1], data[-1, 2], color=c)
 
         if label is not None:
             ax.legend(loc=loc)

@@ -214,12 +214,11 @@ def calc_cartesian_points(robot_config, q):
     for q_t in q:
         joints_t_xyz = []
         links_t_xyz = []
-        ee_t_xyz = []
 
         # loop through the kinematic chain of joints
         for ii in range(0, robot_config.N_JOINTS):
             joints_t_xyz.append(robot_config.Tx('joint%i'%ii, q=q_t))
-        ee_t_xyz.append(robot_config.Tx('EE', q=q_t))
+        joints_t_xyz.append(robot_config.Tx('EE', q=q_t))
 
         # loop through the kinematic chain of links
         for ii in range(0, robot_config.N_LINKS):
@@ -228,6 +227,6 @@ def calc_cartesian_points(robot_config, q):
         # append the cartesian coordinates of this time step to our list
         joints_xyz.append(joints_t_xyz)
         links_xyz.append(links_t_xyz)
-        ee_xyz.append(ee_t_xyz)
+        ee_xyz.append(robot_config.Tx('EE', q=q_t))
 
     return [np.array(joints_xyz), np.array(links_xyz), np.squeeze(ee_xyz)]
