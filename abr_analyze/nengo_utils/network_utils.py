@@ -195,7 +195,7 @@ def raster_plot(network, input_signal, ax, n_ens_to_raster=None):
     spike_trains = get_activities(network, input_signal)
 
     time = np.ones(len(input_signal))
-    print('spike trains: ', spike_trains.T)
+
     ax = rasterplot(np.cumsum(time), spike_trains, ax=ax)
 
     ax.set_ylabel('Neuron')
@@ -270,7 +270,8 @@ def proportion_neurons_active_over_time(
     n_neurons_active = np.zeros(pscs.shape[0])
     for ii, timestep in enumerate(pscs):
         n_neurons_active[ii] = len(np.where(timestep > 1e-2)[0])
-    proportion_neurons_active = n_neurons_active / network.n_neurons
+    proportion_neurons_active = (n_neurons_active /
+                                 (network.n_neurons * network.n_ensembles))
 
     if ax is not None:
         print('Plotting proportion of active neurons over time...')

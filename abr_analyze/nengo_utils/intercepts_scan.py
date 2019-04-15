@@ -5,7 +5,6 @@ possible intercept is run, passing in the input signal, to generate a neural
 profile for each sim. The profiles can be viewed using the
 intercept_scan_viewer.py gui
 '''
-import gc
 import timeit
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,6 +41,8 @@ def run(encoders, intercept_vals, input_signal, seed=1,
     if not isinstance(analysis_fncs, list):
         analysis_fncs = [analysis_fncs]
 
+    print('Input Signal Shape: ', np.asarray(input_signal).shape)
+
     loop_time = 0
     elapsed_time = 0
     for ii, intercept in enumerate(intercept_vals):
@@ -50,6 +51,7 @@ def run(encoders, intercept_vals, input_signal, seed=1,
         print('%i/%i | '%(ii+1, len(intercept_vals))
               + '%.2f%% Complete | '%(ii/len(intercept_vals)*100)
               + '%.2f min elapsed | '%(elapsed_time/60)
+              + '%.2f min for last sim | '%(loop_time/60)
               + '~%.2f min remaining...'
               %((len(intercept_vals)-ii)*loop_time/60),
               end='\r')
@@ -76,7 +78,7 @@ def run(encoders, intercept_vals, input_signal, seed=1,
         # get the spike trains from the sim
         spike_trains = network_utils.get_activities(
             network=network, input_signal=input_signal,
-            synapse=network.tau_output)
+            synapse=0.005)
 
         # loop through the analysis functions
         for func in analysis_fncs:
@@ -109,18 +111,7 @@ def run(encoders, intercept_vals, input_signal, seed=1,
 
             loop_time = timeit.default_timer() - start
 
-        # clear memory
-        start = None
-        intercept_list = None
-        network = None
-        spike_trains = None
-        y = None
-        activity = None
-        num_active = None
-        num_inactive = None
-        gc.collect()
-
-def review(save_name, ideal_function, num_to_plot=3):
+def review(save_name, ideal_function, num_to_plot=10):
     '''
     loads the data from save name and gets num_to_plot tests that most
     closley match the ideal function that was passed in during the scan
@@ -158,7 +149,7 @@ def review(save_name, ideal_function, num_to_plot=3):
 
         if data['title'] == 'proportion_time_neurons_active':
             y, bins_out = np.histogram(np.squeeze(data['y']),
-                                        bins=np.linspace(0, 1, n_bins))
+                                       bins=np.linspace(0, 1, n_bins))
             data['x'] = 0.5*(bins_out[1:]+bins_out[:-1])
             data['y'] = y
         else:
@@ -183,14 +174,14 @@ def review(save_name, ideal_function, num_to_plot=3):
         if data['title'] == 'proportion_time_neurons_active':
             plt.bar(data['x'], data['y'], width=1/(2*n_bins),
                     edgecolor='white', alpha=0.5,
-                    label='%i: err:%.2f \n%s: %s'%
-                    (ind, error, data['intercept_bounds'],
-                    data['intercept_mode']))
+                    label=('%i: err:%.2f \n%s: %s' %
+                           (ind, error, data['intercept_bounds'],
+                            data['intercept_mode'])))
         else:
             plt.plot(np.squeeze(data['x']), np.squeeze(data['y']),
-                    label='%i: err:%.2f \n%s: %s'%
-                    (ind, error, data['intercept_bounds'],
-                    data['intercept_mode']))
+                     label=('%i: err:%.2f \n%s: %s' %
+                            (ind, error, data['intercept_bounds'],
+                             data['intercept_mode'])))
 
     plt.title(data['title'])
     plt.plot(np.squeeze(data['x']), ideal, c='k', lw=3, linestyle='--',

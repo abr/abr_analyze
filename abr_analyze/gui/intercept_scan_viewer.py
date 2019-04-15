@@ -35,6 +35,8 @@ global toggle_ideal_val
 global clear_plot_val
 global legend_loc_val
 global update_plot
+# plot colors
+global plt_col
 
 class FontsAndColors():
     '''
@@ -352,6 +354,7 @@ class InterceptScanViewer(tk.Frame):
         global clear_plot_val
         global legend_loc_val
         global update_plot
+        global plt_col
 
         save_val = False
         keep_test_val = False
@@ -360,10 +363,11 @@ class InterceptScanViewer(tk.Frame):
         legend_loc_val = 1
         update_plot = True
         # set some step boundaries for possible values
-        mode_step = 0.2
+        mode_step = 0.1
         bound_step = 0.1
         mode_range = [-0.9, 0.9]
         bound_range = [-0.9, 0.9]
+        plt_col = ['r', 'b', 'y', 'k', 'tab:grey']
 
         # instanitate our item creating class
         self.create = GuiItems()
@@ -596,12 +600,15 @@ class LiveFigure():
         global clear_plot_val
         global legend_loc_val
         global update_plot
+        global plt_col
 
         if update_plot:
             update_plot = False
             if clear_plot_val:
                 data = None
                 self.test_que = []
+                a = self.fig.add_subplot(111)
+                a.clear()
                 clear_plot_val = False
             else:
                 intercept_keys = self.get_intercept_vals_from_buttons()
@@ -620,15 +627,13 @@ class LiveFigure():
                         )
                     if data['title'] == 'proportion_time_neurons_active':
                         a.set_xlim(0, 1)
+                        a.bar(data['x'], data['y'], width=1/(2*self.bins),
+                              label=label, edgecolor='white',
+                              alpha=0.5, color=plt_col[0])
                     else:
                         a.set_ylim(0, 1)
-                    # length = len(data['x'])
-                    # s = length - int(length*0.1)
-                    # s = 0
-                    a.plot(data['x'], data['y'], label=label)
+                        a.plot(data['x'], data['y'], label=label, c=plt_col[0])
                     a.set_title(data['title'])
-                    # a.set_xlabel(data['xlabel'])
-                    # a.set_ylabel(data['ylabel'])
 
                     if keep_test_val:
                         current_test = {'label': label, 'y': data['y'],
@@ -637,8 +642,18 @@ class LiveFigure():
                         keep_test_val = False
 
                     if self.test_que:
-                        for test in self.test_que:
-                            a.plot(test['x'], test['y'], label=test['label'])
+                        for aa, test in enumerate(self.test_que):
+                            if aa+1 >= len(plt_col):
+                                plt_col.append(None)
+                            if data['title'] == 'proportion_time_neurons_active':
+                                a.bar(test['x'], test['y'],
+                                      width=1/(2*self.bins),
+                                      label=test['label'],
+                                      edgecolor='white', alpha=0.5,
+                                      color=plt_col[aa+1])
+                            else:
+                                a.plot(test['x'], test['y'],
+                                        label=test['label'], c=plt_col[aa+1])
 
                     # if toggle_ideal_val:
                     #     a.plot(data['x'], self.ideal, label='ideal',
@@ -647,10 +662,11 @@ class LiveFigure():
 
                     if save_val:
                         #global valid_val
-                        a.figure.savefig('%s/intercept_scan_viewer.png'
-                                         %figures_dir)
+                        a.figure.savefig('%s/intercept_scan_%s.png'
+                                         % (figures_dir, data['title']))
                         msg = ('Figure saved to:'
-                                + ' %s/intercept_scan_viewer.png'%figures_dir)
+                                + ' %s/intercept_scan_%s.png'
+                                % (figures_dir, data['title']))
                         print(msg)
                         #TODO: make the font smaller while this is printed out
                         #valid_val.set(msg)
@@ -682,6 +698,7 @@ class LiveFigure():
         '''
         global key_dict
         global valid_val
+        self.bins = 30
         try:
             test_num = int(key_dict[keys[0]][keys[1]][keys[2]])
             data = self.dat.load(
@@ -691,7 +708,8 @@ class LiveFigure():
             # get the mean before converting y to a histogram
             data['y_mean'] = np.mean(data['y'])
             if data['title'] == 'proportion_time_neurons_active':
-                y, bins_out = np.histogram(np.squeeze(data['y']), bins=100)
+                y, bins_out = np.histogram(np.squeeze(data['y']),
+                                           bins=np.linspace(0, 1, self.bins))
                 data['x'] = 0.5*(bins_out[1:]+bins_out[:-1])
                 data['y'] = y
             else:
@@ -706,9 +724,9 @@ class LiveFigure():
 # the database to load data from
 db_name = 'intercepts_scan'
 # the name of the intercept scan to look at
-# save_location = 'proportion_activity/proportion_neurons_active_over_time'
-test = 'BF2_nengo_cpu_friction_126_0_[-9to9_step2]'
+test = 'proportion_activity'
 save_location = '%s/proportion_time_neurons_active'%test
+#save_location = '%s/proportion_neurons_active_over_time'%test
 live = LiveFigure(db_name=db_name, save_location=save_location)
 app = MasterPage(db_name=db_name, save_location=save_location)#, fig=ani_plot.fig)
 ani = animation.FuncAnimation(live.fig, live.plot, interval=1000)

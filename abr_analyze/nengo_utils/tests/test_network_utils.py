@@ -151,7 +151,7 @@ def test_proportion_time_neurons_active(network, input_signal, answer, plt):
     # allowable error is 2.5% of max firing rate / s * # of neurons
     threshold = (np.ceil(network.adapt_ens[0].max_rates[0] * 0.03) /
                  input_signal.shape[0] * network.n_neurons)
-    assert abs(np.sum(proportion_time_active) - answer) <= threshold
+    assert round(abs(np.sum(proportion_time_active) - answer), 6) <= threshold
 
 
 @pytest.mark.parametrize('network, input_signal, answer', (
