@@ -19,11 +19,7 @@ else:
     database_dir = os.path.abspath(os.path.join(dir_name, "..", "databases"))
     figures_dir = os.path.join(current_dir, "Figures")
 
-    if not os.path.exists(cache_dir):
-        os.makedirs(cache_dir)
-    if not os.path.exists(database_dir):
-        os.makedirs(database_dir)
-    if not os.path.exists(figures_dir):
-        os.makedirs(figures_dir)
-    if not os.path.exists('%s/examples'%figures_dir):
-        os.makedirs('%s/examples'%figures_dir)
+    os.makedirs(cache_dir, exist_ok=True)
+    os.makedirs(database_dir, exist_ok=True)
+    os.makedirs(figures_dir, exist_ok=True)
+    os.makedirs('%s/examples'%figures_dir, exist_ok=True)
