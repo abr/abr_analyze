@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from abr_control.controllers import signals
+from abr_control.controllers.signals.dynamics_adaptation import AreaIntercepts
+from abr_control.controllers.signals.dynamics_adaptation import Triangular
 from abr_analyze.data_handler import DataHandler
 import abr_analyze.nengo_utils.network_utils as network_utils
 
@@ -57,9 +59,9 @@ def run(encoders, intercept_vals, input_signal, seed=1,
               end='\r')
 
         # create our intercept distribution from the intercepts vals
-        intercept_list = signals.AreaIntercepts(
+        intercept_list = AreaIntercepts(
             dimensions=encoders.shape[2],
-            base=signals.Triangular(intercept[0], intercept[2], intercept[1]))
+            base=Triangular(intercept[0], intercept[2], intercept[1]))
         rng = np.random.RandomState(seed)
         intercept_list = intercept_list.sample(encoders.shape[1], rng=rng)
         intercept_list = np.array(intercept_list)
