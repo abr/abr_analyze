@@ -125,7 +125,9 @@ def test_proportion_neurons_active_over_time(network, input_signal, answer, plt)
         network_utils.proportion_neurons_active_over_time(
             input_signal=input_signal, network=network, synapse=None, ax=ax))
 
-    assert abs(np.sum(proportion_neurons_active) - answer) <= 1
+    threshold = np.ceil(network.adapt_ens[0].max_rates[0] * 0.025)
+    print('threshold: ', threshold)
+    assert abs(np.sum(proportion_neurons_active) - answer) <= threshold
 
 
 # expected sum of the proportion of time neurons are active over 1 second

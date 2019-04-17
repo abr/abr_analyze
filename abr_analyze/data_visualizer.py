@@ -98,7 +98,8 @@ def plot_2d_data(ax, y, x=None, c='r', linestyle='-', label=None,
         else:
             ax[0].plot(x, y, label=label)
         ax = ax[0]
-        ax.legend(loc=loc)
+        if label is not None:
+            ax.legend(loc=loc)
         if title is not None:
             ax.set_title(title)
     # if a list of ax objects is passed in, plot each dimension onto its
