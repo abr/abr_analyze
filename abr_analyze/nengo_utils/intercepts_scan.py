@@ -72,7 +72,6 @@ def run(encoders, intercept_vals, input_signal, seed=1,
             n_output=1,  # number of output is irrelevant
             n_neurons=encoders.shape[1],
             intercepts=intercept_list,
-            probe_weights=True,
             seed=seed,
             encoders=encoders,
             **kwargs)
