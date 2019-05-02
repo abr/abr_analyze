@@ -123,54 +123,6 @@ def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
     return np.array(input_signal)
 
 
-def generate_scaled_inputs(q, dq, in_index):
-    '''
-    Currently set to accept joint position and velocities as time
-    x dimension arrays, and returns them scaled from 0 to 1
-
-    PARAMETERS
-    ----------
-    q: array of shape time_steps x dimension
-        the joint positions to scale
-    dq: array of shape time_steps x dimension
-        the joint velocities to scale
-    in_index: list of integers
-        a list corresponding what joints to return scaled inputs for.
-        The function is currently set up to accept the raw feedback from an
-        arm (all joint position and velocities) and only returns the values
-        specified by the indices in in_index
-
-        EX: in_index = [0, 1, 3, 6]
-        will return the scaled joint position and velocities for joints 0,
-        1, 3 and 6
-    '''
-    #TODO: generalize this so the user passes in means and scales? right
-    #now this is specific for the jaco
-    #NOTE: do we want to have in_index here, or have the user specify what
-    # joint positions and velocities they pass in?
-    qs = q.T
-    dqs = dq.T
-
-    # expected mean of joint angles / velocities
-    means_q = np.array([0, 0, 0, 0, 0, 0])
-    means_dq = np.array([1.25, 1.25, 1.25, 1.25, 1.25, 1.25])
-
-    # expected variance of joint angles / velocities
-    scales_q = np.array([6.28, 6.28, 6.28, 6.28, 6.28, 6.28,])
-    scales_dq = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5])
-
-    for pp in range(0, 5):
-        qs[pp] = (qs[pp] - means_q[pp]) / scales_q[pp]
-        dqs[pp] = (dqs[pp] + means_dq[pp]) / scales_dq[pp]
-    qs = np.clip(qs, 0, 1)
-    dqs = np.clip(dqs, 0, 1)
-
-    scaled_q = np.array([qs[ii] for ii in in_index]).T
-    scaled_dq = np.array([dqs[ii] for ii in in_index]).T
-
-    return [scaled_q, scaled_dq]
-
-
 def raster_plot(network, input_signal, ax, n_ens_to_raster=None):
     '''
     Accepts a Nengo network and runs a simulation with the input_signal
@@ -197,6 +149,7 @@ def raster_plot(network, input_signal, ax, n_ens_to_raster=None):
     time = np.ones(len(input_signal))
 
     ax = rasterplot(np.cumsum(time), spike_trains, ax=ax)
+
 
     ax.set_ylabel('Neuron')
     ax.set_xlabel('Time [sec]')
@@ -280,6 +233,7 @@ def proportion_neurons_active_over_time(
         ax.set_title('Proportion of active neurons over time')
         ax.set_ylabel('Proportion Active')
         ax.set_xlabel('Time steps')
+        ax.set_ylim(0, 1)
         plt.legend()
 
     return proportion_neurons_active, pscs
