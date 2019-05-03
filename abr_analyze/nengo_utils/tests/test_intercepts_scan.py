@@ -28,7 +28,8 @@ def test_run():
         intercept_vals=intercept_vals,
         input_signal=input_signal,
         analysis_fncs=[network_utils.proportion_time_neurons_active,
-                       network_utils.proportion_neurons_active_over_time]
+                       network_utils.proportion_neurons_active_over_time],
+        db_name='intercepts_scan_test_run',
         )
 
 

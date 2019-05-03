@@ -16,7 +16,8 @@ from abr_analyze.data_handler import DataHandler
 import abr_analyze.nengo_utils.network_utils as network_utils
 
 def run(encoders, intercept_vals, input_signal, seed=1,
-        save_name='example', notes='', analysis_fncs=None, **kwargs):
+        db_name='intercepts_scan', save_name='example', notes='',
+        analysis_fncs=None, **kwargs):
     '''
     runs a scan for the proportion of neurons that are active over time
 
@@ -92,7 +93,7 @@ def run(encoders, intercept_vals, input_signal, seed=1,
                 network_utils.n_neurons_active_and_inactive(activity=activity))
 
             if ii == 0:
-                dat = DataHandler('intercepts_scan')
+                dat = DataHandler(db_name)
                 dat.save(
                     data={'total_intercepts':len(intercept_vals),
                           'notes':notes},
