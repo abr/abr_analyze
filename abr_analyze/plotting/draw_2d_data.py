@@ -81,6 +81,13 @@ class Draw2dData(DrawData):
                     ax=ax, x=self.data[save_name]['cumulative_time'][:step],
                     y=self.data[save_name][param][:step], c=c,
                     linestyle=linestyle, label=label, title=title)
+            elif len(parameters) == 1 and parameters[0] == 'time':
+                ax = vis.plot_2d_data(
+                    ax=ax,
+                    y=self.data[save_name]['time'][:step], c=c,
+                    linestyle=linestyle, title=title,
+                    label='%s: %.2fms'
+                    % (label, 1000*np.mean(self.data[save_name]['time'])))
 
         # ax.set_xlim(self.xlimit[0], self.xlimit[1])
         # ax.set_ylim(self.ylimit[0], self.ylimit[1])

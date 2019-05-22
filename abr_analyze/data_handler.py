@@ -509,11 +509,11 @@ class DataHandler():
         # print('session: ', session)
         if session is None or run is None:
             # if session is not None and run is None:
-            #     print('Checking for lastest run in session%03d'%session)
+            #     print('Checking for latest run in session%03d'%session)
             # elif session is None and run is not None:
             #     print('Checking for run%i data in latest session'%run)
             # else:
-            #     print('Checking for lastest session and run...')
+            #     print('Checking for latest session and run...')
             [run, session, group_path] = self.last_save_location(
                 session=session, run=run, test_name=test_name,
                 test_group=test_group, create=create)
