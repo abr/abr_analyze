@@ -1,22 +1,11 @@
-'''
-- a test function is made for every function in the data_processor
-- various permutations and cases are tested for each function
-- a dictionary is created with entries for every test
-  - each test has it's own subtests for the various cases and permutations
-  - the subtests are saved with the value of the boolean 'passed'
-    which is true if the test passed or failed as expected
-  - this is done by placing each subtest in a try except statement.
-    this tests if an exception is raised, setting 'passed' based on the
-    expected behaviour.
-  - further tests are placed after the try except statement,
-    specified for each function (ex: testing if a renamed group exists).
-'''
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from abr_analyze.data_handler import DataHandler
 import abr_analyze.data_processor as proc
+
+from abr_analyze.data_handler import DataHandler
+from abr_analyze.utils import random_trajectories
 
 
 @pytest.mark.parametrize('functions', (
@@ -111,7 +100,9 @@ def load_and_process(interpolated_samples, parameters):
     dat = DataHandler('tests')
     loc = 'fake_trajectory'
     steps = 147
-    generate_random_traj(dat, steps=steps, plot=False)
+    fake_traj_data = random_trajectories.generate(steps=steps, plot=False)
+    dat.save(data=fake_traj_data, save_location='fake_trajectory',
+             overwrite=True)
 
     data = proc.load_and_process(
         db_name='tests',
@@ -194,59 +185,3 @@ def test_calc_cartesion_points():
                 ('Expected %i Received %i'
                  % (expected_shape[ii][jj],
                     np.asarray(data[ii]).shape[jj])))
-
-
-def generate_random_traj(dat, steps, plot=False):
-    alpha = 0.7
-    ee_xyz = [[np.random.uniform(0.05, 0.2, 1),
-               np.random.uniform(0.05, 0.2, 1),
-               np.random.uniform(0.5, 1.0, 1)]]
-
-    for ii in range(steps-1):
-
-        if ii == 0:
-            xx = np.random.uniform(-2, 2, 1)/100
-            yy = np.random.uniform(-2, 2, 1)/100
-            zz = np.random.uniform(-2, 2, 1)/100
-            x = ee_xyz[-1][0] + xx
-            y = ee_xyz[-1][1] + yy
-            z = ee_xyz[-1][2] + zz
-
-        else:
-            xx = xx * alpha + np.random.uniform(-2, 2, 1)/100 * (1-alpha)
-            yy = yy * alpha + np.random.uniform(-2, 2, 1)/100 * (1-alpha)
-            zz = zz * alpha + np.random.uniform(-2, 2, 1)/100 * (1-alpha)
-            x = ee_xyz[-1][0] + xx
-            y = ee_xyz[-1][1] + yy
-            z = ee_xyz[-1][2] + zz
-
-        ee_xyz.append([x, y, z])
-    ee_xyz = np.squeeze(np.array(ee_xyz))
-
-    alpha = 0.2
-    ideal = np.zeros((steps, 3))
-    for ii, val in enumerate(ee_xyz.tolist()):
-
-        if ii == 0:
-            ideal[0] = val
-
-        else:
-            ideal[ii][0] = alpha*val[0] + (1-alpha)*ideal[ii-1][0]
-            ideal[ii][1] = alpha*val[1] + (1-alpha)*ideal[ii-1][1]
-            ideal[ii][2] = alpha*val[2] + (1-alpha)*ideal[ii-1][2]
-
-    ideal = np.array(ideal)
-    times = np.ones(steps) * 0.03 + np.random.rand(steps)/50
-
-    data = {'ee_xyz': ee_xyz, 'ideal_trajectory': ideal, 'time': times}
-    dat.save(data=data, save_location='fake_trajectory', overwrite=True)
-
-    if plot:
-        from mpl_toolkits.mplot3d import axes3d  # pylint: disable=W0611
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.set_title('Generated Trajectory')
-        ax.plot(ee_xyz[:,0], ee_xyz[:,1], ee_xyz[:,2], label='ee_xyz')
-        ax.plot(ideal[:,0], ideal[:,1], ideal[:,2], label='ideal')
-        ax.legend()
-        plt.show()

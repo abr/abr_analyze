@@ -1,6 +1,7 @@
-'''
-A class for plotting data onto ax objects
-'''
+"""
+Functions plotting data onto ax objects
+"""
+
 import matplotlib
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
@@ -11,12 +12,12 @@ import numpy as np
 
 def plot_arm(ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
              joint_color='k', arm_color='k', title=None):
-    '''
-    accepts joint, end-effector, and link COM cartesian locations, and an
+    """
+    Accepts joint, end-effector, and link COM cartesian locations, and an
     ax object, returns a stick arm with points at the joints and link COM's
     plotted on the ax
 
-    PARAMETERS
+    Parameters
     ----------
     ax: ax object for plotting
     ee_xyz: np.array([x,y,z])
@@ -33,7 +34,7 @@ def plot_arm(ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
         the color for the links joining the joints
     title: string, Optional (Default: None)
         the ax title
-    '''
+    """
 
     if isinstance(ax, list):
         if len(ax) > 1:
@@ -65,14 +66,14 @@ def plot_arm(ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
 
 def plot_2d_data(ax, y, x=None, c='r', linestyle='-', label=None,
                  loc=1, title=None):
-    '''
+    """
     Accepts a list of data to plot onto a 2d ax and returns the ax object
 
     NOTE: if y is multidimensional, and a list of ax objects is passed in,
     each dimension will be plotted onto it's respective ax object. If one
     ax object is passed in, all dimensions will be plotted on it
 
-    PARAMETERS
+    Parameters
     ----------
     ax: ax object for plotting
         can be a single ax object or a list of them
@@ -86,7 +87,7 @@ def plot_2d_data(ax, y, x=None, c='r', linestyle='-', label=None,
         the title of the ax object
     loc: int, Optional (Default: 1)
         the legend location
-    '''
+    """
     #TODO: should c and linestyle be accepted as lists?
     #TODO: check if x and y are supposed to be lists or arrays
     # turn the ax object into a list if it is not already one
@@ -122,11 +123,11 @@ def plot_2d_data(ax, y, x=None, c='r', linestyle='-', label=None,
 
 def plot_3d_data(ax, data, c='tab:purple', linestyle='-',
                  emphasize_end=True, label=None, loc=1, title=None):
-    '''
+    """
     accepts an ax object and an n x 3 array to plot a 3d trajectory and
     returns the data plotted on the ax
 
-    PARAMETERS
+    Parameters
     ----------
     ax: axis object
         allows for control of the plot from outside of this function
@@ -149,7 +150,7 @@ def plot_3d_data(ax, data, c='tab:purple', linestyle='-',
         the title of the ax object
     loc: int, Optional (Default: 1)
         the legend location
-    '''
+    """
     if isinstance(ax, list):
         if len(ax) > 1:
             raise Exception(
@@ -170,11 +171,11 @@ def plot_3d_data(ax, data, c='tab:purple', linestyle='-',
 
 def plot_mean_and_ci(ax, data, c=None, linestyle='-', label=None,
                      loc=1, title=None):
-    '''
+    """
     accepts dict with keys upper_bound, lower_bound, and mean, and plots
     the mean onto the ax object with the upper and lower bounds shaded
 
-    PARAMETERS
+    Parameters
     ----------
     ax: axis object
         allows for control of the plot from outside of this function
@@ -195,7 +196,7 @@ def plot_mean_and_ci(ax, data, c=None, linestyle='-', label=None,
         the title of the ax object
     loc: int, Optional (Default: 1)
         the legend location
-    '''
+    """
     ax.fill_between(
         range(np.array(data['mean']).shape[0]),
         data['upper_bound'],
@@ -210,31 +211,31 @@ def plot_mean_and_ci(ax, data, c=None, linestyle='-', label=None,
 
 
 def make_list(param):
-    '''
+    """
     converts param into a list if it is not already one
     returns param as a list
 
-    PARAMETERS
+    Parameters
     ----------
     param: any parameter to be converted into a list
-    '''
+    """
     if not isinstance(param, list):
         param = [param]
     return param
 
 
 def project_data(data, n_dims_project):
-    '''
+    """
     perform SVD and project the data into its top n_dims_project
     principle components
 
-    PARAMETERS
+    Parameters
     ----------
     data: np.array
         a timesteps x dimensions array of data
     n_dims_project: int
         the number of principle components to plot into
-    '''
+    """
     U, S, _ = np.linalg.svd(data.T)
     PCs = np.dot(U, np.diag(S))
 
@@ -242,12 +243,12 @@ def project_data(data, n_dims_project):
 
 
 def plot_against_projection_2d(ax, data_project, data_plot):
-    '''
+    """
     accepts a T x d project array, and a T x 1 plot array. Performs SVD on
     the data_project array, projects the data into the top n_projected_dims
     principle component, and plots against data_plot
 
-    PARAMETERS
+    Parameters
     ----------
     ax: axis object
         allows for control of the plot from outside of this function
@@ -255,7 +256,7 @@ def plot_against_projection_2d(ax, data_project, data_plot):
         the data to perform SVD on and project into its top PC
     data_plot: np.array
         the data to plot the projected data against (y-axis)
-    '''
+    """
     projected = project_data(data_project, 1)
 
     ax.plot(projected, data_plot)
@@ -264,16 +265,16 @@ def plot_against_projection_2d(ax, data_project, data_plot):
 
 
 def make_axes_for_3d_plots(ax, colorbar_ax=False):
-    '''
+    """
     accepts in an axis, in the same space adds two more axes.
     The intention is to use this to plot a 3D plot as 3 plots:
     (x, y), (y, z), (z, y), and optionally a 4th axis for the colorbar.
 
-    PARAMETERS
+    Parameters
     ----------
     ax: axis object
     colorbar_ax: boolean, Option (Default: False)
-    '''
+    """
     # make the subplots in this axis
     divider = make_axes_locatable(ax)
     axes = [ax]
@@ -286,12 +287,12 @@ def make_axes_for_3d_plots(ax, colorbar_ax=False):
 
 
 def plot_against_projection_3d(ax, data_project, data_plot):
-    '''
+    """
     accepts a T x d project array, and a T x 1 plot array. Performs SVD on
     the data_project array, projects the data into the top 2 principle
     components, and plots against data_plot on the z axis
 
-    PARAMETERS
+    Parameters
     ----------
     ax: axis object
         allows for control of the plot from outside of this function
@@ -299,7 +300,7 @@ def plot_against_projection_3d(ax, data_project, data_plot):
         the data to perform SVD on and project into its top PCs
     data_plot: np.array
         the data to plot the projected data against (z-axis)
-    '''
+    """
     projected = project_data(data_project, 2)
     axes = make_axes_for_3d_plots(ax)
 
@@ -315,13 +316,13 @@ def plot_against_projection_3d(ax, data_project, data_plot):
 
 
 def plot_against_projection_4d(ax, data_project, data_plot):
-    '''
+    """
     accepts a T x d project array, and a T x 1 plot array. Performs SVD on
     the data_project array, projects the data into the top three
     principle components, and uses data_plot to determine the color of
     each point
 
-    PARAMETERS
+    Parameters
     ----------
     ax: axis object
         allows for control of the plot from outside of this function
@@ -329,7 +330,7 @@ def plot_against_projection_4d(ax, data_project, data_plot):
         the data to perform SVD on and project into its top PCs
     data_plot: np.array
         specifies the colors of the projected data points
-    '''
+    """
     projected = project_data(data_project, 3)
     axes = make_axes_for_3d_plots(ax, colorbar_ax=True)
 
