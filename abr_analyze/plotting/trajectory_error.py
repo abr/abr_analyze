@@ -150,7 +150,7 @@ class TrajectoryError():
 
         if ideal == 'ideal_trajectory':
             data['ideal_trajectory'] = data['ideal_trajectory'][:, :3]
-        dt = np.sum(data['time']) / self.interpolated_samples
+        dt = np.sum(data['time']) / len(data['time'])
 
         # integrate data
         if self.time_derivative > 0:

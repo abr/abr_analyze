@@ -168,19 +168,20 @@ def load_and_process(db_name, save_location, parameters,
     if 'time' not in parameters:
         data['time'] = np.ones(data_len)
 
-    if interpolated_samples is None:
-        interpolated_samples = data_len
-
     total_time = np.sum(data['time'])
     dat = []
 
     # interpolate for even sampling and save to our dictionary
-    for key in data:
-        if key != 'time':
-            data[key] = interpolate_data(
-                data=data[key],
-                time_intervals=data['time'],
-                interpolated_samples=interpolated_samples)
+    if interpolated_samples is not None:
+        for key in data:
+            if key != 'time':
+                data[key] = interpolate_data(
+                    data=data[key],
+                    time_intervals=data['time'],
+                    interpolated_samples=interpolated_samples)
+    else:
+        interpolated_samples = data_len
+
     # since we are interpolating over time, we are not interpolating
     # the time data, instead evenly sample interpolated_samples from
     # 0 to the sum(time)
