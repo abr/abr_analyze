@@ -1,24 +1,3 @@
-"""
-Data handler for saving and loading data
-
-This class is meant to help simplify running automated tests. This is
-specifically helpful when running consecutive runs of learning where it is
-desired to pick up where the last run ended off.
-
-The naming convention used is as follows:
-- runs are consecutive tests, usually where the previous run is used as
-a starting point for the following run
-- a group of runs is called a session, multiple sessions are used for
-  averaging and other statistical purposes like getting confidence
-  intervals
-- a test_name is the user specified name of the test being run, which is
-  made up of sessions that consist of several runs
-- by default the test_name data is saved in the abr_analyze database_dir.
-  the location of this folder is specified in the path.py file
-
-However, this convention does not have to be used. Any save name can be passed
-in and data will be saved there, and can later be loaded.
-"""
 import time
 import warnings
 
@@ -27,16 +6,36 @@ import h5py
 
 from abr_analyze.paths import database_dir
 
-class DataHandler():
-    def __init__(self, db_name='abr_analyze'):
-        """
-        Saves the path to the database to use in this instanitated object
 
-        PARAMETERS
-        ----------
-        db_name: string, Optional (Default: abr_analyze)
-            name of the database being used
-        """
+class DataHandler():
+    """
+    Data handler for saving and loading data
+
+    This class is meant to help simplify running automated tests. This is
+    specifically helpful when running consecutive runs of learning where it is
+    desired to pick up where the last run ended off.
+
+    The naming convention used is as follows:
+    - runs are consecutive tests, usually where the previous run is used as
+    a starting point for the following run
+    - a group of runs is called a session, multiple sessions are used for
+      averaging and other statistical purposes like getting confidence
+      intervals
+    - a test_name is the user specified name of the test being run, which is
+      made up of sessions that consist of several runs
+    - by default the test_name data is saved in the abr_analyze database_dir.
+      the location of this folder is specified in the path.py file
+
+    However, this convention does not have to be used. Any save name can be
+    passed in and data will be saved there, and can later be loaded.
+
+    Parameters
+    ----------
+    db_name: string, Optional (Default: abr_analyze)
+        name of the database being used
+    """
+
+    def __init__(self, db_name='abr_analyze'):
         self.ERRORS = []
         self.db_loc = '%s/%s.h5'%(database_dir, db_name)
         # Instantiate the database object with the provided path so that it
@@ -44,6 +43,7 @@ class DataHandler():
         db = h5py.File(self.db_loc, 'a')
         # close the database after each function
         db.close()
+
 
     def save(self, data, save_location, overwrite=False, create=True,
              timestamp=True):
@@ -118,6 +118,7 @@ class DataHandler():
 
         db.close()
 
+
     def load(self, parameters, save_location):
         """
         Accepts a list of parameters and their path to where they are saved in
@@ -153,6 +154,7 @@ class DataHandler():
 
         return saved_data
 
+
     def delete(self, save_location):
         '''
         Deletes save_location and all contents from instantiated database
@@ -169,6 +171,7 @@ class DataHandler():
             del db[save_location]
         except KeyError:
             warnings.warn('No entry for %s' % save_location)
+
 
     def rename(self, old_save_location, new_save_location, delete_old=True):
         '''
@@ -189,6 +192,7 @@ class DataHandler():
         if delete_old:
             del db[old_save_location]
 
+
     def get_keys(self, save_location):
         """
         Takes a path to an hdf5 dataset in the instantiated database and
@@ -205,6 +209,7 @@ class DataHandler():
             keys = list(db[save_location].keys())
         db.close()
         return keys
+
 
     def check_group_exists(self, location, create=False):
         """
@@ -234,6 +239,7 @@ class DataHandler():
 
         return exists
 
+
     #TODO: make this function
     def sample_data(self):
         '''
@@ -241,9 +247,9 @@ class DataHandler():
         '''
         raise Exception('This function is currently not supported')
 
+
     #NOTE: these are very control specific, should they be subclassed?
     #TODO: the following functions can probably be cleaned up and shortened
-
     def last_save_location(self, session=None, run=None, test_name='test',
                            test_group='test_group', create=True):
         """
@@ -315,7 +321,6 @@ class DataHandler():
             # if exists, use the value
             if exists:
                 session = 'session%03d' %session
-                #print('session is: ', session)
             else:
                 run = None
                 session = None
@@ -332,17 +337,12 @@ class DataHandler():
 
             if session_keys:
                 session = max(session_keys)
-                #print('session is: ', session)
 
             elif create:
                 # No session can be found, create it if create is True
-                # print('The group %s/%s exists, but there is no session'
-                #         % (test_group, test_name)
-                #       + ' saved... \nCreating session000 group')
                 self.db.create_group('%s/%s/session000' %
                                      (test_group, test_name))
                 session = 'session000'
-                #print('session is: ', session)
 
             else:
                 run = None
@@ -361,7 +361,6 @@ class DataHandler():
             # if exists, use the value
             if exists:
                 run = 'run%03d' % run
-                #print('run is: ', run)
             else:
                 run = None
                 location = '%s/%s/' % (test_group, test_name)
@@ -378,13 +377,9 @@ class DataHandler():
 
             if run_keys:
                 run = max(run_keys)
-                #print('run is: ', run)
 
             else:
-                # print('The group %s/%s/%s exists, but there are no runs saved...'
-                #       %(test_group, test_name, session))
                 run = None
-                #print('run is: ', run)
 
         location = '%s/%s/' % (test_group, test_name)
         if session is not None:
@@ -505,26 +500,11 @@ class DataHandler():
         # if the user doesn'r provide either run or session numbers, the
         # highest numbered run and session are searched for in the provided
         # test_group/test_name location
-        # print('run: ', run)
-        # print('session: ', session)
         if session is None or run is None:
-            # if session is not None and run is None:
-            #     print('Checking for latest run in session%03d'%session)
-            # elif session is None and run is not None:
-            #     print('Checking for run%i data in latest session'%run)
-            # else:
-            #     print('Checking for latest session and run...')
             [run, session, group_path] = self.last_save_location(
                 session=session, run=run, test_name=test_name,
                 test_group=test_group, create=create)
-            # if run is None:
-            #     print('There is no run saved in %s/%s/%s: Returning None'
-            #             % (test_group, test_name, session))
-
         else:
-            # print('using user provided run and session')
-            # print('run: ', run)
-            # print('session: ', session)
             session = 'session%03d' % session
             run = 'run%03d' % run
 
@@ -533,6 +513,7 @@ class DataHandler():
         else:
             group_path = '%s/%s/%s/%s' % (test_group, test_name, session, run)
 
-            saved_data = self.load(parameters=parameters, save_location=group_path)
+            saved_data = self.load(parameters=parameters,
+                                   save_location=group_path)
 
         return saved_data

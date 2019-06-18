@@ -1,8 +1,9 @@
 """
-Class for processing data including: interpolating for even sampling,
-calculating average and confidence intervals, scaling data, filtering data, and
-comparing to an ideal trajectory
+Functions for processing data including: interpolating for even sampling,
+calculating average and confidence intervals, scaling data, filtering data,
+and comparing to an ideal trajectory
 """
+
 import numpy as np
 import scipy.interpolate
 
@@ -10,11 +11,11 @@ from abr_analyze.data_handler import DataHandler
 
 
 def get_mean_and_ci(raw_data, n=3000, p=0.95):
-    '''
-    gets the mean and 95% confidence intervals of data *see Note
+    """
+    Gets the mean and 95% confidence intervals of data *see Note
     NOTE: data has to be grouped along rows, for example: having 5 sets of
     100 data points would be a list of shape (5,100)
-    '''
+    """
     sample = []
     upper_bound = []
     lower_bound = []
@@ -40,17 +41,17 @@ def get_mean_and_ci(raw_data, n=3000, p=0.95):
 
 
 def list_to_function(data, time_intervals):
-    '''
-    accepts a list of dart points and returns an interpolated function that
+    """
+    Accepts a list of dart points and returns an interpolated function that
     can be used to get points at different time intervals
 
-    PARAMETERS
+    Parameters
     ----------
     data: list of floats time x dimension
         the data to turn into a function
     time_intervals: list of floats
         the timesteps corresponding to the data (not cumulative time)
-    '''
+    """
     data = np.asarray(data)
     sample_times = np.cumsum(time_intervals)
 
@@ -66,10 +67,10 @@ def list_to_function(data, time_intervals):
 
 
 def interpolate_data(data, time_intervals, interpolated_samples):
-    '''
-    accepts data and interpolates to the specified number of points
+    """
+    Accepts data and interpolates to the specified number of points
 
-    PARAMETERS
+    Parameters
     ----------
     data: list of floats time x dimension
         the data to turn into a function
@@ -78,7 +79,7 @@ def interpolate_data(data, time_intervals, interpolated_samples):
     interpolated_samples: int
         the number of evenly distributed points along get interpolated data
         for
-    '''
+    """
     data = np.asarray(data)
     time_intervals = np.asarray(time_intervals)
 
@@ -105,10 +106,10 @@ def interpolate_data(data, time_intervals, interpolated_samples):
 
 def scale_data(data, baseline_low, baseline_high, scaling_factor=1):
     """
-    scale data to some baseline to get values from 0-1 relative
+    Scale data to some baseline to get values from 0-1 relative
     to baseline times the scaling factor
 
-    PARAMETERS
+    Parameters
     data: list of floats
         the data to be scaled
     baseline_low: list of floats
@@ -143,7 +144,7 @@ def load_and_process(db_name, save_location, parameters,
     NOTE: if interpolated_samples is set to None, the raw data will be
     returned without interpolation and sampling
 
-    PARAMETERS
+    Parameters
     ----------
     db_name: string
         the database where the data is saved
@@ -197,7 +198,7 @@ def calc_cartesian_points(robot_config, q):
     Takes in a robot_config and a list of joint angles and returns the
     cartesian coordinates of the robots joints and link COM's
 
-    PARAMETERS
+    Parameters
     ----------
     robot_config: instantiated abr_control robot config
         This is required to transform joint angles to cartesian coordinates

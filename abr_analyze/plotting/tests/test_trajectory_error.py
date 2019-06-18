@@ -1,23 +1,17 @@
+import numpy as np
 import pytest
 
-import numpy as np
-# normally we have a package to reference imports, this is a hack for this
-# example to work in a test folder
-import os,sys,inspect
-current_dir = os.path.dirname(
-    os.path.abspath(inspect.getfile(inspect.currentframe())))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
 from abr_analyze.plotting import TrajectoryError
 from abr_analyze.data_handler import DataHandler
-import generate_random_traj
+from abr_analyze.utils import random_trajectories
+
 
 dat = DataHandler('test')
 save_location = 'traj_err_test/session000/run000'
 # generate a random trajectory and an ideal
-data = generate_random_traj.generate(steps=100)
+data = random_trajectories.generate(steps=100)
 # generate another trajectory and ideal so we can test passing in a custom ideal
-data_alt = generate_random_traj.generate(steps=100)
+data_alt = random_trajectories.generate(steps=100)
 # save the second ideal to the first data dict
 data['alt_traj'] = data_alt['ideal_trajectory']
 dat.save(data=data, save_location=save_location, overwrite=True)
