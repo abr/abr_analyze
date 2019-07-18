@@ -169,7 +169,7 @@ def plot_3d_data(ax, data, c='tab:purple', linestyle='-',
     return ax
 
 
-def plot_mean_and_ci(ax, data, c=None, linestyle='-', label=None,
+def plot_mean_and_ci(ax, data, c=None, linestyle='--', label=None,
                      loc=1, title=None):
     """
     accepts dict with keys upper_bound, lower_bound, and mean, and plots
@@ -203,7 +203,7 @@ def plot_mean_and_ci(ax, data, c=None, linestyle='-', label=None,
         data['lower_bound'],
         color=c,
         alpha=.5)
-    ax.plot(data['mean'], color=c, label=label, linestyle='--')
+    ax.plot(data['mean'], color=c, label=label, linestyle=linestyle)
     ax.set_title(title)
     #TODO fix the legend here
     #ax.legend(loc)

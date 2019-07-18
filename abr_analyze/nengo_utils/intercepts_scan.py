@@ -64,8 +64,10 @@ def run(encoders, intercept_vals, input_signal, seed=1,
             dimensions=encoders.shape[2],
             base=Triangular(intercept[0], intercept[2], intercept[1]))
         rng = np.random.RandomState(seed)
-        intercept_list = intercept_list.sample(encoders.shape[1], rng=rng)
-        intercept_list = np.array(intercept_list)
+        # TODO should this be the shape of encoders and 0 and 1?
+        # different for different ensembles...?
+        intercept_list = intercept_list.sample(encoders.shape[1])
+        intercept_list = np.array(intercept_list).reshape(1, encoders.shape[1])
 
         # create a network with the new intercepts
         network = signals.DynamicsAdaptation(
