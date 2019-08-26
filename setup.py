@@ -26,7 +26,7 @@ install_requires = [
     "terminaltables==3.1.0",
     "redis==2.10.5",
     "numpy>=1.13.3",
-    "matplotlib==3.0.2",
+    "matplotlib>=3.0.2",
     "scipy==1.1.0",
     "nengo>=2.8.0",
     "nengolib>=0.4.1",

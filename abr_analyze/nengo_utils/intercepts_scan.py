@@ -15,6 +15,7 @@ from abr_control.controllers.signals.dynamics_adaptation import Triangular
 from abr_analyze.data_handler import DataHandler
 import abr_analyze.nengo_utils.network_utils as network_utils
 
+
 def run(encoders, intercept_vals, input_signal, seed=1,
         db_name='intercepts_scan', save_name='example', notes='',
         analysis_fncs=None, **kwargs):
@@ -51,19 +52,18 @@ def run(encoders, intercept_vals, input_signal, seed=1,
     for ii, intercept in enumerate(intercept_vals):
         start = timeit.default_timer()
         elapsed_time += loop_time
-        print('%i/%i | '%(ii+1, len(intercept_vals))
-              + '%.2f%% Complete | '%(ii/len(intercept_vals)*100)
-              + '%.2f min elapsed | '%(elapsed_time/60)
-              + '%.2f min for last sim | '%(loop_time/60)
+        print('%i/%i | ' % (ii+1, len(intercept_vals))
+              + '%.2f%% Complete | ' % (ii/len(intercept_vals)*100)
+              + '%.2f min elapsed | ' % (elapsed_time/60)
+              + '%.2f min for last sim | ' % (loop_time/60)
               + '~%.2f min remaining...'
-              %((len(intercept_vals)-ii)*loop_time/60),
+              % ((len(intercept_vals)-ii)*loop_time/60),
               end='\r')
 
         # create our intercept distribution from the intercepts vals
         intercept_list = AreaIntercepts(
             dimensions=encoders.shape[2],
             base=Triangular(intercept[0], intercept[2], intercept[1]))
-        rng = np.random.RandomState(seed)
         # TODO should this be the shape of encoders and 0 and 1?
         # different for different ensembles...?
         intercept_list = intercept_list.sample(encoders.shape[1])
@@ -97,9 +97,9 @@ def run(encoders, intercept_vals, input_signal, seed=1,
             if ii == 0:
                 dat = DataHandler(db_name)
                 dat.save(
-                    data={'total_intercepts':len(intercept_vals),
-                          'notes':notes},
-                    save_location='%s/%s'%(save_name, func_name),
+                    data={'total_intercepts': len(intercept_vals),
+                          'notes': notes},
+                    save_location='%s/%s' % (save_name, func_name),
                     overwrite=True)
 
             # not saving activity because takes up a lot of disk space
@@ -110,10 +110,11 @@ def run(encoders, intercept_vals, input_signal, seed=1,
                     'num_inactive': num_inactive,
                     'title': func_name
                     }
-            dat.save(data=data, save_location='%s/%s/%05d'%
+            dat.save(data=data, save_location='%s/%s/%05d' %
                      (save_name, func_name, ii), overwrite=True)
 
             loop_time = timeit.default_timer() - start
+
 
 def review(save_name, ideal_function, num_to_plot=10):
     '''
@@ -172,8 +173,6 @@ def review(save_name, ideal_function, num_to_plot=10):
     for ii in range(0, num_to_plot):
         ind = indices[ii]
         data = run_data[ind]
-        #plt.title('Active: %i | Inactive: %i' % (data['num_active'],
-        #          data['num_inactive']))
         if data['title'] == 'proportion_time_neurons_active':
             plt.bar(data['x'], data['y'], width=1/(2*n_bins),
                     edgecolor='white', alpha=0.5,
