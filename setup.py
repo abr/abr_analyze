@@ -29,7 +29,7 @@ install_requires = [
     "matplotlib>=3.0.2",
     "scipy==1.1.0",
     "nengo>=2.8.0",
-    "nengolib>=0.4.1",
+    "nengolib>=0.5.2",
     "nengo_extras>=0.3.0"
     ]
 
@@ -53,7 +53,6 @@ setup(
     long_description=read('README.rst'),
     install_requires=install_requires + setup_requires,
     setup_requires=setup_requires,
-    python_requires="<3.7",
     extras_require={"tests": tests_require},
     packages=find_packages(),
 )
