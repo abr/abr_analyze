@@ -9,8 +9,6 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
 
-import nengolib
-
 from abr_analyze.nengo_utils import network_utils, intercepts_scan
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir

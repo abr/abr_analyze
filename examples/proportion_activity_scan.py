@@ -13,7 +13,6 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
-import nengolib
 
 examples_db()
 runs = 10

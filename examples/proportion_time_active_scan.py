@@ -10,8 +10,7 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
 
-import nengolib
-from nengolib.stats import ScatteredHypersphere
+from abr_control._vendor.nengolib.stats import ScatteredHypersphere
 
 from abr_analyze.nengo_utils import network_utils, intercepts_scan
 from abr_control.controllers import signals

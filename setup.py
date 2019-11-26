@@ -29,7 +29,6 @@ install_requires = [
     "matplotlib>=3.0.2",
     "scipy==1.1.0",
     "nengo>=2.8.0",
-    "nengolib>=0.5.2",
     "nengo_extras>=0.3.0"
     ]
 

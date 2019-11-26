@@ -20,8 +20,6 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
 
-import nengolib
-
 from abr_analyze import DataHandler
 from abr_analyze.nengo_utils import network_utils
 from abr_control.controllers import signals
