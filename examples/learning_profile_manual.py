@@ -16,9 +16,8 @@ Plots
 """
 import numpy as np
 import matplotlib
+import nengo
 matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-import os
 
 from abr_analyze import DataHandler
 from abr_analyze.nengo import network_utils
@@ -26,11 +25,12 @@ from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir, figures_dir
 from download_examples_db import check_exists as examples_db
 
-import nengo
+import matplotlib.pyplot as plt
+
 
 examples_db()
 dat = DataHandler('abr_analyze_examples')
-fig = plt.figure(figsize=(8,12))
+fig = plt.figure(figsize=(8, 12))
 ax_list = [
       fig.add_subplot(311),
       fig.add_subplot(312),
@@ -39,12 +39,13 @@ ax_list = [
 
 runs = 10
 for ii in range(0, runs):
-    data = dat.load(parameters=['input_signal'],
-            save_location='test_1/session000/run%03d'%ii)
-    if ii == 0:
-        input_signal = data['input_signal']
-    else:
-        input_signal = np.vstack((input_signal, data['input_signal']))
+    data = dat.load(
+        parameters=['input_signal'],
+        save_location='test_1/session000/run%03d' % ii)
+if ii == 0:
+    input_signal = data['input_signal']
+else:
+    input_signal = np.vstack((input_signal, data['input_signal']))
 
 input_signal = np.squeeze(input_signal)
 
@@ -59,7 +60,6 @@ n_output = 5
 seed = 0
 
 # ----------- Create your intercepts ---------------
-
 # Generates intercepts for a d-dimensional ensemble, such that, given a
 # random uniform input (from the interior of the d-dimensional ball), the
 # probability of a neuron firing has the probability density function given
@@ -100,7 +100,7 @@ network_utils.gen_learning_profile(
     n_ens_to_raster=1,
     show_plot=False)
 
-loc = '%s/learning_profile_manual'%figures_dir
+loc = '%s/learning_profile_manual ' % figures_dir
 plt.savefig(loc)
-print('Figure saved to %s'%loc)
+print('Figure saved to %s' % loc)
 plt.show()
