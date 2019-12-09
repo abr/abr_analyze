@@ -1,3 +1,4 @@
+import numpy as np
 from terminaltables import AsciiTable
 
 # Function to print out parameters into an ASCII Table
@@ -52,7 +53,6 @@ def print_params(data, title=None, invert=False):
     for row in formatted_data:
         table_data.append(row)
     if invert:
-        import numpy as np
         table_data = list(np.array(table_data).T)
     table = AsciiTable(table_data)
     if title is not None:

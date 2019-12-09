@@ -16,7 +16,7 @@ if [[ "$COMMAND" == "install" ]]; then
     exe pip install codespell pylint gitlint "astroid"
 elif [[ "$COMMAND" == "script" ]]; then
     exe pylint abr_analyze --rcfile=setup.cfg
-    exe codespell -q 3
+    exe codespell -q 3 --ignore-words-list="DOF,dof,hist"
     exe shellcheck -e SC2087 .ci/*.sh
     # undo single-branch cloning
     git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*

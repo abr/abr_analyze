@@ -27,7 +27,7 @@ test = 'test_1'
 baseline = 'baseline_1'
 
 # instantiate our robot config
-robot_config = jaco2.Config(use_cython=True, hand_attached=True)
+robot_config = jaco2.Config()
 
 # Instantiate our arm drawing module
 draw_arm = DrawArm(db_name=db_name, robot_config=robot_config,

@@ -34,7 +34,7 @@ while rows*cols < len(runs):
     rows += 1
 
 # instantiate our robot config
-robot_config = jaco2.Config(use_cython=True, hand_attached=True)
+robot_config = jaco2.Config()
 
 # Instantiate our arm drawing module
 draw_arm = DrawArm(

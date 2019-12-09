@@ -15,6 +15,7 @@ NOTE: see examples of running for a single profile, or looping through various
 intercepts to later view in the intercept_scan_viewer.py gui
 """
 
+import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -114,7 +115,6 @@ def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
             # if we've tried several times to find input meeting
             # outside threshold distance but failed, return with warning
             # so we're not stuck in infinite loop
-            import warnings
             warnings.warn(
                 'Could not find set of encoders outside thresh distance')
 

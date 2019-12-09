@@ -10,6 +10,7 @@ import matplotlib.gridspec as gridspec
 from mpl_toolkits.mplot3d import axes3d  # pylint: disable=W0611
 
 from abr_analyze.paths import figures_dir
+from abr_analyze.plotting.make_gif import MakeGif
 
 class DrawCells():
     def __init__(self, figsize=None, dpi=200):
@@ -143,7 +144,6 @@ class DrawCells():
         cell_ids = self.data['cell_ids']
         # this will only be greater than one if the cell is being animated
         if self.animate_steps > 1:
-            from abr_analyze.plotting.make_gif import MakeGif
             gif = MakeGif()
             fig_cache = gif.prep_fig_cache()
 

@@ -13,7 +13,7 @@ else:
     current_dir = os.path.abspath('.')
 
     cache_dir = os.path.abspath(
-        os.path.join(home_dir, ".cache", "abr_analyze"))
+        os.path.join(home_dir, "Data/.cache", "abr_analyze"))
     # the repo root directory
     dir_name = os.path.dirname(__file__)
     database_dir = os.path.abspath(os.path.join(dir_name, "..", "databases"))
