@@ -49,8 +49,6 @@ def send_email(from_email=None, from_password=None, to_email=None,
     msg['To'] = to_email
     msg['Subject'] = subject
 
-    body = body
-
     msg.attach(MIMEText(body, 'plain'))
 
     part = MIMEBase('application', 'octet-stream')

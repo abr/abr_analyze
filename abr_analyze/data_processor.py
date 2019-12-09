@@ -19,8 +19,8 @@ def get_mean_and_ci(raw_data, n=3000, p=0.95):
     sample = []
     upper_bound = []
     lower_bound = []
-    sets = np.array(raw_data).shape[0]
-    data_pts = np.array(raw_data).shape[1]
+    sets = np.array(raw_data).shape[0] #pylint: disable=E1136
+    data_pts = np.array(raw_data).shape[1] #pylint: disable=E1136
     print('Mean and CI calculation found %i sets of %i data points'
           %(sets, data_pts))
     raw_data = np.array(raw_data)

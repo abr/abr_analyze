@@ -20,58 +20,39 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
 
+from abr_control._vendor.nengolib.stats import ScatteredHypersphere
+
 from abr_analyze import DataHandler
 from abr_analyze.nengo_utils import network_utils
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir, figures_dir
-from download_examples_db import check_exists as examples_db
 
-
-examples_db()
-dat = DataHandler('abr_analyze_examples')
-fig = plt.figure(figsize=(8,12))
-ax_list = [
-      fig.add_subplot(311),
-      fig.add_subplot(312),
-      fig.add_subplot(313)
-     ]
-
-runs = 10
-for ii in range(0, runs):
-    data = dat.load(parameters=['input_signal'],
-            save_location='test_1/session000/run%03d'%ii)
-    if ii == 0:
-        input_signal = data['input_signal']
-    else:
-        input_signal = np.vstack((input_signal, data['input_signal']))
-
-input_signal = np.squeeze(input_signal)
+npz = 'run_0_obj_53.npz'
+data = np.load(npz)
 
 # specify our network parameters
-seed = 0
-neuron_type = 'lif'
-n_neurons = 1000
+backend = 'nengo_cpu'
+seed = int(data['seed'])
+n_neurons = 3000
 n_ensembles = 1
-test_name = 'learning_profile_example',
-n_input = 11
-n_output = 5
-seed = 0
+test_name = 'learning_profile_l2m',
+n_input = 13
+n_output = 6
+pes = data['learning_rate']
+input_signal = data['input_signal']
 
+np.random.RandomState(seed)
 # ----------- Create your intercepts ---------------
 intercepts = signals.dynamics_adaptation.AreaIntercepts(
     dimensions=n_input,
-    base=signals.dynamics_adaptation.Triangular(-0.5, -0.5, -0.45))
+    base=signals.dynamics_adaptation.Triangular(left=-0.1, mode=0.0, right=0.1))
 
-rng = np.random.RandomState(seed)
 intercepts = intercepts.sample(n_neurons*n_ensembles)
 intercepts = intercepts.reshape(n_ensembles, n_neurons)
-intercepts = np.asarray(intercepts)
 
 # ----------- Create your encoders ---------------
-encoders = network_utils.generate_encoders(
-    input_signal=input_signal,
-    n_neurons=n_neurons*n_ensembles)
-
+hypersphere = ScatteredHypersphere(surface=True)
+encoders = hypersphere.sample(n_ensembles*n_neurons, n_input)
 encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
 
 # ----------- Instantiate your nengo simulator ---------------
@@ -82,10 +63,19 @@ network = signals.DynamicsAdaptation(
     n_output=n_output,
     n_neurons=n_neurons,
     n_ensembles=n_ensembles,
-    pes_learning_rate=1e-6,
+    pes_learning_rate=pes,
     intercepts=intercepts,
     seed=seed,
     encoders=encoders)
+
+# create our figure object
+fig = plt.figure(figsize=(8,12))
+ax_list = [
+      fig.add_subplot(311),
+      fig.add_subplot(312),
+      fig.add_subplot(313)
+     ]
+plt.tight_layout()
 
 # pass your network and input signal to the network utils module
 # run a sim and plot the learning profile
@@ -96,7 +86,7 @@ network_utils.gen_learning_profile(
     n_ens_to_raster=1,
     show_plot=False)
 
-loc = '%s/learning_profile_manual'%figures_dir
+loc = '%s/learning_profile_l2m'%figures_dir
 plt.savefig(loc)
 print('Figure saved to %s'%loc)
 plt.show()

@@ -38,7 +38,7 @@ ax_list = [
 data = dat.load(
     parameters=[
         'n_input', 'n_output', 'n_neurons', 'n_ensembles',
-        'pes', 'intercepts', 'backend', 'seed', 'neuron_type', 'encoders'
+        'pes', 'intercepts', 'seed', 'encoders'
         ],
     save_location='nengo_data')
 
@@ -48,9 +48,9 @@ n_neurons = int(data['n_neurons'])
 n_ensembles = int(data['n_ensembles'])
 pes_learning_rate = float(data['pes'])
 intercepts = data['intercepts']
-backend = data['backend'].tolist()
+intercepts = np.array(intercepts)
+intercepts = intercepts.reshape((n_ensembles, n_neurons))
 seed = int(data['seed'])
-neuron_type = data['neuron_type'].tolist()
 encoders = data['encoders']
 
 runs = 10
@@ -72,10 +72,7 @@ network = signals.DynamicsAdaptation(
     n_ensembles=n_ensembles,
     pes_learning_rate=1e-6,
     intercepts=intercepts,
-    backend=backend,
-    probe_weights=True,
     seed=seed,
-    neuron_type=neuron_type,
     encoders=encoders)
 
 network_utils.gen_learning_profile(

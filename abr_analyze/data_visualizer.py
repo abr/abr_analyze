@@ -198,7 +198,7 @@ def plot_mean_and_ci(ax, data, c=None, linestyle='--', label=None,
         the legend location
     """
     ax.fill_between(
-        range(np.array(data['mean']).shape[0]),
+        range(np.array(data['mean']).shape[0]), #pylint: disable=E1136
         data['upper_bound'],
         data['lower_bound'],
         color=c,

@@ -177,12 +177,12 @@ def review(save_name, ideal_function, num_to_plot=10):
             plt.bar(data['x'], data['y'], width=1/(2*n_bins),
                     edgecolor='white', alpha=0.5,
                     label=('%i: err:%.2f \n%s: %s' %
-                           (ind, error, data['intercept_bounds'],
+                           (ind, errors[ind], data['intercept_bounds'],
                             data['intercept_mode'])))
         else:
             plt.plot(np.squeeze(data['x']), np.squeeze(data['y']),
                      label=('%i: err:%.2f \n%s: %s' %
-                            (ind, error, data['intercept_bounds'],
+                            (ind, errors[ind], data['intercept_bounds'],
                              data['intercept_mode'])))
 
     plt.title(data['title'])
