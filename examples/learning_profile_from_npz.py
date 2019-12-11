@@ -26,6 +26,7 @@ from abr_analyze import DataHandler
 from abr_analyze.nengo_utils import network_utils
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir, figures_dir
+from nengo_extras import triangular_intercepts
 
 npz = 'run_0_obj_53.npz'
 data = np.load(npz)
@@ -43,12 +44,13 @@ input_signal = data['input_signal']
 
 np.random.RandomState(seed)
 # ----------- Create your intercepts ---------------
-intercepts = signals.dynamics_adaptation.AreaIntercepts(
-    dimensions=n_input,
-    base=signals.dynamics_adaptation.Triangular(left=-0.1, mode=0.0, right=0.1))
-
-intercepts = intercepts.sample(n_neurons*n_ensembles)
-intercepts = intercepts.reshape(n_ensembles, n_neurons)
+intercepts = triangular_intercepts.generate(
+    n_input=n_input,
+    n_ensembles=n_ensembles,
+    n_neurons=n_neurons,
+    bounds=[-0.1, 0.1],
+    mode=0.0,
+    seed=seed)
 
 # ----------- Create your encoders ---------------
 hypersphere = ScatteredHypersphere(surface=True)
