@@ -10,8 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from abr_control.controllers import signals
-from abr_control.controllers.signals.dynamics_adaptation import AreaIntercepts
-from abr_control.controllers.signals.dynamics_adaptation import Triangular
+from nengo_extras import dists
 from abr_analyze.data_handler import DataHandler
 import abr_analyze.nengo_utils.network_utils as network_utils
 
@@ -61,13 +60,13 @@ def run(encoders, intercept_vals, input_signal, seed=1,
               end='\r')
 
         # create our intercept distribution from the intercepts vals
-        intercept_list = AreaIntercepts(
-            dimensions=encoders.shape[2],
-            base=Triangular(intercept[0], intercept[2], intercept[1]))
-        # TODO should this be the shape of encoders and 0 and 1?
-        # different for different ensembles...?
-        intercept_list = intercept_list.sample(encoders.shape[1])
-        intercept_list = np.array(intercept_list).reshape(1, encoders.shape[1])
+        intercept_list = dists.generate_triangular(
+            n_input=encoders.shape[2],
+            n_ensembles=1,
+            n_neurons=encoders.shape[1],
+            bounds=[intercept[0], intercept[1]],
+            mode=intercept[2],
+            seed=seed)
 
         # create a network with the new intercepts
         network = signals.DynamicsAdaptation(

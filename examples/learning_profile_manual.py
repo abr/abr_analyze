@@ -25,6 +25,7 @@ from abr_analyze.nengo_utils import network_utils
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir, figures_dir
 from download_examples_db import check_exists as examples_db
+from nengo_extras import dists
 
 
 examples_db()
@@ -58,14 +59,13 @@ n_output = 5
 seed = 0
 
 # ----------- Create your intercepts ---------------
-intercepts = signals.dynamics_adaptation.AreaIntercepts(
-    dimensions=n_input,
-    base=signals.dynamics_adaptation.Triangular(-0.5, -0.5, -0.45))
-
-rng = np.random.RandomState(seed)
-intercepts = intercepts.sample(n_neurons*n_ensembles)
-intercepts = intercepts.reshape(n_ensembles, n_neurons)
-intercepts = np.asarray(intercepts)
+intercepts = dists.generate_triangular(
+    n_input=n_input,
+    n_ensembles=n_ensembles,
+    n_neurons=n_neurons,
+    bounds=[-0.5, -0.45],
+    mode=-0.5,
+    seed=seed)
 
 # ----------- Create your encoders ---------------
 encoders = network_utils.generate_encoders(

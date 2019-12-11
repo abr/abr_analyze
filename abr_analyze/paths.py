@@ -16,7 +16,8 @@ else:
         os.path.join(home_dir, "Data/.cache", "abr_analyze"))
     # the repo root directory
     dir_name = os.path.dirname(__file__)
-    database_dir = os.path.abspath(os.path.join(dir_name, "..", "databases"))
+    #database_dir = os.path.abspath(os.path.join(dir_name, "..", "databases"))
+    database_dir = os.path.abspath(os.path.join(home_dir, "Data/abr_analyze", "databases"))
     figures_dir = os.path.join(current_dir, "Figures")
 
     os.makedirs(cache_dir, exist_ok=True)
