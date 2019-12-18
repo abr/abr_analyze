@@ -24,7 +24,7 @@ from abr_analyze.nengo import network_utils
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir, figures_dir
 from download_examples_db import check_exists as examples_db
-from nengo_extras import triangular_intercepts
+from nengo_extras import dists
 
 import matplotlib.pyplot as plt
 
@@ -71,7 +71,6 @@ triangular = np.random.triangular(
 )
 intercepts = nengo.dists.CosineSimilarity(n_input + 2).ppf(1 - triangular)
 intercepts = intercepts.reshape((n_ensembles, n_neurons))
-
 # ----------- Create your encoders ---------------
 encoders = network_utils.generate_encoders(
     input_signal=input_signal,
