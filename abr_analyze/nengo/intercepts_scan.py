@@ -10,10 +10,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from abr_control.controllers import signals
+<<<<<<< 2ebbbf051206a754c06166331c3755444d62b5f2:abr_analyze/nengo/intercepts_scan.py
 <<<<<<< 2a3660de2a923e1b2e9c55f25849ce75fbf28eae:abr_analyze/nengo/intercepts_scan.py
 =======
 from nengo_extras import triangular_intercepts
 >>>>>>> Intercepts update:abr_analyze/nengo_utils/intercepts_scan.py
+=======
+from nengo_extras import dists
+>>>>>>> Updated triangular intercepts:abr_analyze/nengo_utils/intercepts_scan.py
 from abr_analyze.data_handler import DataHandler
 import abr_analyze.nengo.network_utils as network_utils
 
