@@ -26,7 +26,7 @@ from abr_analyze import DataHandler
 from abr_analyze.nengo_utils import network_utils
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir, figures_dir
-from nengo_extras import triangular_intercepts
+from nengo_extras import dists
 
 npz = 'run_0_obj_53.npz'
 data = np.load(npz)
@@ -44,7 +44,7 @@ input_signal = data['input_signal']
 
 np.random.RandomState(seed)
 # ----------- Create your intercepts ---------------
-intercepts = triangular_intercepts.generate(
+intercepts = dists.generate_triangular(
     n_input=n_input,
     n_ensembles=n_ensembles,
     n_neurons=n_neurons,

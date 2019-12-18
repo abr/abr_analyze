@@ -25,7 +25,7 @@ from abr_analyze.nengo_utils import network_utils
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir, figures_dir
 from download_examples_db import check_exists as examples_db
-from nengo_extras import triangular_intercepts
+from nengo_extras import dists
 
 
 examples_db()
@@ -59,7 +59,7 @@ n_output = 5
 seed = 0
 
 # ----------- Create your intercepts ---------------
-intercepts = triangular_intercepts.generate(
+intercepts = dists.generate_triangular(
     n_input=n_input,
     n_ensembles=n_ensembles,
     n_neurons=n_neurons,

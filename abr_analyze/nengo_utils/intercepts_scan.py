@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from abr_control.controllers import signals
-from nengo_extras import triangular_intercepts
+from nengo_extras import dists
 from abr_analyze.data_handler import DataHandler
 import abr_analyze.nengo_utils.network_utils as network_utils
 
@@ -60,7 +60,7 @@ def run(encoders, intercept_vals, input_signal, seed=1,
               end='\r')
 
         # create our intercept distribution from the intercepts vals
-        intercept_list = triangular_intercepts.generate(
+        intercept_list = dists.generate_triangular(
             n_input=encoders.shape[2],
             n_ensembles=1,
             n_neurons=encoders.shape[1],
