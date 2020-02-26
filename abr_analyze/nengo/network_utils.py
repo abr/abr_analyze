@@ -19,9 +19,11 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 
+from abr_control._vendor.nengolib.stats import ScatteredHypersphere
+
 import nengo
 from nengo.utils.matplotlib import rasterplot
-from abr_control._vendor.nengolib.stats import ScatteredHypersphere
+
 
 def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
     """

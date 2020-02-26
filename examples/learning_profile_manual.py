@@ -21,12 +21,12 @@ import matplotlib.pyplot as plt
 import os
 
 from abr_analyze import DataHandler
-from abr_analyze.nengo_utils import network_utils
+from abr_analyze.nengo import network_utils
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir, figures_dir
 from download_examples_db import check_exists as examples_db
-from nengo_extras import dists
 
+import nengo
 
 examples_db()
 dat = DataHandler('abr_analyze_examples')
@@ -59,13 +59,17 @@ n_output = 5
 seed = 0
 
 # ----------- Create your intercepts ---------------
-intercepts = dists.generate_triangular(
-    n_input=n_input,
-    n_ensembles=n_ensembles,
-    n_neurons=n_neurons,
-    bounds=[-0.5, -0.45],
-    mode=-0.5,
-    seed=seed)
+
+# Generates intercepts for a d-dimensional ensemble, such that, given a
+# random uniform input (from the interior of the d-dimensional ball), the
+# probability of a neuron firing has the probability density function given
+# by rng.triangular(left, mode, right, size=n)
+np.random.seed(seed)
+triangular = np.random.triangular(
+    left=0.45, mode=0.5, right=0.5, size=n_neurons * n_ensembles
+)
+intercepts = nengo.dists.CosineSimilarity(n_input + 2).ppf(1 - triangular)
+intercepts = intercepts.reshape((n_ensembles, n_neurons))
 
 # ----------- Create your encoders ---------------
 encoders = network_utils.generate_encoders(

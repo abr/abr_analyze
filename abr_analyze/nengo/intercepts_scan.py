@@ -10,9 +10,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from abr_control.controllers import signals
-from nengo_extras import dists
 from abr_analyze.data_handler import DataHandler
-import abr_analyze.nengo_utils.network_utils as network_utils
+import abr_analyze.nengo.network_utils as network_utils
+
+import nengo
 
 
 def run(encoders, intercept_vals, input_signal, seed=1,
@@ -60,13 +61,24 @@ def run(encoders, intercept_vals, input_signal, seed=1,
               end='\r')
 
         # create our intercept distribution from the intercepts vals
-        intercept_list = dists.generate_triangular(
-            n_input=encoders.shape[2],
-            n_ensembles=1,
-            n_neurons=encoders.shape[1],
-            bounds=[intercept[0], intercept[1]],
+        # Generates intercepts for a d-dimensional ensemble, such that, given a
+        # random uniform input (from the interior of the d-dimensional ball), the
+        # probability of a neuron firing has the probability density function given
+        # by rng.triangular(left, mode, right, size=n)
+        np.random.seed(seed)
+        triangular = np.random.triangular(
+            # intercept_vals = [left, right, mode]
+            left=intercept[0],
+            right=intercept[1],
             mode=intercept[2],
-            seed=seed)
+            size=encoders.shape[1],
+        )
+        intercepts = nengo.dists.CosineSimilarity(encoders.shape[2] + 2).ppf(1 - triangular)
+        intercept_list = intercepts.reshape((1, encoders.shape[1]))
+
+        print()
+        print(intercept)
+        print(intercept_list)
 
         # create a network with the new intercepts
         network = signals.DynamicsAdaptation(

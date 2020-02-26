@@ -23,7 +23,7 @@ import os
 from abr_control._vendor.nengolib.stats import ScatteredHypersphere
 
 from abr_analyze import DataHandler
-from abr_analyze.nengo_utils import network_utils
+from abr_analyze.nengo import network_utils
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir, figures_dir
 from nengo_extras import dists

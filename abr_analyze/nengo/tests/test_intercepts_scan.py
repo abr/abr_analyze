@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from abr_analyze.nengo_utils import intercepts_scan, network_utils
+from abr_analyze.nengo import intercepts_scan, network_utils
 
 def get_params():
     n_ensembles = 1
@@ -10,9 +10,9 @@ def get_params():
     encoders = np.array([np.random.choice([-1, 1], n_neurons)[:, None]
                          for ii in range(n_ensembles)])
     intercept_vals = [
-        [-.5, 0, -.25],
-        [-.9, .5, .25],
-        [.5, 1, .75],
+        [0, 0.25, 0.25],
+        [.2, 0.95, 0.45],
+        [0.7, 0.8, 0.75],
         ]
     input_signal = np.sin(np.linspace(0, 2*np.pi, 100))
 

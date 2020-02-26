@@ -3,7 +3,7 @@ Run a parameter sweep across intercept values, looking at the proportion
 of neurons are active over time and the proportion of time neurons are active.
 Display the 10 results that are closest to the ideal function specified
 """
-from abr_analyze.nengo_utils import network_utils, intercepts_scan
+from abr_analyze.nengo import network_utils, intercepts_scan
 from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir
 from abr_analyze import DataHandler

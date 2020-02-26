@@ -3,7 +3,7 @@ import numpy as np
 
 import nengo
 
-from abr_analyze.nengo_utils import network_utils
+from abr_analyze.nengo import network_utils
 
 class DynamicsAdaptation:
     def __init__(self, n_neurons, n_ensembles, **kwargs):
