@@ -47,7 +47,6 @@ for ii in range(1, interpolated_samples):
     ax.set_xlim3d(-0.5,0.5)
     ax.set_ylim3d(-0.5,0.5)
     ax.set_zlim3d(0,1)
-    ax.set_aspect(1)
     draw_3d.plot(
             ax=ax,
             save_location='%s/session000/run000'%baseline,

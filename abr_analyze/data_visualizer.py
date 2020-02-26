@@ -58,7 +58,6 @@ def plot_arm(ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
     ax.set_xlim3d(-0.5, 0.5)
     ax.set_ylim3d(-0.5, 0.5)
     ax.set_zlim3d(0.5, 1.2)
-    ax.set_aspect(1)
     if title is not None:
         ax.set_title(title)
 
