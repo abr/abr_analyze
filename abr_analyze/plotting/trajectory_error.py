@@ -170,17 +170,27 @@ class TrajectoryError():
 
         data['time_derivative'] = self.time_derivative
         data['read_location'] = save_location
-        data['error'] = np.linalg.norm((data['ee_xyz'] - data[ideal]), axis=1)
+        data['error'] = np.linalg.norm((data['ee_xyz'] - data[ideal][:, :3]), axis=1)
 
         return data
 
     def plot(self, ax, save_location, step=-1, c=None, linestyle='--',
-             label=None, loc=1, title='Trajectory Error to Path Planner'):
+             label=None, loc=1, title='Trajectory Error to Path Planner',
+             subtract=None, divide=None):
 
         data = self.dat.load(
             parameters=['mean', 'upper_bound', 'lower_bound'],
             save_location='%s/statistical_error_%i'%(
                 save_location, self.time_derivative))
+        if subtract is not None:
+            data['mean'] = data['mean'] - subtract
+            data['upper_bound'] = data['upper_bound'] - subtract
+            data['lower_bound'] = data['lower_bound'] - subtract
+        if divide is not None:
+            data['mean'] = data['mean'] / divide
+            data['upper_bound'] = data['upper_bound'] / divide
+            data['lower_bound'] = data['lower_bound'] / divide
+
         vis.plot_mean_and_ci(
             ax=ax, data=data, c=c, linestyle=linestyle,
             label=label, loc=loc, title=title)

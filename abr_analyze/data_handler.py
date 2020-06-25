@@ -44,9 +44,25 @@ class DataHandler():
         # close the database after each function
         db.close()
 
+    def _save(self, db, save_loc, data, key, overwrite):
+        loc_and_key = '%s/%s' % (save_loc, key)
+        if self.check_group_exists(loc_and_key):
+            if overwrite:
+                # if dataset already exists, then overwrite data
+                del db[loc_and_key]
+            else:
+                raise Exception(
+                    'Dataset %s already exists in %s' %
+                    (key, save_loc) +
+                    ': set overwrite=True to overwrite')
+
+        if data is None:
+            data = 'None'
+        db[save_loc].create_dataset(key, data=data)
+
 
     def save(self, data, save_location, overwrite=False, create=True,
-             timestamp=True):
+             timestamp=True, lookup_table=False):
         """
         Saves the data dict passed in to the save_location specified in the
         instantiated database
@@ -89,32 +105,18 @@ class DataHandler():
 
         for key in data:
             if key is not None:
-                if data[key] is None:
-                    data[key] = 'None'
-                try:
-                    try:
-                        db[save_location].create_dataset(
-                            '%s' % key, data=data[key])
 
-                    except RuntimeError as e:
-                        if overwrite:
-                            # if dataset already exists, then overwrite data
-                            del db[save_location+'/%s'%key]
-                            db[save_location].create_dataset(
-                                '%s' % key, data=data[key])
-                        else:
-                            print(e)
-                            raise Exception(
-                                'Dataset %s already exists in %s' %
-                                (save_location, key) +
-                                ': set overwrite=True to overwrite')
-                except TypeError as type_error:
-                    print('\n\n*****WARNING: SOME DATA DID NOT SAVE*****')
-                    print('Trying to save %s to %s' % (key, save_location))
-                    print('Received error: %s' %type_error)
-                    print('NOTE: HDF5 has no None type and this dataHandler'
-                          + ' currently has no test for None entries')
-                    print('\n\n')
+                if isinstance(data[key], dict):
+                    save_loc = '%s/%s' % (save_location, key)
+                    print('Received dict [%s] in parameter list, breaking up into datasets and saving to %s' % (key, save_loc))
+
+                    if not self.check_group_exists(save_loc):
+                        db.create_group(save_loc)
+
+                    for subkey in data[key]:
+                        self._save(db=db, save_loc=save_loc, data=data[key][subkey], key=subkey, overwrite=overwrite)
+                else:
+                    self._save(db=db, save_loc=save_location, data=data[key], key=key, overwrite=overwrite)
 
         db.close()
 

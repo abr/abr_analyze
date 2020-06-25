@@ -123,7 +123,7 @@ def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
     return np.array(input_signal)
 
 
-def raster_plot(network, input_signal, ax, n_ens_to_raster=None):
+def raster_plot(network, input_signal, ax, network_ens=None, n_ens_to_raster=None):
     '''
     Accepts a Nengo network and runs a simulation with the input_signal
     Plots rasterplot onto ax object up to n_ens_to_raster ensembles
@@ -141,10 +141,13 @@ def raster_plot(network, input_signal, ax, n_ens_to_raster=None):
         the number of ensembles to plot in the raster,
         if None all will be plotted
     '''
-    if n_ens_to_raster is None:
-        n_ens_to_raster = len(network.adapt_ens)
+    if network_ens is None:
+        network_ens = network.adapt_ens
 
-    spike_trains = get_activities(network, input_signal)
+    if n_ens_to_raster is None:
+        n_ens_to_raster = len(network_ens)
+
+    spike_trains = get_activities(network=network, network_ens=network_ens, input_signal=input_signal)
 
     time = np.ones(len(input_signal))
 
@@ -158,7 +161,7 @@ def raster_plot(network, input_signal, ax, n_ens_to_raster=None):
     return spike_trains
 
 
-def get_activities(network, input_signal, dt=0.001, synapse=None):
+def get_activities(network, input_signal, network_ens=None, dt=0.001, synapse=None):
     '''
     Accepts a Nengo network and input signal and simulates it, returns the
     activities. If synapse is None, it returns the spike trains
@@ -172,10 +175,13 @@ def get_activities(network, input_signal, dt=0.001, synapse=None):
     synapse: float, Optional (Default: None)
         the synapse filter on the nengo probe
     '''
+    if network_ens is None:
+        network_ens = network.adapt_ens
+
     # if there aren't neuron probes in the network add them
     with network.nengo_model:
         network.probe_neurons = []
-        for ens in network.adapt_ens:
+        for ens in network_ens:
             network.probe_neurons.append(
                 nengo.Probe(ens.neurons, synapse=synapse))
     network.sim = nengo.Simulator(network.nengo_model, progress_bar=False)
@@ -193,7 +199,8 @@ def get_activities(network, input_signal, dt=0.001, synapse=None):
 
 
 def proportion_neurons_active_over_time(
-        input_signal=None, network=None, pscs=None, synapse=0.005, ax=None):
+        input_signal=None, network=None, network_ens=None, pscs=None, synapse=0.005, ax=None,
+        n_neurons=None, n_ensembles=None):
     '''
     Accepts a Nengo network and simulates its response to a given input
     Plots the proportion of active neurons vs run time onto the ax object
@@ -215,16 +222,25 @@ def proportion_neurons_active_over_time(
         "Either a network object or an array of spike trains must be provided")
 
     if pscs is None:
+        if network_ens is None:
+            network_ens = network.adapt_ens
+
         pscs = get_activities(
             network=network,
+            network_ens=network_ens,
             input_signal=input_signal,
             synapse=synapse)
 
     n_neurons_active = np.zeros(pscs.shape[0])
     for ii, timestep in enumerate(pscs):
         n_neurons_active[ii] = len(np.where(timestep > 1e-2)[0])
+    if n_neurons is None:
+        n_neurons = network.n_neurons
+    if n_ensembles is None:
+        n_ensembles = network.n_ensembles
+
     proportion_neurons_active = (n_neurons_active /
-                                 (network.n_neurons * network.n_ensembles))
+                                 (n_neurons * n_ensembles))
 
     if ax is not None:
         print('Plotting proportion of active neurons over time...')
@@ -240,7 +256,8 @@ def proportion_neurons_active_over_time(
 
 
 def proportion_time_neurons_active(
-        input_signal=None, network=None, pscs=None, synapse=0.005, ax=None):
+        input_signal=None, network=None, network_ens=None, pscs=None, synapse=0.005, ax=None,
+        **kwargs):
     '''
     Accepts a Nengo network andsimulates its response to a given input
     Plots a histogram of neuron activity relative to run time onto ax
@@ -262,8 +279,12 @@ def proportion_time_neurons_active(
         "Either a network object or an array of spike trains must be provided")
 
     if pscs is None:
+        if network_ens is None:
+            network_ens = network.adapt_ens
+
         pscs = get_activities(
             network=network,
+            network_ens=network_ens,
             input_signal=input_signal,
             synapse=synapse)
 
@@ -302,8 +323,9 @@ def n_neurons_active_and_inactive(activity):
     return n_active, n_inactive
 
 
-def gen_learning_profile(network, input_signal, ax_list=None,
-                         n_ens_to_raster=None, show_plot=True):
+def gen_learning_profile(
+        network, input_signal, network_ens=None, ax_list=None,
+        n_ens_to_raster=None, show_plot=True, n_neurons=None, n_ensembles=None):
     """
     Plots the networks neural activity onto three subplots, the rasterplot,
     proportion of active neurons over time, and how many neurons were active
@@ -330,10 +352,13 @@ def gen_learning_profile(network, input_signal, ax_list=None,
         if None all will be plotted
     show_plot: boolean, Optional (Default: True)
         whether to show the figure at the end of the script or not
+    network_ens: list of ensembles to probe, Optional (Default: None)
+        if None then function will assume the network has an ensemble list
+        saved as self.adapt_ens. This allows for other definitions to be used
     """
 
     if ax_list is None:
-        plt.figure(figsize=(8, 15))
+        plt.figure(figsize=(12, 16))
         ax_list = []
         for ii in range(0, 3):
             ax_list.append(plt.subplot(3, 1, ii+1))
@@ -341,6 +366,7 @@ def gen_learning_profile(network, input_signal, ax_list=None,
     print('Getting rasterplot...')
     raster_plot(
         network=network,
+        network_ens=network_ens,
         input_signal=input_signal,
         ax=ax_list[0],
         n_ens_to_raster=n_ens_to_raster)
@@ -348,14 +374,18 @@ def gen_learning_profile(network, input_signal, ax_list=None,
     print('Getting neuron activity over time...')
     # use the input signal to generate the pscs
     proportion_active, pscs = proportion_neurons_active_over_time(
+        n_neurons=n_neurons,
+        n_ensembles=n_ensembles,
         input_signal=input_signal,
         network=network,
+        network_ens=network_ens,
         ax=ax_list[1])
 
     # use the same pscs here rather than rerunning simulation
     print('Getting proportion of time neurons are active...')
     proportion_time_neurons_active(
         network=network,
+        network_ens=network_ens,
         pscs=pscs,
         ax=ax_list[2])
 
@@ -404,9 +434,9 @@ def gen_intercept_bounds_and_modes(intercept_range=None, intercept_step=0.1,
         of values up to and including 0.9
     '''
     if intercept_range is None:
-        intercept_range = [-0.9, 1]
+        intercept_range = [0.0, 1]
     if mode_range is None:
-        mode_range = [-0.9, 1]
+        mode_range = [0.0, 1]
     intercept_range = np.arange(intercept_range[0], intercept_range[1],
                                 intercept_step)
     mode_range = np.arange(mode_range[0], mode_range[1], mode_step)
