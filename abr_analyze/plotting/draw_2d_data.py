@@ -71,23 +71,23 @@ class Draw2dData(DrawData):
             self.data[save_name][param] = np.squeeze(
                 self.data[save_name][param])
             # avoid passing time in for finding y limits
-            if param is not 'time' and param is not 'cumulative_time':
-                # update our x and y limits with every test we add
-                self.check_plot_limits(
-                    x=np.cumsum(self.data[save_name]['cumulative_time']),
-                    y=self.data[save_name][param])
-
-                ax = vis.plot_2d_data(
-                    ax=ax, x=self.data[save_name]['cumulative_time'][:step],
-                    y=self.data[save_name][param][:step], c=c,
-                    linestyle=linestyle, label=label, title=title)
-            elif len(parameters) == 1 and parameters[0] == 'time':
-                ax = vis.plot_2d_data(
-                    ax=ax,
-                    y=self.data[save_name]['time'][:step], c=c,
-                    linestyle=linestyle, title=title,
-                    label='%s: %.2fms'
-                    % (label, 1000*np.mean(self.data[save_name]['time'])))
+            # if param is not 'time' and param is not 'cumulative_time':
+            #     # update our x and y limits with every test we add
+            #     self.check_plot_limits(
+            #         x=np.cumsum(self.data[save_name]['cumulative_time']),
+            #         y=self.data[save_name][param])
+            #
+            #     ax = vis.plot_2d_data(
+            #         ax=ax, x=self.data[save_name]['cumulative_time'][:step],
+            #         y=self.data[save_name][param][:step], c=c,
+            #         linestyle=linestyle, label=label, title=title)
+            # elif len(parameters) == 1 and parameters[0] == 'time':
+            ax = vis.plot_2d_data(
+                ax=ax,
+                y=self.data[save_name]['time'][:step], c=c,
+                linestyle=linestyle, title=title,
+                label='%s: %.2fms'
+                % (label, 1000*np.mean(self.data[save_name]['time'])))
 
         # ax.set_xlim(self.xlimit[0], self.xlimit[1])
         # ax.set_ylim(self.ylimit[0], self.ylimit[1])

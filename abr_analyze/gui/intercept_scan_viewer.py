@@ -2,6 +2,7 @@
 A visualizer for looking through intercept scan data. Currently the test group
 save name has to be manually changed at the bottom of the script.
 """
+import sys
 import tkinter as tk
 from tkinter import ttk
 import time
@@ -715,7 +716,10 @@ class LiveFigure():
             return None
 
 # the database to load data from
-db_name = 'intercepts_scan'
+if len(sys.argv) > 1:
+    db_name = sys.argv[1]
+else:
+    db_name = 'intercepts_scan'
 # the name of the intercept scan to look at
 test = 'proportion_activity'
 save_location = '%s/proportion_time_neurons_active'%test

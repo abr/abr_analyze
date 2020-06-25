@@ -129,9 +129,14 @@ def plot_2d_data(ax, y, x=None, c='r', linestyle='-', label=None,
             label = ''
         for ii, a in enumerate(ax):
             if x is None:
-                a.plot(y[:, ii], label='%s %i'%(label, ii))
-            else:
+                if y.ndim>2:
+                    a.plot(y[:, ii], label='%s %i'%(label, ii))
+                else:
+                    a.plot(y, label='%s %i'%(label, ii))
+            elif y.ndim>1:
                 a.plot(x, y[:, ii], label='%s %i'%(label, ii))
+            else:
+                a.plot(x, y[ii], label='%s %i'%(label, ii))
             a.legend(loc=loc)
         if title is not None:
             ax[0].set_title(title)

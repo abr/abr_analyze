@@ -44,9 +44,25 @@ class DataHandler():
         # close the database after each function
         db.close()
 
+    def _save(self, db, save_loc, data, key, overwrite):
+        loc_and_key = '%s/%s' % (save_loc, key)
+        if self.check_group_exists(loc_and_key):
+            if overwrite:
+                # if dataset already exists, then overwrite data
+                del db[loc_and_key]
+            else:
+                raise Exception(
+                    'Dataset %s already exists in %s' %
+                    (key, save_loc) +
+                    ': set overwrite=True to overwrite')
+
+        if data is None:
+            data = 'None'
+        db[save_loc].create_dataset(key, data=data)
+
 
     def save(self, data, save_location, overwrite=False, create=True,
-             timestamp=True):
+             timestamp=True, lookup_table=False):
         """
         Saves the data dict passed in to the save_location specified in the
         instantiated database
@@ -115,7 +131,6 @@ class DataHandler():
                     print('NOTE: HDF5 has no None type and this dataHandler'
                           + ' currently has no test for None entries')
                     print('\n\n')
-
         db.close()
 
 

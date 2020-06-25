@@ -5,19 +5,13 @@ possible intercept is run, passing in the input signal, to generate a neural
 profile for each sim. The profiles can be viewed using the
 intercept_scan_viewer.py gui
 '''
+import nengo
 import timeit
 import matplotlib.pyplot as plt
 import numpy as np
 
 from abr_control.controllers import signals
-<<<<<<< 2ebbbf051206a754c06166331c3755444d62b5f2:abr_analyze/nengo/intercepts_scan.py
-<<<<<<< 2a3660de2a923e1b2e9c55f25849ce75fbf28eae:abr_analyze/nengo/intercepts_scan.py
-=======
-from nengo_extras import triangular_intercepts
->>>>>>> Intercepts update:abr_analyze/nengo_utils/intercepts_scan.py
-=======
 from nengo_extras import dists
->>>>>>> Updated triangular intercepts:abr_analyze/nengo_utils/intercepts_scan.py
 from abr_analyze.data_handler import DataHandler
 import abr_analyze.nengo.network_utils as network_utils
 
@@ -26,7 +20,8 @@ import nengo
 
 def run(encoders, intercept_vals, input_signal, seed=1,
         db_name='intercepts_scan', save_name='example', notes='',
-        analysis_fncs=None, **kwargs):
+        analysis_fncs=None, network_class=None, network_ens_type=None,
+        force_params=None, angle_params=None, means=None, variances=None, **kwargs):
     '''
     runs a scan for the proportion of neurons that are active over time
 
@@ -50,9 +45,12 @@ def run(encoders, intercept_vals, input_signal, seed=1,
         the function must accept network and input signal, and return a list of
         data and activity
     '''
+    if network_class is None:
+        network_class = signals.DynamicsAdaptation
     if not isinstance(analysis_fncs, list):
         analysis_fncs = [analysis_fncs]
 
+    print('Running intercepts scan on %s' % network_class.__name__)
     print('Input Signal Shape: ', np.asarray(input_signal).shape)
 
     loop_time = 0
@@ -89,25 +87,41 @@ def run(encoders, intercept_vals, input_signal, seed=1,
         print(intercept_list)
 
         # create a network with the new intercepts
-        network = signals.DynamicsAdaptation(
-            n_input=encoders.shape[2],
-            n_output=1,  # number of output is irrelevant
-            n_neurons=encoders.shape[1],
-            intercepts=intercept_list,
-            seed=seed,
-            encoders=encoders,
-            **kwargs)
+        # network = network_class(
+            # n_input=encoders.shape[2],
+            # n_output=1,  # number of output is irrelevant
+            # n_neurons=encoders.shape[1],
+            # intercepts=intercept_list,
+            # seed=seed)#,
+            # encoders=encoders,
+            # **kwargs)
 
         # get the spike trains from the sim
-        spike_trains = network_utils.get_activities(
-            network=network, input_signal=input_signal,
-            synapse=0.005)
+        network = network_class(
+            force_params=force_params,
+            angle_params=angle_params,
+            means=means,
+            variances=variances,
+            seed=seed)
 
-        # loop through the analysis functions
+        if network_ens_type == 'force':
+           network_ens = network.force_ens
+           synapse = force_params['tau_output']
+        elif network_ens_type == 'angle':
+            network_ens = network.angle_ens
+            synapse = angle_params['tau_output']
+
+        spike_trains = network_utils.get_activities(
+            network=network, network_ens=network_ens,
+            input_signal=input_signal,
+            synapse=synapse)
+
         for func in analysis_fncs:
             func_name = func.__name__
-            y, activity = func(network=network, input_signal=input_signal,
-                               pscs=spike_trains)
+            y, activity = func(
+                    pscs=spike_trains,
+                    n_neurons=n_neurons,
+                    n_ensembles=n_ensembles)
 
             # get the number of active and inactive neurons
             num_active, num_inactive = (
@@ -135,7 +149,7 @@ def run(encoders, intercept_vals, input_signal, seed=1,
             loop_time = timeit.default_timer() - start
 
 
-def review(save_name, ideal_function, num_to_plot=10):
+def review(save_name, ideal_function, num_to_plot=10, db_name='intercepts_scan'):
     '''
     loads the data from save name and gets num_to_plot tests that most
     closley match the ideal function that was passed in during the scan
@@ -150,7 +164,7 @@ def review(save_name, ideal_function, num_to_plot=10):
     num_to_plot: int, Optional (Default: 10)
         the number of tests to find that most closley match the ideal
     '''
-    dat = DataHandler('intercepts_scan')
+    dat = DataHandler(db_name)
 
     ideal_data = dat.load(parameters=['ideal', 'total_intercepts'],
                           save_location='%s' % save_name)
