@@ -194,6 +194,21 @@ class DataHandler():
         if delete_old:
             del db[old_save_location]
 
+    def is_dataset(self, save_location):
+        """
+        Returns true if dataset, False if folder
+
+        save_location: string
+            save_location of the group that you want the keys from
+            ex: 'my_feature_test/sub_test_group/session000/run003'
+        """
+        db = h5py.File(self.db_loc, 'a')
+        if isinstance(db[save_location], h5py.Dataset):
+            return True
+        else:
+            return False
+
+
 
     def get_keys(self, save_location):
         """
