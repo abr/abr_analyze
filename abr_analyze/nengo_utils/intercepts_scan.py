@@ -16,7 +16,7 @@ from abr_analyze.data_handler import DataHandler
 import abr_analyze.nengo_utils.network_utils as network_utils
 
 
-def run(encoders, intercept_vals, input_signal, seed=1,
+def run(intercept_vals, input_signal, seed=1,
         db_name='intercepts_scan', save_name='example', notes='',
         analysis_fncs=None, network_class=None, network_ens_type=None,
         force_params=None, angle_params=None, means=None, variances=None, **kwargs):
@@ -48,6 +48,12 @@ def run(encoders, intercept_vals, input_signal, seed=1,
     if not isinstance(analysis_fncs, list):
         analysis_fncs = [analysis_fncs]
 
+    if network_ens_type == 'force':
+        n_neurons = force_params['n_neurons']
+        n_ensembles = force_params['n_ensembles']
+        encoders = force_params['encoders']
+        n_input = force_params['n_input']
+
     print('Running intercepts scan on %s' % network_class.__name__)
     print('Input Signal Shape: ', np.asarray(input_signal).shape)
 
@@ -64,12 +70,30 @@ def run(encoders, intercept_vals, input_signal, seed=1,
               % ((len(intercept_vals)-ii)*loop_time/60),
               end='\r')
 
-        # create our intercept distribution from the intercepts vals
+
         triangular = np.random.triangular(
-            left=intercept[0], mode=intercept[2], right=intercept[1], size=encoders.shape[1]
+            left=intercept[0],
+            mode=intercept[2],
+            right=intercept[1],
+            size=n_neurons*n_ensembles
         )
-        intercept_list = nengo.dists.CosineSimilarity(encoders.shape[1] + 2).ppf(1 - triangular)
-        intercept_list = intercept_list.reshape((1, encoders.shape[1]))
+        # intercepts = nengo.dists.CosineSimilarity(n_input + 2).ppf(1 - triangular)
+        intercepts = nengo.dists.CosineSimilarity(1000 + 2).ppf(1 - triangular)
+        intercepts = intercepts.reshape((n_ensembles, n_neurons))
+
+
+        # print('encoders.shape[1]=',encoders.shape[1])
+        # print('should equal neurons*ensembles which is: ', n_neurons*n_ensembles)
+        # print('n_input: ', n_input)
+        # print('which shoud match encoders.shape[1]: ', encoders.shape[1])
+
+
+        # create our intercept distribution from the intercepts vals
+        # triangular = np.random.triangular(
+        #     left=intercept[0], mode=intercept[2], right=intercept[1], size=encoders.shape[1]
+        # )
+        # intercept_list = nengo.dists.CosineSimilarity(encoders.shape[1] + 2).ppf(1 - triangular)
+        # intercept_list = intercept_list.reshape((1, encoders.shape[1]))
         # intercept_list = dists.generate_triangular(
         #     n_input=encoders.shape[2],
         #     n_ensembles=1,
@@ -78,9 +102,7 @@ def run(encoders, intercept_vals, input_signal, seed=1,
         #     mode=intercept[2],
         #     seed=seed)
 
-        n_neurons=encoders.shape[1]
-        n_ensembles=encoders.shape[0]
-        force_params['intercepts'] = intercept_list
+        force_params['intercepts'] = intercepts
 
         # create a network with the new intercepts
         # network = network_class(
