@@ -188,7 +188,8 @@ def get_activities(network, input_signal, network_ens=None, dt=0.001, synapse=No
                 nengo.Probe(ens.neurons, synapse=synapse))
     network.sim = nengo.Simulator(network.nengo_model, progress_bar=False)
 
-    for in_sig in input_signal:
+    for mm, in_sig in enumerate(input_signal):
+        print('Running sim %i/%i' % (mm, len(input_signal)), end='\r')
         network.input_signal = in_sig
         network.sim.run(dt, progress_bar=False)
 
@@ -326,7 +327,7 @@ def n_neurons_active_and_inactive(activity):
 
 
 def gen_learning_profile(
-        network, input_signal, network_ens=None, ax_list=None,
+        network, input_signal, network_ens=None, ax_list=None, synapse=None,
         n_ens_to_raster=None, show_plot=True, n_neurons=None, n_ensembles=None):
     """
     Plots the networks neural activity onto three subplots, the rasterplot,
@@ -366,7 +367,7 @@ def gen_learning_profile(
             ax_list.append(plt.subplot(3, 1, ii+1))
 
     print('Getting rasterplot...')
-    raster_plot(
+    pscs = raster_plot(
         network=network,
         network_ens=network_ens,
         input_signal=input_signal,
@@ -375,13 +376,15 @@ def gen_learning_profile(
 
     print('Getting neuron activity over time...')
     # use the input signal to generate the pscs
-    proportion_active, pscs = proportion_neurons_active_over_time(
+    proportion_active, _ = proportion_neurons_active_over_time(
+        pscs=pscs,
         n_neurons=n_neurons,
         n_ensembles=n_ensembles,
         input_signal=input_signal,
         network=network,
         network_ens=network_ens,
-        ax=ax_list[1])
+        ax=ax_list[1],
+        synapse=synapse)
 
     # use the same pscs here rather than rerunning simulation
     print('Getting proportion of time neurons are active...')
@@ -389,7 +392,8 @@ def gen_learning_profile(
         network=network,
         network_ens=network_ens,
         pscs=pscs,
-        ax=ax_list[2])
+        ax=ax_list[2],
+        synapse=synapse)
 
     n_active, n_inactive = n_neurons_active_and_inactive(activity=pscs)
 

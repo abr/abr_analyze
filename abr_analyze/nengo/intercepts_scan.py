@@ -18,7 +18,7 @@ import abr_analyze.nengo.network_utils as network_utils
 import nengo
 
 
-def run(encoders, intercept_vals, input_signal, seed=1,
+def run(intercept_vals, input_signal, seed=1,
         db_name='intercepts_scan', save_name='example', notes='',
         analysis_fncs=None, network_class=None, network_ens_type=None,
         force_params=None, angle_params=None, means=None, variances=None, **kwargs):
@@ -49,6 +49,12 @@ def run(encoders, intercept_vals, input_signal, seed=1,
         network_class = signals.DynamicsAdaptation
     if not isinstance(analysis_fncs, list):
         analysis_fncs = [analysis_fncs]
+
+    if network_ens_type == 'force':
+        n_neurons = force_params['n_neurons']
+        n_ensembles = force_params['n_ensembles']
+        encoders = force_params['encoders']
+        n_input = force_params['n_input']
 
     print('Running intercepts scan on %s' % network_class.__name__)
     print('Input Signal Shape: ', np.asarray(input_signal).shape)
