@@ -133,7 +133,7 @@ def scale_data(data, baseline_low, baseline_high, scaling_factor=1):
 
 
 def load_and_process(db_name, save_location, parameters,
-                     interpolated_samples=100):
+                     interpolated_samples=None):
     #TODO: move interpolated samples is None check out of interpolation
     # function and add it here, no sense in having it check in the function
     # and have it do nothing, should only call interpolate if interpolating

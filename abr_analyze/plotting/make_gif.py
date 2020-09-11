@@ -4,7 +4,7 @@ A class for converting a folder of images into a gif
 import os
 import subprocess
 
-from abr_analyze.paths import cache_dir
+from abr_analyze.paths import cache_dir, figures_dir
 
 class MakeGif():
 
@@ -32,7 +32,7 @@ class MakeGif():
 
         return fig_cache
 
-    def create(self, fig_loc, save_loc, save_name, delay=5, res=None):
+    def create(self, fig_loc, save_name, save_loc=None, delay=5, res=None):
         """
         Module that checks fig_loc location for png files and creates a gif
 
@@ -52,6 +52,9 @@ class MakeGif():
         res: list of two integers, Optional (Default: [1200, 1200])
             the pixel resolution of the final gif
         """
+        if save_loc is None:
+            save_loc = figures_dir
+
         res = [1200, 2000] if res is None else res
 
         if not os.path.exists(save_loc):
