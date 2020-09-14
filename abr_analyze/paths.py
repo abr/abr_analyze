@@ -5,9 +5,7 @@ import sys
 
 if sys.platform.startswith('win'):  # pylint: disable=R1720
     raise Exception('Currently not supported for Windows')
-    # config_dir = os.path.expanduser(os.path.join("~", ".abr_analyze"))
-    # cache_dir = os.path.join(config_dir, "cache")
-    # database_dir = os.path.joint(cache_dir, "abr_analyze_db.h5")
+
 else:
     # the repo root directory
     dir_name = os.path.dirname(__file__)
@@ -15,15 +13,15 @@ else:
     current_dir = os.path.abspath('.')
 
     # create file for custom paths if it does not exist
-    # if not os.path.isfile('%s/paths.txt' % dir_name):
     with open("%s/paths.txt" % dir_name, "a+") as f:
         pass
 
     with open("%s/paths.txt" % dir_name, "r+") as f:
         paths = f.read().split('\n')
-        cache_dir = None
-        database_dir = None
-        figures_dir = None
+
+        database_dir = os.path.join(current_dir, "data/.cache")
+        database_dir = os.path.join(current_dir, "data/databases")
+        figures_dir = os.path.join(current_dir, "data/figures")
 
         # check if the template has been setup by checking is substrings are present
         if not any('cache_dir' in x for x in paths):
@@ -53,22 +51,11 @@ else:
                 if len(path) > 0:
                     figures_dir = path
 
-        # if no custom paths, use default
-        if cache_dir is None:
-            database_dir = os.path.join(current_dir, "data/.cache")
-        if database_dir is None:
-            database_dir = os.path.join(current_dir, "data/databases")
-        if figures_dir is None:
-            figures_dir = os.path.join(current_dir, "data/figures")
-
     os.makedirs(cache_dir, exist_ok=True)
     os.makedirs(database_dir, exist_ok=True)
     os.makedirs(figures_dir, exist_ok=True)
 
 if __name__ == '__main__':
-    # print('Repo root dir: ', dir_name)
-    # print('Home dir: ', home_dir)
-    # print('Working dir: ', current_dir)
     print('===== Current Save Directories =====')
     print('cache_dir: ', cache_dir)
     print('database_dir: ', database_dir)
