@@ -58,7 +58,13 @@ class DataHandler():
 
         if data is None:
             data = 'None'
-        db[save_loc].create_dataset(key, data=data)
+        try:
+            db[save_loc].create_dataset(key, data=data)
+        except TypeError as e:
+            if isinstance(data[key], dict):
+                print('You can not pass in a list of dicts.'
+                      + ' To save recursive dicts, they must be saved to a dictionary')
+            raise e
 
 
     def save(self, data, save_location, overwrite=False, create=True,
@@ -108,14 +114,14 @@ class DataHandler():
 
                 if isinstance(data[key], dict):
                     save_loc = '%s/%s' % (save_location, key)
-                    print('Received dict [%s] in parameter list, breaking up into datasets and saving to %s' % (key, save_loc))
+                    # print('Received dict [%s] in parameter list, breaking up into datasets and saving to %s' % (key, save_loc))
 
                     if not self.check_group_exists(save_loc):
                         db.create_group(save_loc)
 
-                    for subkey in data[key]:
-                        self._save(db=db, save_loc=save_loc, data=data[key][subkey], key=subkey, overwrite=overwrite)
+                    self.save(save_location=save_loc, data=data[key], overwrite=overwrite)
                 else:
+                    # print('Received dataset %s' % key)
                     self._save(db=db, save_loc=save_location, data=data[key], key=key, overwrite=overwrite)
 
         db.close()

@@ -69,6 +69,12 @@ if __name__ == '__main__':
     # print('Repo root dir: ', dir_name)
     # print('Home dir: ', home_dir)
     # print('Working dir: ', current_dir)
+    print('===== Current Save Directories =====')
     print('cache_dir: ', cache_dir)
     print('database_dir: ', database_dir)
     print('figures_dir: ', figures_dir)
+    print('====================================')
+    print('\nNOTE: to change your locations, add the direct path to'
+          + ' abr_analyze/abr_analyze/paths.txt\n'
+          + 'Note that the default locations will be a "data" folder in your'
+          + ' current working directory.')
