@@ -85,22 +85,11 @@ def run(intercept_vals, input_signal, seed=1,
             mode=intercept[2],
             size=encoders.shape[1],
         )
-        intercepts = nengo.dists.CosineSimilarity(encoders.shape[2] + 2).ppf(1 - triangular)
-        intercept_list = intercepts.reshape((1, encoders.shape[1]))
+        intercepts = nengo.dists.CosineSimilarity(n_input + 2).ppf(1 - triangular)
+        # intercepts = nengo.dists.CosineSimilarity(1000 + 2).ppf(1 - triangular)
+        intercepts = intercepts.reshape((n_ensembles, n_neurons))
 
-        print()
-        print(intercept)
-        print(intercept_list)
-
-        # create a network with the new intercepts
-        # network = network_class(
-            # n_input=encoders.shape[2],
-            # n_output=1,  # number of output is irrelevant
-            # n_neurons=encoders.shape[1],
-            # intercepts=intercept_list,
-            # seed=seed)#,
-            # encoders=encoders,
-            # **kwargs)
+        force_params['intercepts'] = intercepts
 
         # get the spike trains from the sim
         network = network_class(
