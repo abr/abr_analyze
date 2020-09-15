@@ -1,9 +1,0 @@
-{% extends "templates/test.sh.template" %}
-{% block script %}
-    # shellcheck disable=SC2086
-    exe pytest {{ pkg_name }} -v --color=yes --durations 20 {%- if coverage %} --cov={{ pkg_name }} --cov-report=term-missing {%- endif %} $TEST_ARGS
-    {% if nengo_tests %}
-    # shellcheck disable=SC2086
-    exe pytest --pyargs nengo -v --color=yes --durations 20 {%- if coverage %} --cov={{ pkg_name }} --cov-append --cov-report=term-missing {%- endif %} $TEST_ARGS
-    {% endif %}
-{% endblock %}
