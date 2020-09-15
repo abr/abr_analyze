@@ -16,7 +16,8 @@ Plots
 """
 import numpy as np
 import matplotlib
-matplotlib.use('TkAgg')
+
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import os
 
@@ -29,31 +30,28 @@ from nengo_extras import dists
 
 
 examples_db()
-dat = DataHandler('abr_analyze_examples')
-fig = plt.figure(figsize=(8,12))
-ax_list = [
-      fig.add_subplot(311),
-      fig.add_subplot(312),
-      fig.add_subplot(313)
-     ]
+dat = DataHandler("abr_analyze_examples")
+fig = plt.figure(figsize=(8, 12))
+ax_list = [fig.add_subplot(311), fig.add_subplot(312), fig.add_subplot(313)]
 
 runs = 10
 for ii in range(0, runs):
-    data = dat.load(parameters=['input_signal'],
-            save_location='test_1/session000/run%03d'%ii)
+    data = dat.load(
+        parameters=["input_signal"], save_location="test_1/session000/run%03d" % ii
+    )
     if ii == 0:
-        input_signal = data['input_signal']
+        input_signal = data["input_signal"]
     else:
-        input_signal = np.vstack((input_signal, data['input_signal']))
+        input_signal = np.vstack((input_signal, data["input_signal"]))
 
 input_signal = np.squeeze(input_signal)
 
 # specify our network parameters
 seed = 0
-neuron_type = 'lif'
+neuron_type = "lif"
 n_neurons = 1000
 n_ensembles = 1
-test_name = 'learning_profile_example',
+test_name = ("learning_profile_example",)
 n_input = 11
 n_output = 5
 seed = 0
@@ -65,12 +63,13 @@ intercepts = dists.generate_triangular(
     n_neurons=n_neurons,
     bounds=[-0.5, -0.45],
     mode=-0.5,
-    seed=seed)
+    seed=seed,
+)
 
 # ----------- Create your encoders ---------------
 encoders = network_utils.generate_encoders(
-    input_signal=input_signal,
-    n_neurons=n_neurons*n_ensembles)
+    input_signal=input_signal, n_neurons=n_neurons * n_ensembles
+)
 
 encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
 
@@ -85,7 +84,8 @@ network = signals.DynamicsAdaptation(
     pes_learning_rate=1e-6,
     intercepts=intercepts,
     seed=seed,
-    encoders=encoders)
+    encoders=encoders,
+)
 
 # pass your network and input signal to the network utils module
 # run a sim and plot the learning profile
@@ -94,9 +94,10 @@ network_utils.gen_learning_profile(
     input_signal=input_signal,
     ax_list=ax_list,
     n_ens_to_raster=1,
-    show_plot=False)
+    show_plot=False,
+)
 
-loc = '%s/learning_profile_manual'%figures_dir
+loc = "%s/learning_profile_manual" % figures_dir
 plt.savefig(loc)
-print('Figure saved to %s'%loc)
+print("Figure saved to %s" % loc)
 plt.show()

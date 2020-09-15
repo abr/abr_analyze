@@ -16,7 +16,8 @@ Plots
 """
 import numpy as np
 import matplotlib
-matplotlib.use('TkAgg')
+
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import os
 
@@ -28,19 +29,19 @@ from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir, figures_dir
 from nengo_extras import dists
 
-npz = 'run_0_obj_53.npz'
+npz = "run_0_obj_53.npz"
 data = np.load(npz)
 
 # specify our network parameters
-backend = 'nengo_cpu'
-seed = int(data['seed'])
+backend = "nengo_cpu"
+seed = int(data["seed"])
 n_neurons = 3000
 n_ensembles = 1
-test_name = 'learning_profile_l2m',
+test_name = ("learning_profile_l2m",)
 n_input = 13
 n_output = 6
-pes = data['learning_rate']
-input_signal = data['input_signal']
+pes = data["learning_rate"]
+input_signal = data["input_signal"]
 
 np.random.RandomState(seed)
 # ----------- Create your intercepts ---------------
@@ -50,11 +51,12 @@ intercepts = dists.generate_triangular(
     n_neurons=n_neurons,
     bounds=[-0.1, 0.1],
     mode=0.0,
-    seed=seed)
+    seed=seed,
+)
 
 # ----------- Create your encoders ---------------
 hypersphere = ScatteredHypersphere(surface=True)
-encoders = hypersphere.sample(n_ensembles*n_neurons, n_input)
+encoders = hypersphere.sample(n_ensembles * n_neurons, n_input)
 encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
 
 # ----------- Instantiate your nengo simulator ---------------
@@ -68,15 +70,12 @@ network = signals.DynamicsAdaptation(
     pes_learning_rate=pes,
     intercepts=intercepts,
     seed=seed,
-    encoders=encoders)
+    encoders=encoders,
+)
 
 # create our figure object
-fig = plt.figure(figsize=(8,12))
-ax_list = [
-      fig.add_subplot(311),
-      fig.add_subplot(312),
-      fig.add_subplot(313)
-     ]
+fig = plt.figure(figsize=(8, 12))
+ax_list = [fig.add_subplot(311), fig.add_subplot(312), fig.add_subplot(313)]
 plt.tight_layout()
 
 # pass your network and input signal to the network utils module
@@ -86,9 +85,10 @@ network_utils.gen_learning_profile(
     input_signal=input_signal,
     ax_list=ax_list,
     n_ens_to_raster=1,
-    show_plot=False)
+    show_plot=False,
+)
 
-loc = '%s/learning_profile_l2m'%figures_dir
+loc = "%s/learning_profile_l2m" % figures_dir
 plt.savefig(loc)
-print('Figure saved to %s'%loc)
+print("Figure saved to %s" % loc)
 plt.show()

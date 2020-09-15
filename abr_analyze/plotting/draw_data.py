@@ -1,8 +1,10 @@
-'''
+"""
 A general outline for the plotting classes, and some commonly used
 functions
-'''
-class DrawData():
+"""
+
+
+class DrawData:
     def __init__(self):
         self.xlimit = [0, 0]
         self.ylimit = [0, 0]
@@ -10,7 +12,7 @@ class DrawData():
         self.projection = None
 
     def check_plot_limits(self, x, y, z=None):
-        '''
+        """
         Accepts lists for x and y, or x,y and z data, and returns the min and
         max values. This is used for setting plotting limits
 
@@ -20,7 +22,7 @@ class DrawData():
         y: list of data
         z: list of data, Optional (Default: None)
             can be left as None if checking data for a 2d plot
-        '''
+        """
         if x.ndim > 1:
             self.xlimit[0] = min(min(x.min(axis=1)), self.xlimit[0])
             self.xlimit[1] = max(max(x.max(axis=1)), self.xlimit[1])
@@ -44,17 +46,16 @@ class DrawData():
                 self.zlimit[1] = max(max(z), self.zlimit[1])
 
     def make_list(self, parameter):
-        '''
+        """
         Returns the parameter passed in to a list if it is not already one
 
         PARAMETERS
         ----------
         parameter: any data type to be converted to a list
-        '''
+        """
         if not isinstance(parameter, list):
             parameter = [parameter]
         return parameter
 
     def plot(self):
-        raise Exception(
-            'ERROR: The instantiated subclass is missing a plot function')
+        raise Exception("ERROR: The instantiated subclass is missing a plot function")

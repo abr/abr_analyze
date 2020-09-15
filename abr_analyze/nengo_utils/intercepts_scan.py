@@ -1,33 +1,41 @@
-'''
+"""
 Accepts the parameters to instantiate a dynamics_adaptation network from
 abr_control and a list of intercept ranges and modes. A simulation of each
 possible intercept is run, passing in the input signal, to generate a neural
 profile for each sim. The profiles can be viewed using the
 intercept_scan_viewer.py gui
-'''
-import nengo
+"""
 import timeit
+import nengo
 import matplotlib.pyplot as plt
 import numpy as np
 
 from abr_control.controllers import signals
-from nengo_extras import dists
 from abr_analyze.data_handler import DataHandler
 import abr_analyze.nengo_utils.network_utils as network_utils
 
 
-def run(intercept_vals, input_signal, seed=1,
-        db_name='intercepts_scan', save_name='example', notes='',
-        analysis_fncs=None, network_class=None, network_ens_type=None,
-        force_params=None, angle_params=None, means=None, variances=None, **kwargs):
-    '''
+def run(
+    intercept_vals,
+    input_signal,
+    seed=1,
+    db_name="intercepts_scan",
+    save_name="example",
+    notes="",
+    analysis_fncs=None,
+    network_class=None,
+    network_ens_type=None,
+    force_params=None,
+    angle_params=None,
+    means=None,
+    variances=None,
+    **kwargs
+):
+    """
     runs a scan for the proportion of neurons that are active over time
 
     PARAMETERS
     ----------
-    encoders: array of floats (n_neurons x n_inputs)
-        the values that specify along what vector a neuron will be
-        sensitive to
     intercept_vals: array of floats (n_intercepts to try x 3)
         the [left_bound, mode, right_bound] to pass on to the triangluar
         intercept function in network_utils
@@ -42,46 +50,45 @@ def run(intercept_vals, input_signal, seed=1,
     analysis_fncs: list of network_utils functions to apply to the spike trains
         the function must accept network and input signal, and return a list of
         data and activity
-    '''
+    """
     if network_class is None:
         network_class = signals.DynamicsAdaptation
     if not isinstance(analysis_fncs, list):
         analysis_fncs = [analysis_fncs]
 
-    if network_ens_type == 'force':
-        n_neurons = force_params['n_neurons']
-        n_ensembles = force_params['n_ensembles']
-        encoders = force_params['encoders']
-        n_input = force_params['n_input']
+    if network_ens_type == "force":
+        n_neurons = force_params["n_neurons"]
+        n_ensembles = force_params["n_ensembles"]
+        n_input = force_params["n_input"]
 
-    print('Running intercepts scan on %s' % network_class.__name__)
-    print('Input Signal Shape: ', np.asarray(input_signal).shape)
+    print("Running intercepts scan on %s" % network_class.__name__)
+    print("Input Signal Shape: ", np.asarray(input_signal).shape)
 
     loop_time = 0
     elapsed_time = 0
     for ii, intercept in enumerate(intercept_vals):
         start = timeit.default_timer()
         elapsed_time += loop_time
-        print('%i/%i | ' % (ii+1, len(intercept_vals))
-              + '%.2f%% Complete | ' % (ii/len(intercept_vals)*100)
-              + '%.2f min elapsed | ' % (elapsed_time/60)
-              + '%.2f min for last sim | ' % (loop_time/60)
-              + '~%.2f min remaining...'
-              % ((len(intercept_vals)-ii)*loop_time/60),
-              end='\r')
-
+        print(
+            "%i/%i | " % (ii + 1, len(intercept_vals))
+            + "%.2f%% Complete | " % (ii / len(intercept_vals) * 100)
+            + "%.2f min elapsed | " % (elapsed_time / 60)
+            + "%.2f min for last sim | " % (loop_time / 60)
+            + "~%.2f min remaining..." % ((len(intercept_vals) - ii) * loop_time / 60),
+            end="\r",
+        )
 
         triangular = np.random.triangular(
             left=intercept[0],
             mode=intercept[2],
             right=intercept[1],
-            size=n_neurons*n_ensembles
+            size=n_neurons * n_ensembles,
         )
         intercepts = nengo.dists.CosineSimilarity(n_input + 2).ppf(1 - triangular)
         # intercepts = nengo.dists.CosineSimilarity(1000 + 2).ppf(1 - triangular)
         intercepts = intercepts.reshape((n_ensembles, n_neurons))
 
-        force_params['intercepts'] = intercepts
+        force_params["intercepts"] = intercepts
 
         # get the spike trains from the sim
         network = network_class(
@@ -89,55 +96,62 @@ def run(intercept_vals, input_signal, seed=1,
             angle_params=angle_params,
             means=means,
             variances=variances,
-            seed=seed)
+            seed=seed,
+        )
 
-        if network_ens_type == 'force':
-           network_ens = network.force_ens
-           synapse = force_params['tau_output']
-        elif network_ens_type == 'angle':
+        if network_ens_type == "force":
+            network_ens = network.force_ens
+            synapse = force_params["tau_output"]
+        elif network_ens_type == "angle":
             network_ens = network.angle_ens
-            synapse = angle_params['tau_output']
+            synapse = angle_params["tau_output"]
 
         spike_trains = network_utils.get_activities(
-            network=network, network_ens=network_ens,
+            network=network,
+            network_ens=network_ens,
             input_signal=input_signal,
-            synapse=synapse)
+            synapse=synapse,
+        )
 
         for func in analysis_fncs:
             func_name = func.__name__
             y, activity = func(
-                    pscs=spike_trains,
-                    n_neurons=n_neurons,
-                    n_ensembles=n_ensembles)
+                pscs=spike_trains, n_neurons=n_neurons, n_ensembles=n_ensembles
+            )
 
             # get the number of active and inactive neurons
-            num_active, num_inactive = (
-                network_utils.n_neurons_active_and_inactive(activity=activity))
+            num_active, num_inactive = network_utils.n_neurons_active_and_inactive(
+                activity=activity
+            )
 
             if ii == 0:
                 dat = DataHandler(db_name)
                 dat.save(
-                    data={'total_intercepts': len(intercept_vals),
-                          'notes': notes},
-                    save_location='%s/%s' % (save_name, func_name),
-                    overwrite=True)
+                    data={"total_intercepts": len(intercept_vals), "notes": notes},
+                    save_location="%s/%s" % (save_name, func_name),
+                    overwrite=True,
+                )
 
             # not saving activity because takes up a lot of disk space
-            data = {'intercept_bounds': intercept[:2],
-                    'intercept_mode': intercept[2],
-                    'y': y,
-                    'num_active': num_active,
-                    'num_inactive': num_inactive,
-                    'title': func_name
-                    }
-            dat.save(data=data, save_location='%s/%s/%05d' %
-                     (save_name, func_name, ii), overwrite=True)
+            data = {
+                "intercept_bounds": intercept[:2],
+                "intercept_mode": intercept[2],
+                "y": y,
+                "num_active": num_active,
+                "num_inactive": num_inactive,
+                "title": func_name,
+            }
+            dat.save(
+                data=data,
+                save_location="%s/%s/%05d" % (save_name, func_name, ii),
+                overwrite=True,
+            )
 
             loop_time = timeit.default_timer() - start
 
 
-def review(save_name, ideal_function, num_to_plot=10, db_name='intercepts_scan'):
-    '''
+def review(save_name, ideal_function, num_to_plot=10, db_name="intercepts_scan"):
+    """
     loads the data from save name and gets num_to_plot tests that most
     closley match the ideal function that was passed in during the scan
 
@@ -150,16 +164,17 @@ def review(save_name, ideal_function, num_to_plot=10, db_name='intercepts_scan')
         will use this to find the closest matching results
     num_to_plot: int, Optional (Default: 10)
         the number of tests to find that most closley match the ideal
-    '''
+    """
     dat = DataHandler(db_name)
 
-    ideal_data = dat.load(parameters=['ideal', 'total_intercepts'],
-                          save_location='%s' % save_name)
-    ideal = ideal_data['ideal']
-    num = ideal_data['total_intercepts']
+    ideal_data = dat.load(
+        parameters=["ideal", "total_intercepts"], save_location="%s" % save_name
+    )
+    ideal = ideal_data["ideal"]
+    num = ideal_data["total_intercepts"]
 
     if num_to_plot > num:
-        print('Only %i runs to plot' % num)
+        print("Only %i runs to plot" % num)
         num_to_plot = num
 
     run_data = []
@@ -167,45 +182,72 @@ def review(save_name, ideal_function, num_to_plot=10, db_name='intercepts_scan')
     n_bins = 30
     for ii in range(0, num):
         data = dat.load(
-            parameters=['intercept_bounds', 'intercept_mode',
-                        'y', 'error', 'num_active',
-                        'num_inactive', 'title'],
-            save_location='%s/%05d' % (save_name, ii))
+            parameters=[
+                "intercept_bounds",
+                "intercept_mode",
+                "y",
+                "error",
+                "num_active",
+                "num_inactive",
+                "title",
+            ],
+            save_location="%s/%05d" % (save_name, ii),
+        )
 
-        if data['title'] == 'proportion_time_neurons_active':
-            y, bins_out = np.histogram(np.squeeze(data['y']),
-                                       bins=np.linspace(0, 1, n_bins))
-            data['x'] = 0.5*(bins_out[1:]+bins_out[:-1])
-            data['y'] = y
+        if data["title"] == "proportion_time_neurons_active":
+            y, bins_out = np.histogram(
+                np.squeeze(data["y"]), bins=np.linspace(0, 1, n_bins)
+            )
+            data["x"] = 0.5 * (bins_out[1:] + bins_out[:-1])
+            data["y"] = y
         else:
-            data['x'] = np.cumsum(np.ones(len(data['y'])))
+            data["x"] = np.cumsum(np.ones(len(data["y"])))
 
-        ideal = [ideal_function(x) for x in data['x']]
-        diff_to_ideal = ideal - data['y']
+        ideal = [ideal_function(x) for x in data["x"]]
+        diff_to_ideal = ideal - data["y"]
         error = np.sum(np.abs(diff_to_ideal))
 
         run_data.append(data)
         errors.append(error)
 
     indices = np.array(errors).argsort()[:num_to_plot]
-    print('Plotting...')
+    print("Plotting...")
     plt.figure()
     for ii in range(0, num_to_plot):
         ind = indices[ii]
         data = run_data[ind]
-        if data['title'] == 'proportion_time_neurons_active':
-            plt.bar(data['x'], data['y'], width=1/(2*n_bins),
-                    edgecolor='white', alpha=0.5,
-                    label=('%i: err:%.2f \n%s: %s' %
-                           (ind, errors[ind], data['intercept_bounds'],
-                            data['intercept_mode'])))
+        if data["title"] == "proportion_time_neurons_active":
+            plt.bar(
+                data["x"],
+                data["y"],
+                width=1 / (2 * n_bins),
+                edgecolor="white",
+                alpha=0.5,
+                label=(
+                    "%i: err:%.2f \n%s: %s"
+                    % (
+                        ind,
+                        errors[ind],
+                        data["intercept_bounds"],
+                        data["intercept_mode"],
+                    )
+                ),
+            )
         else:
-            plt.plot(np.squeeze(data['x']), np.squeeze(data['y']),
-                     label=('%i: err:%.2f \n%s: %s' %
-                            (ind, errors[ind], data['intercept_bounds'],
-                             data['intercept_mode'])))
+            plt.plot(
+                np.squeeze(data["x"]),
+                np.squeeze(data["y"]),
+                label=(
+                    "%i: err:%.2f \n%s: %s"
+                    % (
+                        ind,
+                        errors[ind],
+                        data["intercept_bounds"],
+                        data["intercept_mode"],
+                    )
+                ),
+            )
 
-    plt.title(data['title'])
-    plt.plot(np.squeeze(data['x']), ideal, c='k', lw=3, linestyle='--',
-             label='ideal')
+    plt.title(data["title"])
+    plt.plot(np.squeeze(data["x"]), ideal, c="k", lw=3, linestyle="--", label="ideal")
     plt.legend()
