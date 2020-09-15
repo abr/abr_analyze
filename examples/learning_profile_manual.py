@@ -18,6 +18,7 @@ import numpy as np
 import matplotlib
 import nengo
 matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 
 from abr_analyze import DataHandler
 from abr_analyze.nengo import network_utils
@@ -52,10 +53,10 @@ input_signal = np.squeeze(input_signal)
 
 # specify our network parameters
 seed = 0
-neuron_type = 'lif'
+neuron_type = "lif"
 n_neurons = 1000
 n_ensembles = 1
-test_name = 'learning_profile_example',
+test_name = ("learning_profile_example",)
 n_input = 11
 n_output = 5
 seed = 0
@@ -71,10 +72,11 @@ triangular = np.random.triangular(
 )
 intercepts = nengo.dists.CosineSimilarity(n_input + 2).ppf(1 - triangular)
 intercepts = intercepts.reshape((n_ensembles, n_neurons))
+
 # ----------- Create your encoders ---------------
 encoders = network_utils.generate_encoders(
-    input_signal=input_signal,
-    n_neurons=n_neurons*n_ensembles)
+    input_signal=input_signal, n_neurons=n_neurons * n_ensembles
+)
 
 encoders = encoders.reshape(n_ensembles, n_neurons, n_input)
 
@@ -89,7 +91,8 @@ network = signals.DynamicsAdaptation(
     pes_learning_rate=1e-6,
     intercepts=intercepts,
     seed=seed,
-    encoders=encoders)
+    encoders=encoders,
+)
 
 # pass your network and input signal to the network utils module
 # run a sim and plot the learning profile
@@ -98,9 +101,10 @@ network_utils.gen_learning_profile(
     input_signal=input_signal,
     ax_list=ax_list,
     n_ens_to_raster=1,
-    show_plot=False)
+    show_plot=False,
+)
 
-loc = '%s/learning_profile_manual ' % figures_dir
+loc = "%s/learning_profile_manual" % figures_dir
 plt.savefig(loc)
-print('Figure saved to %s' % loc)
+print("Figure saved to %s" % loc)
 plt.show()
