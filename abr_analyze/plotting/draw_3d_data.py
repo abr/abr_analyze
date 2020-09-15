@@ -1,15 +1,16 @@
-'''
+"""
 a class for loading, interpolating, and plotting 3d data onto ax objects
-'''
+"""
 import numpy as np
 
 import abr_analyze.data_visualizer as vis
 import abr_analyze.data_processor as proc
 from .draw_data import DrawData
 
+
 class Draw3dData(DrawData):
     def __init__(self, db_name, interpolated_samples=100):
-        '''
+        """
         PARAMETERS
         ----------
         db_name: string
@@ -18,18 +19,27 @@ class Draw3dData(DrawData):
             the number of samples to take (evenly) from the interpolated data
             if set to None, no interpolated or sampling will be done, the raw
             data will be returned, Use None for no interpolation
-        '''
-        super(Draw3dData, self).__init__()
+        """
+        super().__init__()
 
-        self.projection = '3d'
+        self.projection = "3d"
         self.db_name = db_name
         self.interpolated_samples = interpolated_samples
         # create a dict to store processed data
         self.data = {}
 
-    def plot(self, ax, save_location, parameters, step=-1, c='tab:purple',
-             linestyle='--', label=None, title=None):
-        '''
+    def plot(
+        self,
+        ax,
+        save_location,
+        parameters,
+        step=-1,
+        c="tab:purple",
+        linestyle="--",
+        label=None,
+        title=None,
+    ):
+        """
         Plots the parameters from save_location on the ax object
         Returns the ax object and the current max x, y and z limits
 
@@ -52,34 +62,40 @@ class Draw3dData(DrawData):
             the legend label for the data
         title: string, Optional (Default: None)
             the title of the ax object
-        '''
+        """
         # convert our parameters to lists if they are not
         parameters = self.make_list(parameters)
         ax = self.make_list(ax)
 
-        save_name = '%s-%s'%(save_location, parameters)
+        save_name = "%s-%s" % (save_location, parameters)
         if save_name not in self.data:
             self.data[save_name] = proc.load_and_process(
                 db_name=self.db_name,
                 save_location=save_location,
                 parameters=parameters,
-                interpolated_samples=self.interpolated_samples)
+                interpolated_samples=self.interpolated_samples,
+            )
 
         for param in parameters:
             # remove single dimensions
-            self.data[save_name][param] = np.squeeze(
-                self.data[save_name][param])
+            self.data[save_name][param] = np.squeeze(self.data[save_name][param])
             # avoid passing time in for finding y limits
-            if param != 'time' or param != 'cumulative_time':
+            if param != "time" or param != "cumulative_time":
                 # update our xyz limit with every test we add
                 self.check_plot_limits(
                     x=self.data[save_name][param][:, 0],
                     y=self.data[save_name][param][:, 1],
-                    z=self.data[save_name][param][:, 2])
+                    z=self.data[save_name][param][:, 2],
+                )
 
             ax = vis.plot_3d_data(
-                ax=ax, data=self.data[save_name][param][:step], c=c,
-                linestyle=linestyle, label=label, title=title)
+                ax=ax,
+                data=self.data[save_name][param][:step],
+                c=c,
+                linestyle=linestyle,
+                label=label,
+                title=title,
+            )
 
         # ax.set_xlim(self.xlimit[0], self.xlimit[1])
         # ax.set_ylim(self.ylimit[0], self.ylimit[1])

@@ -1,13 +1,14 @@
-'''
+"""
     A class for plotting a stick arm onto a 3d ax object
-'''
+"""
 import abr_analyze.data_visualizer as vis
 import abr_analyze.data_processor as proc
 from .draw_data import DrawData
 
+
 class DrawArm(DrawData):
     def __init__(self, db_name, robot_config, interpolated_samples=100):
-        '''
+        """
         PARAMETERS
         ----------
         db_name: string
@@ -18,19 +19,29 @@ class DrawArm(DrawData):
             the number of samples to take (evenly) from the interpolated data
             if set to None, no interpolated or sampling will be done, the raw
             data will be returned, Use None for no interpolation
-        '''
-        super(DrawArm, self).__init__()
+        """
+        super().__init__()
 
-        self.projection = '3d'
+        self.projection = "3d"
         self.db_name = db_name
         self.robot_config = robot_config
         self.interpolated_samples = interpolated_samples
         # create a dict to store processed data
         self.data = {}
 
-    def plot(self, ax, save_location, step=-1, parameters=None, c='b',
-             linestyle=None, label=None, title=None, show_ground_collision=True):
-        '''
+    def plot(
+        self,
+        ax,
+        save_location,
+        step=-1,
+        parameters=None,
+        c="b",
+        linestyle=None,
+        label=None,
+        title=None,
+        show_ground_collision=True
+    ):
+        """
         Plots the parameters from save_location on the ax object
         Returns the ax object and the current max x, y and z limits
 
@@ -53,7 +64,7 @@ class DrawArm(DrawData):
             the legend label for the data
         title: string, Optional (Default: None)
             the title of the ax object
-        '''
+        """
         if save_location not in self.data:
             # create a dictionary with our test data interpolated to the same
             # number of steps
@@ -61,14 +72,15 @@ class DrawArm(DrawData):
                 db_name=self.db_name,
                 save_location=save_location,
                 interpolated_samples=self.interpolated_samples,
-                parameters=['time', 'q'])
+                parameters=["time", "q"],
+            )
             # get our joint and link positions
             [joints, links, ee_xyz] = proc.calc_cartesian_points(
-                robot_config=self.robot_config,
-                q=self.data[save_location]['q'])
-            self.data[save_location]['joints_xyz'] = joints
-            self.data[save_location]['links_xyz'] = links
-            self.data[save_location]['ee_xyz'] = ee_xyz
+                robot_config=self.robot_config, q=self.data[save_location]["q"]
+            )
+            self.data[save_location]["joints_xyz"] = joints
+            self.data[save_location]["links_xyz"] = links
+            self.data[save_location]["ee_xyz"] = ee_xyz
 
         data = self.data[save_location]
 

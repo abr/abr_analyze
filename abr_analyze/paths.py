@@ -19,7 +19,7 @@ else:
     with open("%s/paths.txt" % dir_name, "r+") as f:
         paths = f.read().split('\n')
 
-        database_dir = os.path.join(current_dir, "data/.cache")
+        cache_dir = os.path.join(current_dir, "data/.cache")
         database_dir = os.path.join(current_dir, "data/databases")
         figures_dir = os.path.join(current_dir, "data/figures")
 

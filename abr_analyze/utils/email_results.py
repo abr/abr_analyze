@@ -1,6 +1,6 @@
-'''
+"""
 Function for sending emails, with the option to attach images
-'''
+"""
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
@@ -8,8 +8,15 @@ from email import encoders
 import smtplib
 import traceback
 
-def send_email(from_email=None, from_password=None, to_email=None,
-               subject=None, body=None, file_location=None):
+
+def send_email(
+    from_email=None,
+    from_password=None,
+    to_email=None,
+    subject=None,
+    body=None,
+    file_location=None,
+):
     """
     Send an email with the option of adding an attachment
 
@@ -45,24 +52,24 @@ def send_email(from_email=None, from_password=None, to_email=None,
 
     msg = MIMEMultipart()
 
-    msg['From'] = from_email
-    msg['To'] = to_email
-    msg['Subject'] = subject
+    msg["From"] = from_email
+    msg["To"] = to_email
+    msg["Subject"] = subject
 
-    msg.attach(MIMEText(body, 'plain'))
+    msg.attach(MIMEText(body, "plain"))
 
-    part = MIMEBase('application', 'octet-stream')
+    part = MIMEBase("application", "octet-stream")
 
     if file_location is not None:
         filename = file_location
         attachment = open(filename, "rb")
         part.set_payload((attachment).read())
         encoders.encode_base64(part)
-        part.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+        part.add_header("Content-Disposition", "attachment; filename= %s" % filename)
         msg.attach(part)
 
     try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
         server.login(from_email, from_password)
         text = msg.as_string()
@@ -70,5 +77,5 @@ def send_email(from_email=None, from_password=None, to_email=None,
         server.quit()
 
     except:  # pylint: disable=W0702
-        print('Error: unable to send email')
+        print("Error: unable to send email")
         print(traceback.format_exc())

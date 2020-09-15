@@ -18,6 +18,7 @@ from select import select
 import sys
 import termios
 
+
 class KBHit:
     def __init__(self):
         # Save the terminal settings
@@ -26,7 +27,7 @@ class KBHit:
         self.old_term = termios.tcgetattr(self.fd)
 
         # New terminal setting unbuffered
-        self.new_term[3] = (self.new_term[3] & ~termios.ICANON & ~termios.ECHO)
+        self.new_term[3] = self.new_term[3] & ~termios.ICANON & ~termios.ECHO
         termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.new_term)
 
         # Support normal-terminal reset at exit
