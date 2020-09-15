@@ -59,9 +59,11 @@ class DataHandler:
         if data is None:
             data = "None"
         try:
+            if isinstance(data, tuple):
+                data = list(data)
             db[save_loc].create_dataset(key, data=data)
         except TypeError as e:
-            if isinstance(data[key], dict):
+            if isinstance(data, dict):
                 print(
                     "You can not pass in a list of dicts."
                     + " To save recursive dicts, they must be saved to a dictionary"
