@@ -22,8 +22,8 @@ from abr_analyze.data_handler import DataHandler
     (
         # test saving bool
         ({"bool": True}, True),
-        # test overwriting with overwrite=True
-        ({"bool": True}, True),
+        # # test overwriting with overwrite=True
+        # ({"bool": True}, True),
         # test saving int
         ({"int": int(4)}, True),
         # test saving float
@@ -34,7 +34,7 @@ from abr_analyze.data_handler import DataHandler
         ({"string": "howdy"}, True),
         # test saving tuple
         # NOTE: Warning expected for this test
-        ({"tuple": ("what", "is", "a", "tuple", "?")}, True),
+        ({"tuple": (1, 2, 3)}, True),
         # test saving dict
         # NOTE: Warning expected for this test
         ({"dict": {"test_again": True}}, True),
