@@ -14,9 +14,6 @@ from abr_control.controllers import signals
 from abr_analyze.data_handler import DataHandler
 import abr_analyze.nengo.network_utils as network_utils
 
-import nengo
-
-
 def run(
     intercept_vals,
     input_signal,
@@ -62,6 +59,11 @@ def run(
         n_neurons = force_params["n_neurons"]
         n_ensembles = force_params["n_ensembles"]
         n_input = force_params["n_input"]
+    elif network_ens_type == "angle":
+        n_neurons = angle_params["n_neurons"]
+        n_ensembles = angle_params["n_ensembles"]
+        n_input = angle_params["n_input"]
+
 
     print("Running intercepts scan on %s" % network_class.__name__)
     print("Input Signal Shape: ", np.asarray(input_signal).shape)
@@ -81,9 +83,9 @@ def run(
         )
 
         triangular = np.random.triangular(
-            # intercept_vals = [left, right, mode]
             left=intercept[0],
             right=intercept[1],
+            mode=intercept[2],
             size=n_neurons * n_ensembles,
         )
         intercepts = nengo.dists.CosineSimilarity(n_input + 2).ppf(1 - triangular)
