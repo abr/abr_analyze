@@ -17,7 +17,8 @@ Plots
 import numpy as np
 import matplotlib
 import nengo
-matplotlib.use('TkAgg')
+
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 
 from abr_analyze import DataHandler
@@ -31,23 +32,19 @@ import matplotlib.pyplot as plt
 
 
 examples_db()
-dat = DataHandler('abr_analyze_examples')
+dat = DataHandler("abr_analyze_examples")
 fig = plt.figure(figsize=(8, 12))
-ax_list = [
-      fig.add_subplot(311),
-      fig.add_subplot(312),
-      fig.add_subplot(313)
-     ]
+ax_list = [fig.add_subplot(311), fig.add_subplot(312), fig.add_subplot(313)]
 
 runs = 10
 for ii in range(0, runs):
     data = dat.load(
-        parameters=['input_signal'],
-        save_location='test_1/session000/run%03d' % ii)
+        parameters=["input_signal"], save_location="test_1/session000/run%03d" % ii
+    )
 if ii == 0:
-    input_signal = data['input_signal']
+    input_signal = data["input_signal"]
 else:
-    input_signal = np.vstack((input_signal, data['input_signal']))
+    input_signal = np.vstack((input_signal, data["input_signal"]))
 
 input_signal = np.squeeze(input_signal)
 

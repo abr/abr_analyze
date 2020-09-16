@@ -152,7 +152,12 @@ class GoogleDoc:
         # print('saving text "%s" to index %i' % (line, start_index))
 
         requests = {
-            "insertText": {"location": {"index": start_index,}, "text": line + "\n",}
+            "insertText": {
+                "location": {
+                    "index": start_index,
+                },
+                "text": line + "\n",
+            }
         }
 
         self.last_index += len(line) + 1
@@ -238,7 +243,9 @@ class GoogleDoc:
         }
         batch.add(
             self.drive.permissions().create(
-                fileId=img_id, body=domain_permission, fields="id",
+                fileId=img_id,
+                body=domain_permission,
+                fields="id",
             )
         )
         batch.execute()

@@ -79,6 +79,8 @@ intercepts_scan.run(
 # ----- compare generated data to ideal, plot 10 closest ----
 save_name += "/%s" % analysis_fncs.__name__
 intercepts_scan.review(
-    save_name=save_name, ideal_function=lambda x: 0.3, num_to_plot=10,
+    save_name=save_name,
+    ideal_function=lambda x: 0.3,
+    num_to_plot=10,
 )
 plt.show()

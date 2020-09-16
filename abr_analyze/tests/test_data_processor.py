@@ -8,7 +8,13 @@ from abr_analyze.data_handler import DataHandler
 from abr_analyze.utils import random_trajectories
 
 
-@pytest.mark.parametrize("functions", ([np.sin], [np.sin, np.cos],))
+@pytest.mark.parametrize(
+    "functions",
+    (
+        [np.sin],
+        [np.sin, np.cos],
+    ),
+)
 def test_list_to_function(functions, plt):
     samples = 44
     x = np.linspace(0, 6.28, 100)
@@ -57,7 +63,10 @@ def test_interpolate_data_2D(plt):
 
     x2 = np.linspace(time_intervals[0], np.sum(time_intervals), samples)
     plt.figure()
-    for d, y, in zip(data, interp_data.T):
+    for (
+        d,
+        y,
+    ) in zip(data, interp_data.T):
         plt.plot(np.cumsum(time_intervals), d, "o", label="raw")
         plt.plot(x2, y, label="interpolated")
     plt.legend()

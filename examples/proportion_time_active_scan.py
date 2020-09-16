@@ -90,6 +90,8 @@ def gauss(x, a=400, mu=0.4, sig=0.025):
 # ----- compare generated data to ideal, plot 10 closest ----
 save_name += "/%s" % analysis_fncs.__name__
 intercepts_scan.review(
-    save_name=save_name, ideal_function=gauss, num_to_plot=10,
+    save_name=save_name,
+    ideal_function=gauss,
+    num_to_plot=10,
 )
 plt.show()

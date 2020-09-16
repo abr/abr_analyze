@@ -66,7 +66,10 @@ def test_save_error():
 
 @pytest.mark.parametrize(
     "parameters, compare_to, key",
-    ((["test_data"], np.ones(3), "test_data"), (["test_data2"], None, "test_data2"),),
+    (
+        (["test_data"], np.ones(3), "test_data"),
+        (["test_data2"], None, "test_data2"),
+    ),
 )
 def test_load(parameters, compare_to, key):
     dat = DataHandler("tests")

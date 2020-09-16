@@ -34,17 +34,14 @@ class KBHit:
         atexit.register(self.set_normal_term)
 
     def set_normal_term(self):
-        """ Resets to normal terminal.
-        """
+        """Resets to normal terminal."""
         termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.old_term)
 
     def getch(self):
-        """ Returns a keyboard character after kbhit() has been called.
-        """
+        """Returns a keyboard character after kbhit() has been called."""
         return sys.stdin.read(1)
 
     def kbhit(self):
-        """ Returns True if keyboard character was hit, False otherwise.
-        """
+        """Returns True if keyboard character was hit, False otherwise."""
         dr, _, _ = select([sys.stdin], [], [], 0)
         return dr != []
