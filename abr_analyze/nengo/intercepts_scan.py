@@ -21,6 +21,7 @@ def run(
     db_name="intercepts_scan",
     save_name="example",
     notes="",
+    encoders=None,
     analysis_fncs=None,
     network_class=None,
     network_ens_type=None,
@@ -63,6 +64,10 @@ def run(
         n_neurons = angle_params["n_neurons"]
         n_ensembles = angle_params["n_ensembles"]
         n_input = angle_params["n_input"]
+    elif network_ens_type is None:
+        n_neurons = encoders.shape[1]
+        n_ensembles = encoders.shape[0]
+        n_input = encoders.shape[2]
 
 
     print("Running intercepts scan on %s" % network_class.__name__)
