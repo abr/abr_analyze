@@ -80,7 +80,9 @@ intercepts_scan.run(
 # ----- compare generated data to ideal, plot 10 closest ----
 save_name0 = "%s/%s" % (save_name, analysis_fncs[0].__name__)
 intercepts_scan.review(
-    save_name=save_name0, ideal_function=lambda x: 0.3, num_to_plot=10,
+    save_name=save_name0,
+    ideal_function=lambda x: 0.3,
+    num_to_plot=10,
 )
 
 
@@ -90,7 +92,9 @@ def gauss(x, a=400, mu=0.4, sig=0.025):
 
 save_name1 = "%s/%s" % (save_name, analysis_fncs[1].__name__)
 intercepts_scan.review(
-    save_name=save_name1, ideal_function=gauss, num_to_plot=10,
+    save_name=save_name1,
+    ideal_function=gauss,
+    num_to_plot=10,
 )
 
 plt.show()

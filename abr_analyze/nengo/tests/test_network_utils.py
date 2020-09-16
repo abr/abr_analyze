@@ -244,7 +244,11 @@ def test_gen_learning_profile(plt):
 
 @pytest.mark.parametrize(
     "intercept_range, intercept_step, mode_range, mode_step",
-    ((None, 0.1, None, 0.2), (None, 0.05, None, 0.01), (None, 0.5, None, 0.7),),
+    (
+        (None, 0.1, None, 0.2),
+        (None, 0.05, None, 0.01),
+        (None, 0.5, None, 0.7),
+    ),
 )
 def test_gen_intercept_bounds_and_modes(
     intercept_range, intercept_step, mode_range, mode_step

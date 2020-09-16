@@ -443,7 +443,7 @@ class DataHandler:
         # exists if the user provides a number for either parameter, could lead
         # to a case where user provides run to save as 6, but runs 0-5 do not
         # exist, is it worth adding a check for this?
-        """ Saves data collected from test trials with
+        """Saves data collected from test trials with
         standard naming convention.
 
         Uses the naming structure of a session being made up of several runs.

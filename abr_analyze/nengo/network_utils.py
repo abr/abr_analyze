@@ -25,7 +25,6 @@ import nengo
 from nengo.utils.matplotlib import rasterplot
 
 
-
 def generate_encoders(n_neurons, input_signal=None, thresh=0.008, depth=0):
     """
     Accepts an input_signal in the shape of time X dim and outputs encoders
