@@ -96,7 +96,7 @@ class DataHandler():
                         db[save_location].create_dataset(
                             '%s' % key, data=data[key])
 
-                    except RuntimeError as e:
+                    except (RuntimeError, ValueError) as e:
                         if overwrite:
                             # if dataset already exists, then overwrite data
                             del db[save_location+'/%s'%key]
