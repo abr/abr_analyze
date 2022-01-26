@@ -49,12 +49,9 @@ MED_FONT = ("Verdana", 10)
 SMALL_FONT = ("Verdana", 8)
 style.use("ggplot")
 global text_color
-# text_color = 'white'
 # charcoal grey
 text_color = "#36454f"
 global background_color
-# charcoal grey
-# background_color = '#36454f'
 background_color = "white"
 global button_color
 # abr blue
@@ -77,13 +74,8 @@ browse_datasets = True
 # list of possible plotting variables
 # NOTE not being used atm, needs to be updated
 plotting_variables = []
-# plotting_variables = ['time', 'q', 'dq', 'q_torque', 'avg error', 'final error', 'u_base',
-#     'u_adapt', 'u_friction', 'input_signal', 'training_signal', 'u_vmax', 'mean & ci',
-#     #'activity_over_time', 'proportion_active'
-#     ]
 global plotting_colors
 plotting_colors = []
-# data_processed = []
 # boolean that triggers when a test is added or removed from the plotting list
 update_plot = False
 # list of selected variables to plot
@@ -277,20 +269,6 @@ def toggle_browse_datasets(self):
     browse_datasets = not browse_datasets
 
 
-def add_img(self, size=[200, 200], file_loc="test_img.jpg", row=0, column=0, *args):
-    """
-    A generic function for loading a provided photo into a specific row and
-    column
-    """
-    print("Image not supported atm")
-    # img = Image.open(file_loc)
-    # img = img.resize((size[0], size[1]), Image.ANTIALIAS)
-    # img = ImageTk.PhotoImage(img)
-    # label = tk.Label(self, image=img, width=size[0], height=size[1])
-    # label.image = img
-    # label.grid(row=row, column=column, padx=10, pady=10)
-
-
 class Page(tk.Tk):
     def __init__(self, *args, **kwargs):
 
@@ -396,9 +374,6 @@ class StartPage(tk.Frame):
             fg=button_text_color,
         )
         search_button.grid(row=2, column=1)
-
-        # Add a picture of the abr logo for funzies
-        # add_img(self, file_loc='abr_logo.jpg', row=0, column=0)
 
 
 class SearchPage(tk.Frame):
@@ -622,24 +597,7 @@ class SearchPage(tk.Frame):
                     print("Size: ", np.array(loaded_data[browse_key]).shape)
                     print("\n", loaded_data)
 
-                # if browse_datasets is not selected then go back a level in the
-                # search
-                #     else:
-                #         print('Error: ', dat.load(parameters='error', save_location=''.join(loc)))
-                #         print('loc points to dataset')
-                #     go_back_loc_level(self)
-                #
-                #
-                # # if keys do exist, check if we're at the session level, at which point
-                # # we should plot data, not go further down in the search, unless
-                # # browse_datasets is set to True
-                # elif not browse_datasets and any('session' in s for s in keys):
-                # check if the selection is already in our list, if so remove it
                 test_name = "".join(loc)
-                # if any('proc_data' in keys):
-                #     processed = True
-                # else:
-                #     processed = False
 
                 if test_name in disp_loc:
                     index = disp_loc.index(test_name)
