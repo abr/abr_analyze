@@ -185,6 +185,8 @@ def get_activities(network, input_signal, network_ens=None, dt=0.001, synapse=No
     # if there aren't neuron probes in the network add them
     with network.nengo_model:
         network.probe_neurons = []
+        if not isinstance(network_ens, list):
+            network_ens = [network_ens]
         for ens in network_ens:
             network.probe_neurons.append(nengo.Probe(ens.neurons, synapse=synapse))
     network.sim = nengo.Simulator(network.nengo_model, progress_bar=False)
@@ -351,6 +353,7 @@ def gen_learning_profile(
     synapse=None,
     n_ens_to_raster=None,
     show_plot=True,
+    savename=None,
     n_neurons=None,
     n_ensembles=None,
 ):
@@ -380,6 +383,8 @@ def gen_learning_profile(
         if None all will be plotted
     show_plot: boolean, Optional (Default: True)
         whether to show the figure at the end of the script or not
+    savename: string, Optional (Default: None)
+        string where to save figure, including figure name. If None will not save
     network_ens: list of ensembles to probe, Optional (Default: None)
         if None then function will assume the network has an ensemble list
         saved as self.adapt_ens. This allows for other definitions to be used
@@ -430,8 +435,11 @@ def gen_learning_profile(
     ax_list[1].legend(["Mean Prop Active: %.2f" % np.mean(proportion_active)])
     ax_list[2].legend(["Active: %i  |  Inactive: %i" % (n_active, n_inactive)])
 
+    plt.tight_layout()
+    if savename is not None:
+        print(f"Saving figure to {savename}")
+        plt.savefig(savename)
     if show_plot:
-        plt.tight_layout()
         plt.show()
 
 

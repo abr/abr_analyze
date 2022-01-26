@@ -4,7 +4,7 @@ import warnings
 import numpy as np
 import h5py
 
-from abr_analyze.paths import database_dir
+from abr_analyze.paths import database_dir as abr_database_dir
 
 
 class DataHandler:
@@ -35,9 +35,13 @@ class DataHandler:
         name of the database being used
     """
 
-    def __init__(self, db_name="abr_analyze"):
+    def __init__(self, db_name="abr_analyze", database_dir=None):
+        database_dir = database_dir if database_dir is not None else abr_database_dir
+        self.db_loc = f"{database_dir}/{db_name}.h5"
+
         self.ERRORS = []
         self.db_loc = "%s/%s.h5" % (database_dir, db_name)
+        print('LOADING DATA FROM: ', self.db_loc)
         # Instantiate the database object with the provided path so that it
         # gets created if it does not yet exist
         db = h5py.File(self.db_loc, "a")
@@ -166,6 +170,8 @@ class DataHandler:
             EX: 'test_group/test_name/session_num/run_num'
         """
         # check if the group exists
+        print('CHECKING IF GROUP %s EXISTS AT %s' % (parameters, save_location))
+        print('IN DB LOC: ', self.db_loc)
         exists = self.check_group_exists(location=save_location, create=False)
 
         # if group path does not exist, raise an exception to alert the user
