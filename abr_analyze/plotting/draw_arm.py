@@ -29,7 +29,7 @@ class DrawArm(DrawData):
         self.data = {}
 
     def plot(self, ax, save_location, step=-1, parameters=None, c='b',
-             linestyle=None, label=None, title=None):
+             linestyle=None, label=None, title=None, show_ground_collision=True):
         '''
         Plots the parameters from save_location on the ax object
         Returns the ax object and the current max x, y and z limits
@@ -78,6 +78,8 @@ class DrawArm(DrawData):
             joints_xyz=data['joints_xyz'][step],
             links_xyz=data['links_xyz'][step],
             ee_xyz=data['ee_xyz'][step],
-            title=title)
+            title=title,
+            show_ground_collision=show_ground_collision
+        )
 
         return ax, [self.xlimit, self.ylimit, self.zlimit]

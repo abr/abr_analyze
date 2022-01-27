@@ -7,11 +7,12 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d  # pylint: disable=W0611
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib import rcParams
 import numpy as np
 
 
 def plot_arm(ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
-             joint_color='k', arm_color='k', title=None):
+             joint_color='k', arm_color='k', title=None, show_ground_collision=True):
     """
     Accepts joint, end-effector, and link COM cartesian locations, and an
     ax object, returns a stick arm with points at the joints and link COM's
@@ -44,11 +45,29 @@ def plot_arm(ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
 
     for xyz in joints_xyz:
         # plot joint location
-        ax.scatter(xyz[0], xyz[1], xyz[2], c=joint_color)
+        if xyz[2] <= 0.0:
+            marker = '*'
+            col = 'r'
+            s = rcParams['lines.markersize'] * 8
+        else:
+            marker = 'o'
+            col = joint_color
+            s = rcParams['lines.markersize'] * 4
+
+        ax.scatter(xyz[0], xyz[1], xyz[2], c=col, marker=marker, s=s)
 
     for xyz in links_xyz:
-        # plot joint location
-        ax.scatter(xyz[0], xyz[1], xyz[2], c=link_color)
+        # plot link location
+        if xyz[2] <= 0.0:
+            marker = 'x'
+            col = 'r'
+            s = rcParams['lines.markersize'] * 8
+        else:
+            marker = 'o'
+            col = link_color
+            s = rcParams['lines.markersize'] * 4
+
+        ax.scatter(xyz[0], xyz[1], xyz[2], c=col, marker=marker, s=s)
 
     origin = [0, 0, 0]
     joints_xyz = np.vstack((origin, joints_xyz))
