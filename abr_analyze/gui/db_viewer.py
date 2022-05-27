@@ -25,11 +25,37 @@ from PIL import Image, ImageTk
 
 import numpy as np
 from abr_analyze import DataHandler
+from abr_analyze.paths import database_dir
 
 from terminaltables import AsciiTable
+from os import listdir
+from os.path import isfile, join
 
 np.set_printoptions(threshold=12)
-dat = DataHandler(db_name=sys.argv[1])
+folder = None
+db = None
+# if len(sys.argv) >= 2:
+for val in sys.argv:
+    if '--folder' in val:
+        folder = val.split('==')[-1]
+        database_dir = folder
+    if '--name' in val:
+        db = val.split('==')[-1]
+
+if db is None:
+    onlyfiles = [f for f in listdir(database_dir) if isfile(join(database_dir, f))]
+    print(f"No database passed in, the following are available in the repo database direction: {database_dir}")
+    for ii, fname in enumerate(onlyfiles):
+        print(f"{ii}) {fname}")
+    index = input("Which databse would you like to view?")
+    db = onlyfiles[int(index)].split('.')[0]
+
+# else:
+#     db = sys.argv[1]
+    # if len(sys.argv)>2:
+    #     folder = sys.argv[2]
+
+dat = DataHandler(db_name=db, database_dir=folder)
 
 
 class bcolors:
@@ -149,7 +175,7 @@ def live_plot(i):
         axs = []
         for ii in range(max_dims):
             rows = min(6, max_dims)
-            axs.append(f.add_subplot(rows, np.ceil(max_dims / rows), ii + 1))
+            axs.append(f.add_subplot(int(rows), int(np.ceil(max_dims / rows)), ii + 1))
 
         for a in axs:
             a.clear()
