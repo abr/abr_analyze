@@ -41,10 +41,10 @@ for ii in range(0, runs):
     data = dat.load(
         parameters=["input_signal"], save_location="test_1/session000/run%03d" % ii
     )
-if ii == 0:
-    input_signal = data["input_signal"]
-else:
-    input_signal = np.vstack((input_signal, data["input_signal"]))
+    if ii == 0:
+        input_signal = data["input_signal"]
+    else:
+        input_signal = np.vstack((input_signal, data["input_signal"]))
 
 input_signal = np.squeeze(input_signal)
 
