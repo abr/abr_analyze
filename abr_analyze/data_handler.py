@@ -163,8 +163,8 @@ class DataHandler:
             EX: 'test_group/test_name/session_num/run_num'
         """
         # check if the group exists
-        print('CHECKING IF GROUP %s EXISTS AT %s' % (parameters, save_location))
-        print('IN DB LOC: ', self.db_loc)
+        # print('CHECKING IF GROUP %s EXISTS AT %s' % (parameters, save_location))
+        # print('IN DB LOC: ', self.db_loc)
         exists = self.check_group_exists(location=save_location, create=False)
 
         # if group path does not exist, raise an exception to alert the user
