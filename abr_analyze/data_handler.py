@@ -154,7 +154,7 @@ class DataHandler:
                     print('\n\n')
         db.close()
 
-    def load(self, save_location, parameters=None):
+    def load(self, save_location, parameters=None, recursive=False):
         """
         Accepts a list of parameters and their path to where they are saved in
         the instantiated db, and returns a dictionary of the parameters and their
@@ -183,7 +183,7 @@ class DataHandler:
             return None
 
         if parameters is None:
-            parameters = self.get_keys(save_location)
+            parameters = self.get_keys(save_location, recursive=recursive)
 
         # otherwise load the keys
         db = h5py.File(self.db_loc, "a")
