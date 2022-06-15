@@ -1,7 +1,8 @@
 import io
-import runpy
 import os
-from setuptools import setup, find_packages
+import runpy
+
+from setuptools import find_packages, setup
 
 
 def read(*filenames, **kwargs):

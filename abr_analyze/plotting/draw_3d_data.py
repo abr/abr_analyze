@@ -3,8 +3,9 @@ a class for loading, interpolating, and plotting 3d data onto ax objects
 """
 import numpy as np
 
-import abr_analyze.data_visualizer as vis
 import abr_analyze.data_processor as proc
+import abr_analyze.data_visualizer as vis
+
 from .draw_data import DrawData
 
 

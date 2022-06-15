@@ -14,43 +14,47 @@ pairs for all parameters that are constant between loaded tests.
 
 See _example() below for simple use case
 """
-import sys
 import copy
-import numpy as np
-from abr_analyze import DataHandler
-from itertools import product
-import json
 import hashlib
+import json
+import sys
+from itertools import product
+
+import numpy as np
+
+from abr_analyze import DataHandler
 
 blue = "\033[94m"
 endc = "\033[0m"
 green = "\033[92m"
 red = "\033[91m"
 
+
 def gen_hash_name(params):
-    hash_name = hashlib.sha256(str(params).replace(' ', '').encode('utf-8')).hexdigest()
+    hash_name = hashlib.sha256(str(params).replace(" ", "").encode("utf-8")).hexdigest()
     return hash_name
+
 
 def print_nested(d, indent=0, return_val=False):
     """
     Pretty printing of nested dictionaries
     """
     if return_val:
-        full_print = ''
+        full_print = ""
     for key, value in d.items():
         if isinstance(value, dict):
-            line = '\t' * indent + str(key) + ': '
+            line = "\t" * indent + str(key) + ": "
             if return_val:
                 full_print += line
             else:
                 print(line)
             if return_val:
-                nested_line = print_nested(value, indent+1, return_val=return_val)
+                nested_line = print_nested(value, indent + 1, return_val=return_val)
                 full_print += nested_line
             else:
-                print_nested(value, indent+1)
+                print_nested(value, indent + 1)
         else:
-            line = '\t' * indent + str(key) + f': {value}'
+            line = "\t" * indent + str(key) + f": {value}"
             if return_val:
                 full_print += line
             else:
@@ -59,8 +63,9 @@ def print_nested(d, indent=0, return_val=False):
     if return_val:
         return full_print
 
+
 def dict_nested2str(d, indent=4, _recursive_call=False):
-    str_dict = ''
+    str_dict = ""
     if _recursive_call:
         internal_indent = indent
     else:
@@ -68,30 +73,24 @@ def dict_nested2str(d, indent=4, _recursive_call=False):
     # print('internal: ', internal_indent)
     for key, value in d.items():
         if isinstance(value, dict):
-            str_dict += '\n' + ' ' * internal_indent + str(key) + ': '
+            str_dict += "\n" + " " * internal_indent + str(key) + ": "
             # str_dict += str(key) + ": "
             # str_dict += '-woah-' + str(value)
-            str_dict += dict_nested2str(value, indent*2, _recursive_call=True)
+            str_dict += dict_nested2str(value, indent * 2, _recursive_call=True)
         else:
-            str_dict += '\n' + ' ' * internal_indent + str(key) + f': {value}'
+            str_dict += "\n" + " " * internal_indent + str(key) + f": {value}"
     return str_dict
 
 
 def gen_lookup_table(db_name, db_folder):
-    dat = DataHandler(
-        db_name=db_name,
-        database_dir=db_folder
-    )
+    dat = DataHandler(db_name=db_name, database_dir=db_folder)
 
-    hashes = dat.load(
-        save_location="params",
-        parameters=dat.get_keys("params")
-    )
+    hashes = dat.load(save_location="params", parameters=dat.get_keys("params"))
     lookup = {}
     for hash_id in hashes:
         params = dat.load(
             save_location=f"params/{hash_id}",
-            parameters=dat.get_keys(f"params/{hash_id}", recursive=True)
+            parameters=dat.get_keys(f"params/{hash_id}", recursive=True),
         )
         for key, val in params.items():
             if key not in lookup:
@@ -109,6 +108,7 @@ def gen_lookup_table(db_name, db_folder):
 #         database_dir=db_folder
 #     )
 #     hash_ids = dat.load(save_location='params')
+
 
 def find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems=None):
     """
@@ -147,7 +147,7 @@ def find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems
         parameter_stems = [parameter_stems]
     # TODO might not need this now that can get nested keys
     if parameter_stems is None:
-        parameter_stems = ['']
+        parameter_stems = [""]
 
     final_legend = []
     final_constants = {}
@@ -160,10 +160,14 @@ def find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems
         legend_keys = []
         if ee == 0:
             # base_parameters = dat.load(save_location=f"params/{exp_hash}/{group_name}", parameters=keys)
-            base_parameters = dat.load(save_location=f"params/{exp_hash}", recursive=True)
+            base_parameters = dat.load(
+                save_location=f"params/{exp_hash}", recursive=True
+            )
         else:
             # new_parameters = dat.load(save_location=f"params/{exp_hash}/{group_name}", parameters=keys)
-            new_parameters = dat.load(save_location=f"params/{exp_hash}", recursive=True)
+            new_parameters = dat.load(
+                save_location=f"params/{exp_hash}", recursive=True
+            )
             # temporary storage of differing keys to add to legend keys
             differing_keys = []
             for key in base_parameters:
@@ -171,7 +175,10 @@ def find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems
                     try:
                         # if (base_parameters[key] != new_parameters[key]).any():
                         #     differing_keys.append(key)
-                        if np.asarray(base_parameters[key]).shape != np.asarray(new_parameters[key]).shape:
+                        if (
+                            np.asarray(base_parameters[key]).shape
+                            != np.asarray(new_parameters[key]).shape
+                        ):
                             differing_keys.append(key)
                         elif type(base_parameters[key]) != type(new_parameters[key]):
                             differing_keys.append(key)
@@ -179,10 +186,11 @@ def find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems
                             differing_keys.append(key)
 
                     except AttributeError as e:
-                        print(f"Got AttributeError on {key} who's value is:\n{base_parameters[key]}")
+                        print(
+                            f"Got AttributeError on {key} who's value is:\n{base_parameters[key]}"
+                        )
                         print(f"Or possibly from const params:\n{new_parameters[key]}")
                         raise e
-
 
                 else:
                     if key not in new_parameters.keys():
@@ -204,6 +212,7 @@ def find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems
 
     return base_parameters, legend_keys
 
+
 def find_experiments_that_match_constants(dat, saved_exp_hashes, const_params):
     """
     Input an instantiated DataHandler, a list of experiment hashes to compare,
@@ -222,25 +231,33 @@ def find_experiments_that_match_constants(dat, saved_exp_hashes, const_params):
     matches = []
     print("EXP HASHES: ", saved_exp_hashes)
     for exp_hash in saved_exp_hashes:
-        data = dat.load(save_location=f"params/{exp_hash}", parameters=const_params.keys())
+        data = dat.load(
+            save_location=f"params/{exp_hash}", parameters=const_params.keys()
+        )
         # count the number of different key: value pairs, if zero save the hash
         # since looking for experiments with matching parameters
         num_diff = 0
         for param_key in const_params.keys():
-            print('param key: ', param_key)
+            print("param key: ", param_key)
             print(data)
-            if (data[param_key] is not None and
-                isinstance(data[param_key], (list, np.ndarray))):
-                    try:
-                        # print(param_key)
-                        if np.asarray(data[param_key]).shape != np.asarray(const_params[param_key]).shape:
-                            num_diff += 1
-                        elif (data[param_key] != const_params[param_key]).any():
-                            num_diff += 1
-                    except AttributeError as e:
-                        print(f"Got AttributeError on {param_key} who's value is:\n{data[param_key]}")
-                        print(f"Or possibly from const params:\n{const_params[param_key]}")
-                        raise e
+            if data[param_key] is not None and isinstance(
+                data[param_key], (list, np.ndarray)
+            ):
+                try:
+                    # print(param_key)
+                    if (
+                        np.asarray(data[param_key]).shape
+                        != np.asarray(const_params[param_key]).shape
+                    ):
+                        num_diff += 1
+                    elif (data[param_key] != const_params[param_key]).any():
+                        num_diff += 1
+                except AttributeError as e:
+                    print(
+                        f"Got AttributeError on {param_key} who's value is:\n{data[param_key]}"
+                    )
+                    print(f"Or possibly from const params:\n{const_params[param_key]}")
+                    raise e
             else:
                 if data[param_key] != const_params[param_key]:
                     num_diff += 1
@@ -250,11 +267,8 @@ def find_experiments_that_match_constants(dat, saved_exp_hashes, const_params):
 
 
 def get_common_experiments(
-        script_name,
-        dat,
-        const_params=None,
-        ignore_keys=None,
-        saved_exp_hashes=None):
+    script_name, dat, const_params=None, ignore_keys=None, saved_exp_hashes=None
+):
     """
     Input the script name to load results from and the desired set of constant
     parameters between experiments. If const_params is left as None, all parameters
@@ -276,19 +290,25 @@ def get_common_experiments(
     # Load the hashes of all experiments that have been run for this script
     if saved_exp_hashes is None:
         saved_exp_hashes = dat.get_keys(f"results/{script_name}")
-        print(f"{len(saved_exp_hashes)} experiments found with results from {script_name}")
+        print(
+            f"{len(saved_exp_hashes)} experiments found with results from {script_name}"
+        )
 
     if const_params is not None:
         # Get all experiment id's that match a set of key value pairs
         print(f"Searching for results with matching parameters to:")
         print_nested(const_params)
-        saved_exp_hashes = find_experiments_that_match_constants(dat, saved_exp_hashes, const_params)
+        saved_exp_hashes = find_experiments_that_match_constants(
+            dat, saved_exp_hashes, const_params
+        )
         print(f"{len(saved_exp_hashes)} experiments found with matching parameters")
         print(saved_exp_hashes)
 
     # Get a dictionary of common values and a list of keys for differing values
     # to use in the auto legend
-    all_constants, all_variable = find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems=['llp', 'data', 'general', 'ens_args'])
+    all_constants, all_variable = find_constant_and_variable_parameters(
+        dat, saved_exp_hashes, parameter_stems=["llp", "data", "general", "ens_args"]
+    )
     if ignore_keys is not None:
         if isinstance(ignore_keys, str):
             ignore_keys = [ignore_keys]
@@ -299,15 +319,17 @@ def get_common_experiments(
 
     return saved_exp_hashes, all_constants, all_variable
 
+
 def load_results(
-        script_name,
-        result_keys,
-        dat,
-        # db_name,
-        # db_folder=None,
-        const_params=None,
-        saved_exp_hashes=None,
-        ignore_keys=None):
+    script_name,
+    result_keys,
+    dat,
+    # db_name,
+    # db_folder=None,
+    const_params=None,
+    saved_exp_hashes=None,
+    ignore_keys=None,
+):
     """
     Input unique script id that generated results, the values of parameters to
     hold constant between expriments, and the result keys to load. Returns a
@@ -357,7 +379,7 @@ def load_results(
         dat=dat,
         const_params=const_params,
         ignore_keys=ignore_keys,
-        saved_exp_hashes=saved_exp_hashes
+        saved_exp_hashes=saved_exp_hashes,
     )
 
     results = {}
@@ -367,14 +389,10 @@ def load_results(
     for mm, match in enumerate(saved_exp_hashes):
         results[f"{match}"] = {}
         results[f"{match}"]["results"] = dat.load(
-            save_location=f'results/{script_name}/{match}',
-            parameters=result_keys
-       )
-
-        name_params = dat.load(
-            save_location=f'params/{match}',
-            parameters=all_variable
+            save_location=f"results/{script_name}/{match}", parameters=result_keys
         )
+
+        name_params = dat.load(save_location=f"params/{match}", parameters=all_variable)
 
         name = ""
         for kk, key in enumerate(all_variable):
@@ -407,7 +425,9 @@ def gen_parameter_variations(params, variation_dict):
             dic = dic.setdefault(key, {})
         dic[keys[-1]] = value
 
-    variations = [dict(zip(variation_dict, v)) for v in product(*variation_dict.values())]
+    variations = [
+        dict(zip(variation_dict, v)) for v in product(*variation_dict.values())
+    ]
     variation_dict = {}
 
     # do not overwrite the reference to params
@@ -416,7 +436,7 @@ def gen_parameter_variations(params, variation_dict):
     print(f"\nGeneratnig {len(variations)} variations of parameters\n")
     for vv, var in enumerate(variations):
         for key in var:
-            nested_set(params_copy, key.split('/'), var[key])
+            nested_set(params_copy, key.split("/"), var[key])
 
         hash_name = gen_hash_name(params_copy)
 
@@ -427,41 +447,36 @@ def gen_parameter_variations(params, variation_dict):
 
     return variation_dict
 
+
 def searchable_save(dat, results, params, script_name, overwrite=True):
     hash_name = gen_hash_name(params)
 
     # Save parameters
-    dat.save(
-        save_location=f'params/{hash_name}',
-        data=params,
-        overwrite=overwrite
-    )
+    dat.save(save_location=f"params/{hash_name}", data=params, overwrite=overwrite)
 
     dat.save(
-        save_location=f'results/{script_name}/{hash_name}',
+        save_location=f"results/{script_name}/{hash_name}",
         data=results,
-        overwrite=overwrite
+        overwrite=overwrite,
     )
+
 
 def _example():
     import matplotlib.pyplot as plt
+
     # Instantiate database to save results
-    db_name = 'searchable_results_example'
+    db_name = "searchable_results_example"
     db_folder = None
-    dat = DataHandler(
-        db_name=db_name,
-        database_dir=db_folder
-    )
+    dat = DataHandler(db_name=db_name, database_dir=db_folder)
 
     # generate baseline json
     params = {
-        'sin_params':
-        {
-            'A': 3,
-            'shift': 5,
+        "sin_params": {
+            "A": 3,
+            "shift": 5,
         },
-        'time': [0, 5, 100],
-        'exp': 2
+        "time": [0, 5, 100],
+        "exp": 2,
     }
 
     # if loading from json
@@ -471,53 +486,42 @@ def _example():
     # example function that generates results
     # Needs to accept params dict as input and return dictionary of results
     def example_results(params):
-        t = np.linspace(params['time'][0], params['time'][1], params['time'][2])
+        t = np.linspace(params["time"][0], params["time"][1], params["time"][2])
         y = (
-            params['sin_params']['A'] * np.sin(t-params['sin_params']['shift']) ** params['exp']
+            params["sin_params"]["A"]
+            * np.sin(t - params["sin_params"]["shift"]) ** params["exp"]
         )
-        return {'t': t, 'y': y}
+        return {"t": t, "y": y}
 
     # unique name for script that generates results
     # should update name if something changes in the script that would affect results
-    script_name = 'example_script'
+    script_name = "example_script"
 
     # get results
-    print('--Getting results for baseline parameters--')
+    print("--Getting results for baseline parameters--")
     results = example_results(params)
 
     # save in searchable format
-    print('--Saving baseline results--')
-    searchable_save(
-        dat=dat,
-        results=results,
-        params=params,
-        script_name=script_name
-    )
+    print("--Saving baseline results--")
+    searchable_save(dat=dat, results=results, params=params, script_name=script_name)
 
     # helper function to quickly create some variations of our parameter set
-    print('--Generating parameter variations--')
+    print("--Generating parameter variations--")
     param_variations = gen_parameter_variations(
-        params=params,
-        variation_dict = {
-            'sin_params/A': [5, 7, 10],
-            'exp': [3, 4]
-        }
+        params=params, variation_dict={"sin_params/A": [5, 7, 10], "exp": [3, 4]}
     )
 
     # get results for each variation and save
-    print('--Getting results for parameter variations--')
+    print("--Getting results for parameter variations--")
     for hash_id, varied_params in param_variations.items():
         print(f"\nGetting results for {hash_id}")
         # pretty printing of nested dictionaries
         print_nested(varied_params, indent=0, return_val=False)
 
         results = example_results(varied_params)
-        print('Saving results')
+        print("Saving results")
         searchable_save(
-            dat=dat,
-            results=results,
-            params=varied_params,
-            script_name=script_name
+            dat=dat, results=results, params=varied_params, script_name=script_name
         )
 
     # now load all results that have these parameter values
@@ -525,7 +529,7 @@ def _example():
         "exp": 3,
     }
     # result keys to load
-    result_keys = ['y']
+    result_keys = ["y"]
 
     # Load results that have a set of common parameters
     print(f"Loading results with parameters:\n{const_params}")
@@ -535,7 +539,7 @@ def _example():
         saved_exp_hashes=None,
         result_keys=result_keys,
         dat=dat,
-        ignore_keys=None
+        ignore_keys=None,
     )
 
     # plot the results
@@ -543,18 +547,21 @@ def _example():
     ax = plt.subplot(111)
     for hash_name in results:
         # ignore const and variable params keys
-        if 'params' in hash_name:
+        if "params" in hash_name:
             continue
         # print(dict_nested2str(results[hash_name]))
-        ax.plot(results[hash_name]['results']['y'], label=results[hash_name]['name'])
+        ax.plot(results[hash_name]["results"]["y"], label=results[hash_name]["name"])
 
     # print the values that are constant between all tests
     ax.text(
-        0, -5,
-        ('Constant Parameters\n'
-        +'___________________\n'
-        + dict_nested2str(results['const_params'])),
-        fontsize=8
+        0,
+        -5,
+        (
+            "Constant Parameters\n"
+            + "___________________\n"
+            + dict_nested2str(results["const_params"])
+        ),
+        fontsize=8,
     )
     plt.subplots_adjust(right=0.6)
 
@@ -572,5 +579,6 @@ def _example():
     #     ignore_keys=None
     # )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     _example()

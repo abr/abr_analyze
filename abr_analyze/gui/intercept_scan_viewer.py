@@ -3,28 +3,27 @@ A visualizer for looking through intercept scan data. Currently the test group
 save name has to be manually changed at the bottom of the script.
 """
 import sys
+import time
 import tkinter as tk
 from tkinter import ttk
-import time
 
 import matplotlib
 
 matplotlib.use("TkAgg")
+import matplotlib.animation as animation
+import numpy as np
+import seaborn
 from matplotlib import pyplot as plt
+from matplotlib import style
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg,
 )  # , NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
-import matplotlib.animation as animation
-from matplotlib import style
-import seaborn
 from PIL import Image, ImageTk
+from terminaltables import AsciiTable
 
-import numpy as np
 from abr_analyze.data_handler import DataHandler
 from abr_analyze.paths import figures_dir
-
-from terminaltables import AsciiTable
 
 # a reorganized dict of intercept values and run number to allow for easy
 # searching. Allows the user to find the desired run number by searching

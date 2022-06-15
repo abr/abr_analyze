@@ -1,10 +1,9 @@
 import numpy as np
 import pytest
 
-from abr_analyze.plotting import TrajectoryError
 from abr_analyze.data_handler import DataHandler
+from abr_analyze.plotting import TrajectoryError
 from abr_analyze.utils import random_trajectories
-
 
 dat = DataHandler("test")
 save_location = "traj_err_test/session000/run000"

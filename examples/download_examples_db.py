@@ -1,5 +1,4 @@
 import os
-
 from urllib.request import urlretrieve
 
 from abr_analyze.paths import database_dir

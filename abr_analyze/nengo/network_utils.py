@@ -16,12 +16,12 @@ intercepts to later view in the intercept_scan_viewer.py gui
 """
 
 import warnings
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-from abr_control._vendor.nengolib.stats import ScatteredHypersphere
-
 import nengo
+from abr_control._vendor.nengolib.stats import ScatteredHypersphere
 from nengo.utils.matplotlib import rasterplot
 
 
@@ -276,7 +276,7 @@ def proportion_time_neurons_active(
     pscs=None,
     synapse=0.005,
     ax=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Accepts a Nengo network andsimulates its response to a given input

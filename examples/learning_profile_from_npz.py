@@ -14,20 +14,20 @@ Plots
    of run time
 3. proportion of neurons that are active over time
 """
-import numpy as np
 import matplotlib
+import numpy as np
 
 matplotlib.use("TkAgg")
-import matplotlib.pyplot as plt
 import os
 
-from abr_control._vendor.nengolib.stats import ScatteredHypersphere
+import matplotlib.pyplot as plt
+from nengo_extras import dists
 
 from abr_analyze import DataHandler
 from abr_analyze.nengo import network_utils
-from abr_control.controllers import signals
 from abr_analyze.paths import cache_dir, figures_dir
-from nengo_extras import dists
+from abr_control._vendor.nengolib.stats import ScatteredHypersphere
+from abr_control.controllers import signals
 
 npz = "run_0_obj_53.npz"
 data = np.load(npz)

@@ -5,8 +5,9 @@ corresponding parameters for it's plot() function, and returns a grid plot with
 all of the data. Cells can also be animated, in which case a gif is saved.
 """
 import uuid
-import matplotlib.pyplot as plt
+
 import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d  # pylint: disable=W0611
 
 from abr_analyze.paths import figures_dir
