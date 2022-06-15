@@ -22,15 +22,13 @@ setup_requires = [
 ]
 
 install_requires = [
-    "h5py==3.5.0",
+    "h5py>=3.0",
     "Pillow>=5.1.0",
     "terminaltables==3.1.0",
-    "redis==2.10.5",
     "numpy>=1.16.0",
     "matplotlib>=3.0.0",
     "scipy>=1.1.0",
     "nengo>=2.8.0",
-    "nengo_extras>=0.3.0",
 ]
 
 tests_require = [
