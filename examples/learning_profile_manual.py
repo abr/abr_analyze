@@ -14,22 +14,20 @@ Plots
    of run time
 3. proportion of neurons that are active over time
 """
-import numpy as np
 import matplotlib
+import numpy as np
+
 import nengo
 
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
-
-from abr_analyze import DataHandler
-from abr_analyze.nengo import network_utils
-from abr_control.controllers import signals
-from abr_analyze.paths import cache_dir, figures_dir
 from download_examples_db import check_exists as examples_db
 from nengo_extras import dists
 
-import matplotlib.pyplot as plt
-
+from abr_analyze import DataHandler
+from abr_analyze.nengo import network_utils
+from abr_analyze.paths import cache_dir, figures_dir
+from abr_control.controllers import signals
 
 examples_db()
 dat = DataHandler("abr_analyze_examples")

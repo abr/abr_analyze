@@ -1,8 +1,8 @@
 import time
 import warnings
 
-import numpy as np
 import h5py
+import numpy as np
 
 from abr_analyze.paths import database_dir as abr_database_dir
 
@@ -92,11 +92,13 @@ class DataHandler:
                     "You can not pass in a list of dicts."
                     + " To save recursive dicts, they must be saved to a dictionary"
                 )
-            from abr_control.utils import colors
             import pdb
-            print(f'\n\n\n{colors.red}Error raised on key: {key}{colors.endc}')
-            print(f'{colors.red}{key} has a value of: {data}{colors.endc}')
-            print(f'{colors.red}{key} has a type of: {type(data)}{colors.endc}')
+
+            from abr_control.utils import colors
+
+            print(f"\n\n\n{colors.red}Error raised on key: {key}{colors.endc}")
+            print(f"{colors.red}{key} has a value of: {data}{colors.endc}")
+            print(f"{colors.red}{key} has a type of: {type(data)}{colors.endc}")
             print("Entering pdb for live debugging. Type <exit> to close")
             print("NOTE: key is stored in <key> and value is stored in <data>")
             pdb.set_trace()
@@ -159,7 +161,10 @@ class DataHandler:
                         db.create_group(save_loc)
 
                     self.save(
-                        save_location=save_loc, data=data[key], overwrite=overwrite, timestamp=timestamp
+                        save_location=save_loc,
+                        data=data[key],
+                        overwrite=overwrite,
+                        timestamp=timestamp,
                     )
                 else:
                     self._save(
@@ -213,16 +218,16 @@ class DataHandler:
                 tmp = self.load(
                     # parameters=self.get_keys(f"{save_location}/{key}"),
                     save_location=f"{save_location}/{key}",
-                    recursive=recursive
+                    recursive=recursive,
                 )
             # TODO:
             # if is a dataset, if recursive load is on then recursively get keys
             # and append them to parameters. Can append to parameters in loop (tested)
             # if self.is_dataset(f"{save_location}/{key}"):
             #     parameters.append(self.get_keys("f{save_location}/{key}", recursive=True))
-            elif tmp.dtype == 'bool':
+            elif tmp.dtype == "bool":
                 tmp = bool(tmp)
-            elif tmp.dtype == 'object':
+            elif tmp.dtype == "object":
                 tmp = tmp.asstr()[()]
                 # if not self.is_dataset(f"{save_location}/{key}"):
                 #     tmp = tmp.asstr()[()]
@@ -312,14 +317,14 @@ class DataHandler:
             keys = list(db[save_location].keys())
 
         if recursive:
+
             def get_recursive(save_location, keys):
                 key_hierarchy = []
                 num_datasets = 0
                 for key in keys:
                     # print('debug: ', key)
                     # print(f'checking {save_location}/{key} to see if dataset')
-                    if not isinstance(
-                            db[f"{save_location}/{key}"], h5py.Dataset):
+                    if not isinstance(db[f"{save_location}/{key}"], h5py.Dataset):
                         # print(f"{key} is not a dataset")
                         next_level_keys = list(db[f"{save_location}/{key}"].keys())
                         # print(f"next level keys: {next_level_keys}")

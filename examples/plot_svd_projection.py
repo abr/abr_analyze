@@ -3,18 +3,17 @@ An example using the 3 SVD projection functions in data_visualizer.py.
 The input signal is projected into a 1D, 2D, and 3D space, and plotted
 against the first dimension of u_adapt.
 """
-import numpy as np
 import matplotlib
+import numpy as np
 
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
-
-from abr_analyze import DataHandler
-import abr_analyze.data_visualizer as vis
-from abr_analyze.plotting import TrajectoryError
-from abr_analyze.paths import figures_dir
 from download_examples_db import check_exists as examples_db
 
+import abr_analyze.data_visualizer as vis
+from abr_analyze import DataHandler
+from abr_analyze.paths import figures_dir
+from abr_analyze.plotting import TrajectoryError
 
 examples_db()
 dat = DataHandler("abr_analyze_examples")

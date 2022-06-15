@@ -1,8 +1,9 @@
 """
     A class for plotting a stick arm onto a 3d ax object
 """
-import abr_analyze.data_visualizer as vis
 import abr_analyze.data_processor as proc
+import abr_analyze.data_visualizer as vis
+
 from .draw_data import DrawData
 
 

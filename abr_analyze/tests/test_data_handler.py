@@ -11,8 +11,8 @@
   - Further tests are placed after the try except statement,
     specified for each function (EX: testing if a renamed group exists).
 """
-import pytest
 import numpy as np
+import pytest
 
 from abr_analyze.data_handler import DataHandler
 

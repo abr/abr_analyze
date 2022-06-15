@@ -1,6 +1,7 @@
 import numpy as np
 from terminaltables import AsciiTable
 
+
 # Function to print out parameters into an ASCII Table
 def print_params(data, title=None, invert=False):
     """
@@ -59,6 +60,7 @@ def print_params(data, title=None, invert=False):
     if title is not None:
         print(BLUE + "----------" + title + "----------" + ENDC)
     print(table.table)
+
 
 def print_lookup(data, title=None, invert=False):
     """

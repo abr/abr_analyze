@@ -4,19 +4,18 @@ A simple example of plotting a 3d stick arm figure from saved data.
 The save location must have the joint angles of the robot arm saved under the
 key 'q'
 """
-import numpy as np
 import matplotlib
+import numpy as np
 
 matplotlib.use("TkAgg")
-import matplotlib.pyplot as plt
 import os
 
-from abr_control.arms import jaco2
-
-from abr_analyze.plotting import DrawArm, Draw3dData
-from abr_analyze.paths import figures_dir
+import matplotlib.pyplot as plt
 from download_examples_db import check_exists as examples_db
 
+from abr_analyze.paths import figures_dir
+from abr_analyze.plotting import Draw3dData, DrawArm
+from abr_control.arms import jaco2
 
 examples_db()
 # the number of samples to interpolate our data to, set to None for no
