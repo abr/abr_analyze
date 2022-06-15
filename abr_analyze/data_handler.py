@@ -66,7 +66,26 @@ class DataHandler:
         try:
             if isinstance(data, tuple):
                 data = list(data)
-            db[save_loc].create_dataset(key, data=data)
+                db[save_loc].create_dataset(key, data=data)
+            elif isinstance(data, str):
+                dtype = h5py.special_dtype(vlen=str)
+                db[save_loc].create_dataset(key, data=data, dtype=dtype)
+                # NOTE if catching list of strings can use this
+                # data = [data]
+                # data_conv = []
+                # for i in range(10_000):
+                #     data_conv += data
+                # print(len(data_conv))
+                # longest_word=len(max(data_conv, key=len))
+                # print('longest_word=',longest_word)
+                #
+                # dtype = h5py.special_dtype(vlen=str)
+                #
+                # arr = np.array(data,dtype='S'+str(longest_word))
+                #
+                # db[save_loc].create_dataset(key, data=arr, dtype=dtype)
+            else:
+                db[save_loc].create_dataset(key, data=data)
         except TypeError as e:
             if isinstance(data, dict):
                 print(
@@ -74,7 +93,13 @@ class DataHandler:
                     + " To save recursive dicts, they must be saved to a dictionary"
                 )
             from abr_control.utils import colors
+            import pdb
             print(f'\n\n\n{colors.red}Error raised on key: {key}{colors.endc}')
+            print(f'{colors.red}{key} has a value of: {data}{colors.endc}')
+            print(f'{colors.red}{key} has a type of: {type(data)}{colors.endc}')
+            print("Entering pdb for live debugging. Type <exit> to close")
+            print("NOTE: key is stored in <key> and value is stored in <data>")
+            pdb.set_trace()
             raise e
 
     def save(
@@ -193,8 +218,9 @@ class DataHandler:
             tmp = db.get("%s/%s" % (save_location, key))
             if not self.is_dataset(f"{save_location}/{key}"):
                 tmp = self.load(
-                    parameters=self.get_keys(f"{save_location}/{key}"),
-                    save_location=f"{save_location}/{key}"
+                    # parameters=self.get_keys(f"{save_location}/{key}"),
+                    save_location=f"{save_location}/{key}",
+                    recursive=recursive
                 )
             # TODO:
             # if is a dataset, if recursive load is on then recursively get keys
@@ -205,6 +231,10 @@ class DataHandler:
                 tmp = bool(tmp)
             elif tmp.dtype == 'object':
                 tmp = tmp.asstr()[()]
+                # if not self.is_dataset(f"{save_location}/{key}"):
+                #     tmp = tmp.asstr()[()]
+                # else:
+                #     print(f'test failed looking for dataset type: {tmp}')
             else:
                 tmp = np.array(tmp, dtype=tmp.dtype)
             saved_data[key] = tmp
