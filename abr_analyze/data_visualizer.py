@@ -5,10 +5,10 @@ Functions plotting data onto ax objects
 import matplotlib
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d  # pylint: disable=W0611
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from matplotlib import rcParams
 import numpy as np
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.mplot3d import axes3d  # pylint: disable=W0611
+from matplotlib import rcParams
 
 
 def plot_arm(
