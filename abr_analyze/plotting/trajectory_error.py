@@ -13,9 +13,10 @@ minimum
 """
 
 import numpy as np
-from abr_analyze.data_handler import DataHandler
+
 import abr_analyze.data_processor as proc
 import abr_analyze.data_visualizer as vis
+from abr_analyze.data_handler import DataHandler
 
 
 class TrajectoryError:

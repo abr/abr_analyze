@@ -5,8 +5,8 @@ Both are the same randomly generated path with different
 amounts of filtering. This is mainly used to provide test data
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from mpl_toolkits.mplot3d import axes3d  # pylint: disable=W0611
 
 
