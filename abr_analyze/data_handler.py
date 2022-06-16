@@ -239,6 +239,8 @@ class DataHandler:
                 #     print(f'test failed looking for dataset type: {tmp}')
             else:
                 tmp = np.array(tmp, dtype=tmp.dtype)
+            if tmp == 'None':
+                tmp = None
             saved_data[key] = tmp
 
         db.close()
