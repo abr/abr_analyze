@@ -229,14 +229,14 @@ class DataHandler:
                 tmp = bool(tmp)
             elif tmp.dtype == "object":
                 tmp = tmp.asstr()[()]
+                if tmp == 'None':
+                    tmp = None
                 # if not self.is_dataset(f"{save_location}/{key}"):
                 #     tmp = tmp.asstr()[()]
                 # else:
                 #     print(f'test failed looking for dataset type: {tmp}')
             else:
                 tmp = np.array(tmp, dtype=tmp.dtype)
-            if tmp == 'None':
-                tmp = None
             saved_data[key] = tmp
 
         db.close()
