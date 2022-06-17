@@ -195,7 +195,9 @@ def find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems
                 else:
                     if key not in new_parameters.keys():
                         new_parameters[key] = None
-                    if base_parameters[key] != new_parameters[key]:
+                    if type(base_parameters[key]) != type(new_parameters[key]):
+                        differing_keys.append(key)
+                    elif base_parameters[key] != new_parameters[key]:
                         differing_keys.append(key)
 
             # add missing keys directly to legend keys
@@ -238,8 +240,8 @@ def find_experiments_that_match_constants(dat, saved_exp_hashes, const_params):
         # since looking for experiments with matching parameters
         num_diff = 0
         for param_key in const_params.keys():
-            print("param key: ", param_key)
-            print(data)
+            # print("param key: ", param_key)
+            # print(data)
             if data[param_key] is not None and isinstance(
                 data[param_key], (list, np.ndarray)
             ):
@@ -258,6 +260,12 @@ def find_experiments_that_match_constants(dat, saved_exp_hashes, const_params):
                     )
                     print(f"Or possibly from const params:\n{const_params[param_key]}")
                     raise e
+            elif isinstance(data[param_key], dict):
+                raise NotImplementedError(
+                    f"{red}Currently not able to pass nested dict in as const_params{endc}"
+                    + f"{red}\n To pass in nested dict items, pass the nested keys in{endc} "
+                    + f"{red}separated by as slash '/'{endc}"
+                )
             else:
                 if data[param_key] != const_params[param_key]:
                     num_diff += 1
