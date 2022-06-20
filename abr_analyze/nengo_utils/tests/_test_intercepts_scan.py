@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 from abr_analyze.nengo_utils import intercepts_scan, network_utils
 

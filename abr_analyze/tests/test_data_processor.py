@@ -3,7 +3,6 @@ import numpy as np
 import pytest
 
 import abr_analyze.data_processor as proc
-
 from abr_analyze.data_handler import DataHandler
 from abr_analyze.utils import random_trajectories
 

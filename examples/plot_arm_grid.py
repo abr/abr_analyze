@@ -2,18 +2,17 @@
 Accepts a save location for arm tests and a list of runs to plot, plotting them
 on different cells
 """
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
 import os
 
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import numpy as np
 from abr_control.arms import jaco2
+from download_examples_db import check_exists as examples_db
+from mpl_toolkits.mplot3d import Axes3D
 
 from abr_analyze.paths import figures_dir
-from abr_analyze.plotting import DrawCells, Draw3dData, DrawArm
-from download_examples_db import check_exists as examples_db
-
+from abr_analyze.plotting import Draw3dData, DrawArm, DrawCells
 
 examples_db()
 interpolated_samples = 100

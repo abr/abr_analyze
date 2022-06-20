@@ -6,13 +6,15 @@ profile for each sim. The profiles can be viewed using the
 intercept_scan_viewer.py gui
 """
 import timeit
-import nengo
-import matplotlib.pyplot as plt
-import numpy as np
 
+import matplotlib.pyplot as plt
+import nengo
+import numpy as np
 from abr_control.controllers import signals
-from abr_analyze.data_handler import DataHandler
+
 import abr_analyze.nengo.network_utils as network_utils
+from abr_analyze.data_handler import DataHandler
+
 
 def run(
     intercept_vals,
@@ -68,7 +70,6 @@ def run(
         n_neurons = encoders.shape[1]
         n_ensembles = encoders.shape[0]
         n_input = encoders.shape[2]
-
 
     print("Running intercepts scan on %s" % network_class.__name__)
     print("Input Signal Shape: ", np.asarray(input_signal).shape)

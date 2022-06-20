@@ -1,7 +1,6 @@
-import pytest
-import numpy as np
-
 import nengo
+import numpy as np
+import pytest
 
 from abr_analyze.nengo_utils import network_utils
 

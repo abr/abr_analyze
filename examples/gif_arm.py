@@ -4,20 +4,19 @@ A simple example of plotting a 3d stick arm figure from saved data.
 The save location must have the joint angles of the robot arm saved under the
 key 'q'
 """
-import numpy as np
 import matplotlib
+import numpy as np
 
 matplotlib.use("TkAgg")
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import os
 
+import matplotlib.pyplot as plt
 from abr_control.arms import jaco2
-
-from abr_analyze.plotting import DrawArm, Draw3dData, MakeGif
-from abr_analyze.paths import figures_dir
 from download_examples_db import check_exists as examples_db
+from mpl_toolkits.mplot3d import Axes3D
 
+from abr_analyze.paths import figures_dir
+from abr_analyze.plotting import Draw3dData, DrawArm, MakeGif
 
 examples_db()
 gif = MakeGif()
@@ -50,7 +49,7 @@ for ii in range(1, interpolated_samples):
     ax.set_xlim3d(-0.5, 0.5)
     ax.set_ylim3d(-0.5, 0.5)
     ax.set_zlim3d(0, 1)
-    ax.set_aspect(1)
+    ax.set_aspect("auto")
 
     draw_3d.plot(
         ax=ax,
@@ -89,5 +88,5 @@ for ii in range(1, interpolated_samples):
 
 save_loc = "%s" % (figures_dir)
 gif.create(
-    fig_loc=fig_cache, save_loc=save_loc, save_name="gif_arm", delay=5, res=[1920, 1080]
+    fig_loc=fig_cache, save_loc=save_loc, save_name="gif_arm", delay=5, res=[720, 480]
 )

@@ -1,8 +1,8 @@
 import time
 import warnings
 
-import numpy as np
 import h5py
+import numpy as np
 
 from abr_analyze.paths import database_dir as abr_database_dir
 
@@ -35,13 +35,14 @@ class DataHandler:
         name of the database being used
     """
 
-    def __init__(self, db_name="abr_analyze", database_dir=None):
+    def __init__(self, db_name="abr_analyze", database_dir=None, raise_warnings=False):
+        self.raise_warnings = raise_warnings
         database_dir = database_dir if database_dir is not None else abr_database_dir
         self.db_loc = f"{database_dir}/{db_name}.h5"
 
         self.ERRORS = []
         self.db_loc = "%s/%s.h5" % (database_dir, db_name)
-        print('LOADING DATA FROM: ', self.db_loc)
+        # print('LOADING DATA FROM: ', self.db_loc)
         # Instantiate the database object with the provided path so that it
         # gets created if it does not yet exist
         db = h5py.File(self.db_loc, "a")
@@ -65,13 +66,42 @@ class DataHandler:
         try:
             if isinstance(data, tuple):
                 data = list(data)
-            db[save_loc].create_dataset(key, data=data)
+                db[save_loc].create_dataset(key, data=data)
+            elif isinstance(data, str):
+                dtype = h5py.special_dtype(vlen=str)
+                db[save_loc].create_dataset(key, data=data, dtype=dtype)
+                # NOTE if catching list of strings can use this
+                # data = [data]
+                # data_conv = []
+                # for i in range(10_000):
+                #     data_conv += data
+                # print(len(data_conv))
+                # longest_word=len(max(data_conv, key=len))
+                # print('longest_word=',longest_word)
+                #
+                # dtype = h5py.special_dtype(vlen=str)
+                #
+                # arr = np.array(data,dtype='S'+str(longest_word))
+                #
+                # db[save_loc].create_dataset(key, data=arr, dtype=dtype)
+            else:
+                db[save_loc].create_dataset(key, data=data)
         except TypeError as e:
             if isinstance(data, dict):
                 print(
                     "You can not pass in a list of dicts."
                     + " To save recursive dicts, they must be saved to a dictionary"
                 )
+            import pdb
+
+            from abr_control.utils import colors
+
+            print(f"\n\n\n{colors.red}Error raised on key: {key}{colors.endc}")
+            print(f"{colors.red}{key} has a value of: {data}{colors.endc}")
+            print(f"{colors.red}{key} has a type of: {type(data)}{colors.endc}")
+            print("Entering pdb for live debugging. Type <exit> to close")
+            print("NOTE: key is stored in <key> and value is stored in <data>")
+            pdb.set_trace()
             raise e
 
     def save(
@@ -80,8 +110,7 @@ class DataHandler:
         save_location,
         overwrite=False,
         create=True,
-        timestamp=True,
-        lookup_table=False,
+        timestamp=False,
     ):
         """
         Saves the data dict passed in to the save_location specified in the
@@ -132,7 +161,10 @@ class DataHandler:
                         db.create_group(save_loc)
 
                     self.save(
-                        save_location=save_loc, data=data[key], overwrite=overwrite
+                        save_location=save_loc,
+                        data=data[key],
+                        overwrite=overwrite,
+                        timestamp=timestamp,
                     )
                 else:
                     self._save(
@@ -145,7 +177,7 @@ class DataHandler:
 
         db.close()
 
-    def load(self, parameters, save_location):
+    def load(self, save_location, parameters=None, recursive=False):
         """
         Accepts a list of parameters and their path to where they are saved in
         the instantiated db, and returns a dictionary of the parameters and their
@@ -169,13 +201,43 @@ class DataHandler:
 
         # if group path does not exist, raise an exception to alert the user
         if exists is False:
-            raise ValueError("The path %s does not exist" % (save_location))
+            if self.raise_warnings:
+                warnings.warn("The path %s does not exist" % (save_location))
+            return None
+
+        if parameters is None:
+            parameters = self.get_keys(save_location, recursive=recursive)
 
         # otherwise load the keys
         db = h5py.File(self.db_loc, "a")
         saved_data = {}
         for key in parameters:
-            saved_data[key] = np.array(db.get("%s/%s" % (save_location, key)))
+            # saved_data[key] = np.array(db.get("%s/%s" % (save_location, key)))
+            tmp = db.get("%s/%s" % (save_location, key))
+            if not self.is_dataset(f"{save_location}/{key}"):
+                tmp = self.load(
+                    # parameters=self.get_keys(f"{save_location}/{key}"),
+                    save_location=f"{save_location}/{key}",
+                    recursive=recursive,
+                )
+            # TODO:
+            # if is a dataset, if recursive load is on then recursively get keys
+            # and append them to parameters. Can append to parameters in loop (tested)
+            # if self.is_dataset(f"{save_location}/{key}"):
+            #     parameters.append(self.get_keys("f{save_location}/{key}", recursive=True))
+            elif tmp.dtype == "bool":
+                tmp = bool(tmp)
+            elif tmp.dtype == "object":
+                tmp = tmp.asstr()[()]
+                if tmp == "None":
+                    tmp = None
+                # if not self.is_dataset(f"{save_location}/{key}"):
+                #     tmp = tmp.asstr()[()]
+                # else:
+                #     print(f'test failed looking for dataset type: {tmp}')
+            else:
+                tmp = np.array(tmp, dtype=tmp.dtype)
+            saved_data[key] = tmp
 
         db.close()
 
@@ -196,7 +258,8 @@ class DataHandler:
             db = h5py.File(self.db_loc, "a")
             del db[save_location]
         except KeyError:
-            warnings.warn("No entry for %s" % save_location)
+            if self.raise_warnings:
+                warnings.warn("No entry for %s" % save_location)
 
     def rename(self, old_save_location, new_save_location, delete_old=True):
         """
@@ -226,9 +289,14 @@ class DataHandler:
             ex: 'my_feature_test/sub_test_group/session000/run003'
         """
         db = h5py.File(self.db_loc, "a")
-        return isinstance(db[save_location], h5py.Dataset)
+        try:
+            result = isinstance(db[save_location], h5py.Dataset)
+        except KeyError as e:
+            # key doesn't exist, return False
+            result = False
+        return result
 
-    def get_keys(self, save_location):
+    def get_keys(self, save_location, recursive=False):
         """
         Takes a path to an hdf5 dataset in the instantiated database and
         returns the keys at that location
@@ -236,12 +304,44 @@ class DataHandler:
         save_location: string
             save_location of the group that you want the keys from
             ex: 'my_feature_test/sub_test_group/session000/run003'
+        recursive: bool, Optional (Default: False)
+            if True will search through the tree at save_location
+            and will return key/sub_key0/..../sub_keyn format keys
+            in a list.
+            if False will return base level key values in a list.
         """
         db = h5py.File(self.db_loc, "a")
+        if not self.check_group_exists(save_location, create=False):
+            return [None]
         if isinstance(db[save_location], h5py.Dataset):
             keys = [None]
         else:
             keys = list(db[save_location].keys())
+
+        if recursive:
+
+            def get_recursive(save_location, keys):
+                key_hierarchy = []
+                num_datasets = 0
+                for key in keys:
+                    # print('debug: ', key)
+                    # print(f'checking {save_location}/{key} to see if dataset')
+                    if not isinstance(db[f"{save_location}/{key}"], h5py.Dataset):
+                        # print(f"{key} is not a dataset")
+                        next_level_keys = list(db[f"{save_location}/{key}"].keys())
+                        # print(f"next level keys: {next_level_keys}")
+                        for subkey in next_level_keys:
+                            key_hierarchy.append(f"{key}/{subkey}")
+                        # key_hierarchy = get_recursive(save_location, key_hierarchy)
+                        num_datasets += 1
+                    else:
+                        key_hierarchy.append(f"{key}")
+                return key_hierarchy, num_datasets
+
+            num_datasets = 1
+            while num_datasets > 0:
+                keys, num_datasets = get_recursive(save_location, keys)
+
         db.close()
         return keys
 
@@ -249,7 +349,8 @@ class DataHandler:
         """
         Accepts a location in the instantiated database and returns a boolean
         whether it exists. Additionally, the boolean create can be passed in
-        that will create the group if it does not exist
+        that will create the group if it does not exist. Ignores date and
+        timestamp
 
         Parameters
         ----------

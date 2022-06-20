@@ -14,9 +14,9 @@ http://home.wlu.edu/~levys/software/kbhit.py
 http://code.activestate.com/recipes/572182-how-to-implement-kbhit-on-linux/
 """
 import atexit
-from select import select
 import sys
 import termios
+from select import select
 
 
 class KBHit:

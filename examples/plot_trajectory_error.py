@@ -1,13 +1,12 @@
-import numpy as np
 import matplotlib
+import numpy as np
 
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
-
-from abr_analyze.plotting import TrajectoryError
-from abr_analyze.paths import figures_dir
 from download_examples_db import check_exists as examples_db
 
+from abr_analyze.paths import figures_dir
+from abr_analyze.plotting import TrajectoryError
 
 examples_db()
 db_name = "abr_analyze_examples"
