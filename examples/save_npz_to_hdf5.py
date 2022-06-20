@@ -1,5 +1,5 @@
 import numpy as np
-
+from download_examples_db import check_exists as examples_db
 from abr_analyze.utils import npz_to_hdf5
 
 # TODO the name of the npz file you are sampling
