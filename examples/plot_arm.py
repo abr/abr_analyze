@@ -11,11 +11,11 @@ matplotlib.use("TkAgg")
 import os
 
 import matplotlib.pyplot as plt
+from abr_control.arms import jaco2
 from download_examples_db import check_exists as examples_db
 
 from abr_analyze.paths import figures_dir
 from abr_analyze.plotting import Draw3dData, DrawArm
-from abr_control.arms import jaco2
 
 examples_db()
 # the number of samples to interpolate our data to, set to None for no

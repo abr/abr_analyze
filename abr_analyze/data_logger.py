@@ -260,7 +260,9 @@ def find_experiments_that_match_constants(dat, saved_exp_hashes, const_params):
                     print(
                         f"{red}Got AttributeError on {param_key} who's value is:\n{data[param_key]}{endc}"
                     )
-                    print(f"{red}Or possibly from const params:\n{const_params[param_key]}{endc}")
+                    print(
+                        f"{red}Or possibly from const params:\n{const_params[param_key]}{endc}"
+                    )
                     raise e
             elif isinstance(data[param_key], dict):
                 raise NotImplementedError(
@@ -311,7 +313,9 @@ def get_common_experiments(
         saved_exp_hashes = find_experiments_that_match_constants(
             dat, saved_exp_hashes, const_params
         )
-        print(f"{green}{len(saved_exp_hashes)} experiments found with matching parameters{endc}")
+        print(
+            f"{green}{len(saved_exp_hashes)} experiments found with matching parameters{endc}"
+        )
         print(f"{green}{saved_exp_hashes}{endc}")
 
     # Get a dictionary of common values and a list of keys for differing values

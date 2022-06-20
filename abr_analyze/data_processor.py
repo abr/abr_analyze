@@ -209,7 +209,7 @@ def calc_cartesian_points(robot_config, q):
         The list of recorded joint angles used to transform link centers of
         mass and joint positions to cartesian coordinates
     """
-    assert robot_config is not None, 'robot_config must be provided'
+    assert robot_config is not None, "robot_config must be provided"
     if hasattr(robot_config, "xml_file"):
         mujoco_model = True
     else:
@@ -227,27 +227,27 @@ def calc_cartesian_points(robot_config, q):
         if not mujoco_model:
             # loop through the kinematic chain of joints
             for ii in range(0, robot_config.N_JOINTS):
-                joints_t_xyz.append(robot_config.Tx('joint%i'%ii, q=q_t))
-            joints_t_xyz.append(robot_config.Tx('EE', q=q_t))
+                joints_t_xyz.append(robot_config.Tx("joint%i" % ii, q=q_t))
+            joints_t_xyz.append(robot_config.Tx("EE", q=q_t))
 
             # loop through the kinematic chain of links
             for ii in range(0, robot_config.N_LINKS):
-                links_t_xyz.append(robot_config.Tx('link%i'%ii, q=q_t))
+                links_t_xyz.append(robot_config.Tx("link%i" % ii, q=q_t))
         else:
             # loop through the kinematic chain of joints
             for ii in range(0, robot_config.N_JOINTS):
-                joints_t_xyz.append(robot_config.Tx('joint%i'%ii, q=q_t, object_type="site"))
-            joints_t_xyz.append(robot_config.Tx('EE', q=q_t))
+                joints_t_xyz.append(
+                    robot_config.Tx("joint%i" % ii, q=q_t, object_type="site")
+                )
+            joints_t_xyz.append(robot_config.Tx("EE", q=q_t))
 
             # loop through the kinematic chain of links
-            for ii in range(0, robot_config.N_JOINTS+1):
+            for ii in range(0, robot_config.N_JOINTS + 1):
                 if ii == 0:
-                    name = 'base_link'
+                    name = "base_link"
                 else:
                     name = f"link{ii}"
                 links_t_xyz.append(robot_config.Tx(name, q=q_t))
-
-
 
         # append the cartesian coordinates of this time step to our list
         joints_xyz.append(joints_t_xyz)

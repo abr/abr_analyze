@@ -229,7 +229,7 @@ class DataHandler:
                 tmp = bool(tmp)
             elif tmp.dtype == "object":
                 tmp = tmp.asstr()[()]
-                if tmp == 'None':
+                if tmp == "None":
                     tmp = None
                 # if not self.is_dataset(f"{save_location}/{key}"):
                 #     tmp = tmp.asstr()[()]

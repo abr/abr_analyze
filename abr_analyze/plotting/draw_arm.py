@@ -40,7 +40,7 @@ class DrawArm(DrawData):
         linestyle=None,
         label=None,
         title=None,
-        show_ground_collision=True
+        show_ground_collision=True,
     ):
         """
         Plots the parameters from save_location on the ax object
@@ -88,11 +88,11 @@ class DrawArm(DrawData):
         # plot our arm figure
         vis.plot_arm(
             ax=ax,
-            joints_xyz=data['joints_xyz'][step],
-            links_xyz=data['links_xyz'][step],
-            ee_xyz=data['ee_xyz'][step],
+            joints_xyz=data["joints_xyz"][step],
+            links_xyz=data["links_xyz"][step],
+            ee_xyz=data["ee_xyz"][step],
             title=title,
-            show_ground_collision=show_ground_collision
+            show_ground_collision=show_ground_collision,
         )
 
         return ax, [self.xlimit, self.ylimit, self.zlimit]

@@ -1,7 +1,7 @@
+import nengo
 import numpy as np
 import pytest
 
-import nengo
 from abr_analyze.nengo_utils import network_utils
 
 

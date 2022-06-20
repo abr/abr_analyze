@@ -4,10 +4,10 @@ a gridspec grid
 """
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
+from abr_control.arms import jaco2
 from download_examples_db import check_exists as examples_db
 
 from abr_analyze.plotting import Draw2dData, Draw3dData, DrawArm, DrawCells
-from abr_control.arms import jaco2
 
 examples_db()
 # the number of samples to interpolate our data to, set to None for no

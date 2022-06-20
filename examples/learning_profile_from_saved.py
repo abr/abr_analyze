@@ -21,12 +21,12 @@ matplotlib.use("TkAgg")
 import os
 
 import matplotlib.pyplot as plt
+from abr_control.controllers import signals
 from download_examples_db import check_exists as examples_db
 
 from abr_analyze import DataHandler
 from abr_analyze.nengo import network_utils
 from abr_analyze.paths import cache_dir, figures_dir
-from abr_control.controllers import signals
 
 examples_db()
 dat = DataHandler("abr_analyze_examples")
