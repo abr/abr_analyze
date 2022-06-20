@@ -404,10 +404,11 @@ def load_results(
 
         name_params = dat.load(save_location=f"params/{match}", parameters=all_variable)
 
-        name = ""
+        name = "---------"
         for kk, key in enumerate(all_variable):
-            if kk > 0 and kk < len(all_variable):
-                name += " | "
+            # if kk > 0 and kk < len(all_variable):
+            #     # name += " | "
+            name += "\n"
             name += f"{key}={name_params[key]}"
 
         results[f"{match}"]["name"] = name
