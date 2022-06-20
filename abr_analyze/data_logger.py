@@ -175,7 +175,9 @@ def find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems
                     try:
                         # if (base_parameters[key] != new_parameters[key]).any():
                         #     differing_keys.append(key)
-                        if (
+                        if key not in new_parameters.keys():
+                            differing_keys.append(key)
+                        elif (
                             np.asarray(base_parameters[key]).shape
                             != np.asarray(new_parameters[key]).shape
                         ):
@@ -231,7 +233,7 @@ def find_experiments_that_match_constants(dat, saved_exp_hashes, const_params):
         Dictionary of parameter values used to find experiments that contain them
     """
     matches = []
-    print("EXP HASHES: ", saved_exp_hashes)
+    print(f"{blue}EXP HASHES: {saved_exp_hashes}{endc}")
     for exp_hash in saved_exp_hashes:
         data = dat.load(
             save_location=f"params/{exp_hash}", parameters=const_params.keys()
@@ -256,9 +258,9 @@ def find_experiments_that_match_constants(dat, saved_exp_hashes, const_params):
                         num_diff += 1
                 except AttributeError as e:
                     print(
-                        f"Got AttributeError on {param_key} who's value is:\n{data[param_key]}"
+                        f"{red}Got AttributeError on {param_key} who's value is:\n{data[param_key]}{endc}"
                     )
-                    print(f"Or possibly from const params:\n{const_params[param_key]}")
+                    print(f"{red}Or possibly from const params:\n{const_params[param_key]}{endc}")
                     raise e
             elif isinstance(data[param_key], dict):
                 raise NotImplementedError(
@@ -299,7 +301,7 @@ def get_common_experiments(
     if saved_exp_hashes is None:
         saved_exp_hashes = dat.get_keys(f"results/{script_name}")
         print(
-            f"{len(saved_exp_hashes)} experiments found with results from {script_name}"
+            f"{blue}{len(saved_exp_hashes)} experiments found with results from {script_name}{endc}"
         )
 
     if const_params is not None:
@@ -309,8 +311,8 @@ def get_common_experiments(
         saved_exp_hashes = find_experiments_that_match_constants(
             dat, saved_exp_hashes, const_params
         )
-        print(f"{len(saved_exp_hashes)} experiments found with matching parameters")
-        print(saved_exp_hashes)
+        print(f"{green}{len(saved_exp_hashes)} experiments found with matching parameters{endc}")
+        print(f"{green}{saved_exp_hashes}{endc}")
 
     # Get a dictionary of common values and a list of keys for differing values
     # to use in the auto legend
