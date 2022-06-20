@@ -35,7 +35,7 @@ draw_2d = Draw2dData(db_name=db_name, interpolated_samples=interpolated_samples)
 draw_3d = Draw3dData(db_name=db_name, interpolated_samples=interpolated_samples)
 
 # Instantiate our plot organizational module
-cells = DrawCells()
+cells = DrawCells(res=[720, 480], dpi=200)
 
 # layout our desired plotting grid
 outer_grid = gridspec.GridSpec(4, 4)

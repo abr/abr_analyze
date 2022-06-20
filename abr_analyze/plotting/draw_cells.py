@@ -15,7 +15,14 @@ from abr_analyze.plotting.make_gif import MakeGif
 
 
 class DrawCells:
-    def __init__(self, figsize=None, dpi=200):
+    def __init__(self, figsize=None, dpi=200, res=[1920, 1080]):
+        """
+        Parameters
+        ----------
+            res: list of two floats
+                resolution of final gif
+        """
+        self.res = res
         self.data = {"cell_ids": []}
         self.animate_steps = 1
 
@@ -238,5 +245,5 @@ class DrawCells:
                 save_loc="%s" % figures_dir,
                 save_name=save_name,
                 delay=5,
-                res=[1920, 1080],
+                res=self.res,
             )

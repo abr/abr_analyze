@@ -49,7 +49,7 @@ for ii in range(1, interpolated_samples):
     ax.set_xlim3d(-0.5, 0.5)
     ax.set_ylim3d(-0.5, 0.5)
     ax.set_zlim3d(0, 1)
-    ax.set_aspect(1)
+    ax.set_aspect('auto')
 
     draw_3d.plot(
         ax=ax,
@@ -88,5 +88,5 @@ for ii in range(1, interpolated_samples):
 
 save_loc = "%s" % (figures_dir)
 gif.create(
-    fig_loc=fig_cache, save_loc=save_loc, save_name="gif_arm", delay=5, res=[1920, 1080]
+    fig_loc=fig_cache, save_loc=save_loc, save_name="gif_arm", delay=5, res=[720, 480]
 )

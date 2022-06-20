@@ -2,7 +2,6 @@ import numpy as np
 
 from abr_analyze.utils import npz_to_hdf5
 
-examples_db()
 a = np.ones(11)
 b = np.zeros(4)
 save_name = "test.npz"
