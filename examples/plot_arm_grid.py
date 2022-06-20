@@ -7,12 +7,12 @@ import os
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
+from abr_control.arms import jaco2
 from download_examples_db import check_exists as examples_db
 from mpl_toolkits.mplot3d import Axes3D
 
 from abr_analyze.paths import figures_dir
 from abr_analyze.plotting import Draw3dData, DrawArm, DrawCells
-from abr_control.arms import jaco2
 
 examples_db()
 interpolated_samples = 100

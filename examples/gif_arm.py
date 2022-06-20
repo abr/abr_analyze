@@ -11,12 +11,12 @@ matplotlib.use("TkAgg")
 import os
 
 import matplotlib.pyplot as plt
+from abr_control.arms import jaco2
 from download_examples_db import check_exists as examples_db
 from mpl_toolkits.mplot3d import Axes3D
 
 from abr_analyze.paths import figures_dir
 from abr_analyze.plotting import Draw3dData, DrawArm, MakeGif
-from abr_control.arms import jaco2
 
 examples_db()
 gif = MakeGif()
@@ -49,7 +49,7 @@ for ii in range(1, interpolated_samples):
     ax.set_xlim3d(-0.5, 0.5)
     ax.set_ylim3d(-0.5, 0.5)
     ax.set_zlim3d(0, 1)
-    ax.set_aspect('auto')
+    ax.set_aspect("auto")
 
     draw_3d.plot(
         ax=ax,

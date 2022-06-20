@@ -18,9 +18,8 @@ intercepts to later view in the intercept_scan_viewer.py gui
 import warnings
 
 import matplotlib.pyplot as plt
-import numpy as np
-
 import nengo
+import numpy as np
 from abr_control._vendor.nengolib.stats import ScatteredHypersphere
 from nengo.utils.matplotlib import rasterplot
 

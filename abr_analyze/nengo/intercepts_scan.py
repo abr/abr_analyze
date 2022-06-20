@@ -8,12 +8,12 @@ intercept_scan_viewer.py gui
 import timeit
 
 import matplotlib.pyplot as plt
+import nengo
 import numpy as np
+from abr_control.controllers import signals
 
 import abr_analyze.nengo.network_utils as network_utils
-import nengo
 from abr_analyze.data_handler import DataHandler
-from abr_control.controllers import signals
 
 
 def run(
