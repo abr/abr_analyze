@@ -161,6 +161,9 @@ def load_and_process(db_name, save_location, parameters, interpolated_samples=No
     dat = DataHandler(db_name=db_name)
     data = dat.load(parameters=parameters, save_location=save_location)
 
+    # print(f"{db_name=}")
+    # print(f"{parameters=}")
+    # print(f"{save_location=}")
     # If time is not passed in, create a range from 0 to the length of any
     # other parameter in the list that is not time. This assumes that any
     # data passed in at once will be of the same length
@@ -206,7 +209,11 @@ def calc_cartesian_points(robot_config, q):
         The list of recorded joint angles used to transform link centers of
         mass and joint positions to cartesian coordinates
     """
-    assert robot_config is not None, "robot_config must be provided"
+    assert robot_config is not None, 'robot_config must be provided'
+    if hasattr(robot_config, "xml_file"):
+        mujoco_model = True
+    else:
+        mujoco_model = False
 
     joints_xyz = []
     links_xyz = []
@@ -217,14 +224,30 @@ def calc_cartesian_points(robot_config, q):
         joints_t_xyz = []
         links_t_xyz = []
 
-        # loop through the kinematic chain of joints
-        for ii in range(0, robot_config.N_JOINTS):
-            joints_t_xyz.append(robot_config.Tx("joint%i" % ii, q=q_t, object_type="joint"))
-        joints_t_xyz.append(robot_config.Tx("EE", q=q_t))
+        if not mujoco_model:
+            # loop through the kinematic chain of joints
+            for ii in range(0, robot_config.N_JOINTS):
+                joints_t_xyz.append(robot_config.Tx('joint%i'%ii, q=q_t))
+            joints_t_xyz.append(robot_config.Tx('EE', q=q_t))
 
-        # loop through the kinematic chain of links
-        for ii in range(0, 7):
-            links_t_xyz.append(robot_config.Tx("link%i" % ii, q=q_t, object_type="geom"))
+            # loop through the kinematic chain of links
+            for ii in range(0, robot_config.N_LINKS):
+                links_t_xyz.append(robot_config.Tx('link%i'%ii, q=q_t))
+        else:
+            # loop through the kinematic chain of joints
+            for ii in range(0, robot_config.N_JOINTS):
+                joints_t_xyz.append(robot_config.Tx('joint%i'%ii, q=q_t, object_type="site"))
+            joints_t_xyz.append(robot_config.Tx('EE', q=q_t))
+
+            # loop through the kinematic chain of links
+            for ii in range(0, robot_config.N_JOINTS+1):
+                if ii == 0:
+                    name = 'base_link'
+                else:
+                    name = f"link{ii}"
+                links_t_xyz.append(robot_config.Tx(name, q=q_t))
+
+
 
         # append the cartesian coordinates of this time step to our list
         joints_xyz.append(joints_t_xyz)
