@@ -1,6 +1,6 @@
 import os
 
-from . import nengo, plotting, utils
+from . import utils
 from .data_handler import DataHandler
 from .version import version as __version__
 
