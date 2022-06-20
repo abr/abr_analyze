@@ -30,6 +30,7 @@ install_requires = [
     "matplotlib>=3.0.0",
     "scipy>=1.1.0",
     "nengo>=2.8.0",
+    "seaborn>=0.11.2",
 ]
 
 tests_require = [
