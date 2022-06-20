@@ -32,9 +32,7 @@ def convert(npz_loc, db_name, save_location, overwrite=False):
     keys = npz.keys()
     new_data = {}
     for key in keys:
-        # print(key)
         new_data[key] = npz[key]
     dat.save(data=new_data, save_location=save_location, overwrite=overwrite)
     keys = dat.get_keys(save_location)
-    data = dat.load(keys, save_location)
-    # print(data)
+    data = dat.load(parameters=keys, save_location=save_location)
