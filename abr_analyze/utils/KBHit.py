@@ -18,6 +18,7 @@ from select import select
 import sys
 import termios
 
+
 class KBHit:
     def __init__(self):
         # Save the terminal settings
@@ -26,24 +27,21 @@ class KBHit:
         self.old_term = termios.tcgetattr(self.fd)
 
         # New terminal setting unbuffered
-        self.new_term[3] = (self.new_term[3] & ~termios.ICANON & ~termios.ECHO)
+        self.new_term[3] = self.new_term[3] & ~termios.ICANON & ~termios.ECHO
         termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.new_term)
 
         # Support normal-terminal reset at exit
         atexit.register(self.set_normal_term)
 
     def set_normal_term(self):
-        """ Resets to normal terminal.
-        """
+        """Resets to normal terminal."""
         termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.old_term)
 
     def getch(self):
-        """ Returns a keyboard character after kbhit() has been called.
-        """
+        """Returns a keyboard character after kbhit() has been called."""
         return sys.stdin.read(1)
 
     def kbhit(self):
-        """ Returns True if keyboard character was hit, False otherwise.
-        """
+        """Returns True if keyboard character was hit, False otherwise."""
         dr, _, _ = select([sys.stdin], [], [], 0)
         return dr != []

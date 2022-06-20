@@ -4,10 +4,10 @@ import warnings
 import numpy as np
 import h5py
 
-from abr_analyze.paths import database_dir
+from abr_analyze.paths import database_dir as abr_database_dir
 
 
-class DataHandler():
+class DataHandler:
     """
     Data handler for saving and loading data
 
@@ -35,18 +35,54 @@ class DataHandler():
         name of the database being used
     """
 
-    def __init__(self, db_name='abr_analyze'):
+    def __init__(self, db_name="abr_analyze", database_dir=None):
+        database_dir = database_dir if database_dir is not None else abr_database_dir
+        self.db_loc = f"{database_dir}/{db_name}.h5"
+
         self.ERRORS = []
-        self.db_loc = '%s/%s.h5'%(database_dir, db_name)
+        self.db_loc = "%s/%s.h5" % (database_dir, db_name)
+        print('LOADING DATA FROM: ', self.db_loc)
         # Instantiate the database object with the provided path so that it
         # gets created if it does not yet exist
-        db = h5py.File(self.db_loc, 'a')
+        db = h5py.File(self.db_loc, "a")
         # close the database after each function
         db.close()
 
+    def _save(self, db, save_loc, data, key, overwrite):
+        loc_and_key = "%s/%s" % (save_loc, key)
+        if self.check_group_exists(loc_and_key):
+            if overwrite:
+                # if dataset already exists, then overwrite data
+                del db[loc_and_key]
+            else:
+                raise Exception(
+                    "Dataset %s already exists in %s" % (key, save_loc)
+                    + ": set overwrite=True to overwrite"
+                )
 
-    def save(self, data, save_location, overwrite=False, create=True,
-             timestamp=True):
+        if data is None:
+            data = "None"
+        try:
+            if isinstance(data, tuple):
+                data = list(data)
+            db[save_loc].create_dataset(key, data=data)
+        except TypeError as e:
+            if isinstance(data, dict):
+                print(
+                    "You can not pass in a list of dicts."
+                    + " To save recursive dicts, they must be saved to a dictionary"
+                )
+            raise e
+
+    def save(
+        self,
+        data,
+        save_location,
+        overwrite=False,
+        create=True,
+        timestamp=True,
+        lookup_table=False,
+    ):
         """
         Saves the data dict passed in to the save_location specified in the
         instantiated database
@@ -76,48 +112,38 @@ class DataHandler():
         """
 
         if not isinstance(data, dict):
-            raise TypeError('ERROR: data must be a dict, received ',
-                            type(data))
+            raise TypeError("ERROR: data must be a dict, received ", type(data))
 
-        db = h5py.File(self.db_loc, 'a')
+        db = h5py.File(self.db_loc, "a")
         if not self.check_group_exists(save_location):
             db.create_group(save_location)
 
         if timestamp:
-            data['timestamp'] = time.strftime("%H:%M:%S")
-            data['datestamp'] = time.strftime("%Y/%m/%d")
+            data["timestamp"] = time.strftime("%H:%M:%S")
+            data["datestamp"] = time.strftime("%Y/%m/%d")
 
         for key in data:
             if key is not None:
-                if data[key] is None:
-                    data[key] = 'None'
-                try:
-                    try:
-                        db[save_location].create_dataset(
-                            '%s' % key, data=data[key])
 
-                    except RuntimeError as e:
-                        if overwrite:
-                            # if dataset already exists, then overwrite data
-                            del db[save_location+'/%s'%key]
-                            db[save_location].create_dataset(
-                                '%s' % key, data=data[key])
-                        else:
-                            print(e)
-                            raise Exception(
-                                'Dataset %s already exists in %s' %
-                                (save_location, key) +
-                                ': set overwrite=True to overwrite')
-                except TypeError as type_error:
-                    print('\n\n*****WARNING: SOME DATA DID NOT SAVE*****')
-                    print('Trying to save %s to %s' % (key, save_location))
-                    print('Received error: %s' %type_error)
-                    print('NOTE: HDF5 has no None type and this dataHandler'
-                          + ' currently has no test for None entries')
-                    print('\n\n')
+                if isinstance(data[key], dict):
+                    save_loc = "%s/%s" % (save_location, key)
+
+                    if not self.check_group_exists(save_loc):
+                        db.create_group(save_loc)
+
+                    self.save(
+                        save_location=save_loc, data=data[key], overwrite=overwrite
+                    )
+                else:
+                    self._save(
+                        db=db,
+                        save_loc=save_location,
+                        data=data[key],
+                        key=key,
+                        overwrite=overwrite,
+                    )
 
         db.close()
-
 
     def load(self, parameters, save_location):
         """
@@ -137,44 +163,43 @@ class DataHandler():
             EX: 'test_group/test_name/session_num/run_num'
         """
         # check if the group exists
+        # print('CHECKING IF GROUP %s EXISTS AT %s' % (parameters, save_location))
+        # print('IN DB LOC: ', self.db_loc)
         exists = self.check_group_exists(location=save_location, create=False)
 
         # if group path does not exist, raise an exception to alert the user
         if exists is False:
-            raise ValueError('The path %s does not exist'%(save_location))
+            raise ValueError("The path %s does not exist" % (save_location))
 
         # otherwise load the keys
-        db = h5py.File(self.db_loc, 'a')
+        db = h5py.File(self.db_loc, "a")
         saved_data = {}
         for key in parameters:
-            saved_data[key] = np.array(
-                db.get('%s/%s' % (save_location, key)))
+            saved_data[key] = np.array(db.get("%s/%s" % (save_location, key)))
 
         db.close()
 
         return saved_data
 
-
     def delete(self, save_location):
-        '''
+        """
         Deletes save_location and all contents from instantiated database
 
         PARAMETERS
         ----------
         save_location: string
             location in the instantiated database to delete
-        '''
-        #TODO: incoprorate KBHit to get user to verify deleting location and
+        """
+        # TODO: incoprorate KBHit to get user to verify deleting location and
         # print the keys so they are aware of what will be deleted
         try:
-            db = h5py.File(self.db_loc, 'a')
+            db = h5py.File(self.db_loc, "a")
             del db[save_location]
         except KeyError:
-            warnings.warn('No entry for %s' % save_location)
-
+            warnings.warn("No entry for %s" % save_location)
 
     def rename(self, old_save_location, new_save_location, delete_old=True):
-        '''
+        """
         Renames a group of dataset
 
         PARAMETERS
@@ -186,12 +211,22 @@ class DataHandler():
         delete_old: Boolean, Optional(Default:True)
             True to delete old_save_location after renaming
             False to keep both the old and new save_locations
-        '''
-        db = h5py.File(self.db_loc, 'a')
+        """
+        db = h5py.File(self.db_loc, "a")
         db[new_save_location] = db[old_save_location]
         if delete_old:
             del db[old_save_location]
 
+    def is_dataset(self, save_location):
+        """
+        Returns true if dataset, False if folder
+
+        save_location: string
+            save_location of the group that you want the keys from
+            ex: 'my_feature_test/sub_test_group/session000/run003'
+        """
+        db = h5py.File(self.db_loc, "a")
+        return isinstance(db[save_location], h5py.Dataset)
 
     def get_keys(self, save_location):
         """
@@ -202,14 +237,13 @@ class DataHandler():
             save_location of the group that you want the keys from
             ex: 'my_feature_test/sub_test_group/session000/run003'
         """
-        db = h5py.File(self.db_loc, 'a')
+        db = h5py.File(self.db_loc, "a")
         if isinstance(db[save_location], h5py.Dataset):
             keys = [None]
         else:
             keys = list(db[save_location].keys())
         db.close()
         return keys
-
 
     def check_group_exists(self, location, create=False):
         """
@@ -225,8 +259,8 @@ class DataHandler():
             true: create group if it does not exist
             false: do not create group if it does not exist
         """
-        #TODO: should we add check if location is a dataset?
-        db = h5py.File(self.db_loc, 'a')
+        # TODO: should we add check if location is a dataset?
+        db = h5py.File(self.db_loc, "a")
         exists = location in db
 
         if exists is False:
@@ -239,19 +273,23 @@ class DataHandler():
 
         return exists
 
-
-    #TODO: make this function
+    # TODO: make this function
     def sample_data(self):
-        '''
+        """
         saves every nth data value to save on storage space
-        '''
-        raise Exception('This function is currently not supported')
+        """
+        raise Exception("This function is currently not supported")
 
-
-    #NOTE: these are very control specific, should they be subclassed?
-    #TODO: the following functions can probably be cleaned up and shortened
-    def last_save_location(self, session=None, run=None, test_name='test',
-                           test_group='test_group', create=True):
+    # NOTE: these are very control specific, should they be subclassed?
+    # TODO: the following functions can probably be cleaned up and shortened
+    def last_save_location(
+        self,
+        session=None,
+        run=None,
+        test_name="test",
+        test_group="test_group",
+        create=True,
+    ):
         """
         Following the naming structure of save_name/session(int)/run(int) for
         groups, the highest numbered run and session are returned (if not
@@ -296,17 +334,18 @@ class DataHandler():
             whether to create the group passed in if it does not exist
         """
 
-        self.db = h5py.File(self.db_loc, 'a')
+        self.db = h5py.File(self.db_loc, "a")
 
         # first check whether the test passed in exists
         exists = self.check_group_exists(
-            location='%s/%s/' % (test_group, test_name), create=create)
+            location="%s/%s/" % (test_group, test_name), create=create
+        )
 
         # if the test does not exist, return None
         if exists is False:
             run = None
             session = None
-            location = '%s/%s/'%(test_group, test_name)
+            location = "%s/%s/" % (test_group, test_name)
             self.db.close()
             return [run, session, location]
 
@@ -315,16 +354,16 @@ class DataHandler():
             # check if the provided session exists before continuing, create it
             # if it does not and create is set to True
             exists = self.check_group_exists(
-                location=(
-                    '%s/%s/session%03d/' % (test_group, test_name, session)),
-                create=create)
+                location=("%s/%s/session%03d/" % (test_group, test_name, session)),
+                create=create,
+            )
             # if exists, use the value
             if exists:
-                session = 'session%03d' %session
+                session = "session%03d" % session
             else:
                 run = None
                 session = None
-                location = '%s/%s/' % (test_group, test_name)
+                location = "%s/%s/" % (test_group, test_name)
                 self.db.close()
                 return [run, session, location]
 
@@ -332,22 +371,20 @@ class DataHandler():
         # numbered session is
         elif session is None:
             # get all of the session keys
-            session_keys = list(
-                self.db['%s/%s' % (test_group, test_name)].keys())
+            session_keys = list(self.db["%s/%s" % (test_group, test_name)].keys())
 
             if session_keys:
                 session = max(session_keys)
 
             elif create:
                 # No session can be found, create it if create is True
-                self.db.create_group('%s/%s/session000' %
-                                     (test_group, test_name))
-                session = 'session000'
+                self.db.create_group("%s/%s/session000" % (test_group, test_name))
+                session = "session000"
 
             else:
                 run = None
                 session = None
-                location = '%s/%s/' % (test_group, test_name)
+                location = "%s/%s/" % (test_group, test_name)
                 self.db.close()
                 return [run, session, location]
 
@@ -355,15 +392,15 @@ class DataHandler():
             # check if the provided run exists before continuing, create it
             # if it does not and create is set to True
             exists = self.check_group_exists(
-                location='%s/%s/%s/run%03d' % (
-                    test_group, test_name, session, run),
-                create=create)
+                location="%s/%s/%s/run%03d" % (test_group, test_name, session, run),
+                create=create,
+            )
             # if exists, use the value
             if exists:
-                run = 'run%03d' % run
+                run = "run%03d" % run
             else:
                 run = None
-                location = '%s/%s/' % (test_group, test_name)
+                location = "%s/%s/" % (test_group, test_name)
                 self.db.close()
                 return [run, session, location]
 
@@ -372,8 +409,9 @@ class DataHandler():
         # a specific run
         elif run is None:
             # get all of the run keys
-            run_keys = list(self.db['%s/%s/%s' %
-                                    (test_group, test_name, session)].keys())
+            run_keys = list(
+                self.db["%s/%s/%s" % (test_group, test_name, session)].keys()
+            )
 
             if run_keys:
                 run = max(run_keys)
@@ -381,30 +419,37 @@ class DataHandler():
             else:
                 run = None
 
-        location = '%s/%s/' % (test_group, test_name)
+        location = "%s/%s/" % (test_group, test_name)
         if session is not None:
             session = int(session[7:])
-            location += 'session%03d/' % session
+            location += "session%03d/" % session
         else:
-            location += '%s/' % session
+            location += "%s/" % session
         if run is not None:
             run = int(run[3:])
-            location += 'run%03d' % run
+            location += "run%03d" % run
         else:
-            location += '%s/' % run
+            location += "%s/" % run
 
         self.db.close()
         return [run, session, location]
 
-
-    def save_run_data(self, tracked_data, session=None, run=None,
-                      test_name='test', test_group='test_group',
-                      overwrite=False, create=True, timestamp=True):
-        #TODO: currently module does not check whether a lower run or session
+    def save_run_data(
+        self,
+        tracked_data,
+        session=None,
+        run=None,
+        test_name="test",
+        test_group="test_group",
+        overwrite=False,
+        create=True,
+        timestamp=True,
+    ):
+        # TODO: currently module does not check whether a lower run or session
         # exists if the user provides a number for either parameter, could lead
         # to a case where user provides run to save as 6, but runs 0-5 do not
         # exist, is it worth adding a check for this?
-        """ Saves data collected from test trials with
+        """Saves data collected from test trials with
         standard naming convention.
 
         Uses the naming structure of a session being made up of several runs.
@@ -445,29 +490,45 @@ class DataHandler():
         """
 
         if run is not None:
-            run = 'run%03d' % run
+            run = "run%03d" % run
         if session is not None:
-            session = 'session%03d' % session
+            session = "session%03d" % session
         if session is None or run is None:
             # user did not specify either run or session so we will grab the
             # last entry in the test_name directory based off the highest
             # numbered session and/or run
             [run, session, _] = self.last_save_location(
-                session=session, run=run, test_name=test_name,
-                test_group=test_group, create=create)
+                session=session,
+                run=run,
+                test_name=test_name,
+                test_group=test_group,
+                create=create,
+            )
 
             # if no previous run saved, start saving in run0
             if run is None:
-                run = 'run000'
+                run = "run000"
 
-        group_path = '%s/%s/%s/%s' % (test_group, test_name, session, run)
+        group_path = "%s/%s/%s/%s" % (test_group, test_name, session, run)
 
         # save the data
-        self.save(data=tracked_data, save_location=group_path,
-                  overwrite=overwrite, create=create, timestamp=timestamp)
+        self.save(
+            data=tracked_data,
+            save_location=group_path,
+            overwrite=overwrite,
+            create=create,
+            timestamp=timestamp,
+        )
 
-    def load_run_data(self, parameters, session=None, run=None,
-                      test_name='test', test_group='test_group', create=False):
+    def load_run_data(
+        self,
+        parameters,
+        session=None,
+        run=None,
+        test_name="test",
+        test_group="test_group",
+        create=False,
+    ):
         """
         Loads the data listed in parameters from the group provided
 
@@ -502,18 +563,21 @@ class DataHandler():
         # test_group/test_name location
         if session is None or run is None:
             [run, session, group_path] = self.last_save_location(
-                session=session, run=run, test_name=test_name,
-                test_group=test_group, create=create)
+                session=session,
+                run=run,
+                test_name=test_name,
+                test_group=test_group,
+                create=create,
+            )
         else:
-            session = 'session%03d' % session
-            run = 'run%03d' % run
+            session = "session%03d" % session
+            run = "run%03d" % run
 
         if run is None:
             saved_data = None
         else:
-            group_path = '%s/%s/%s/%s' % (test_group, test_name, session, run)
+            group_path = "%s/%s/%s/%s" % (test_group, test_name, session, run)
 
-            saved_data = self.load(parameters=parameters,
-                                   save_location=group_path)
+            saved_data = self.load(parameters=parameters, save_location=group_path)
 
         return saved_data

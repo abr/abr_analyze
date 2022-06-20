@@ -17,9 +17,10 @@ from abr_analyze.data_handler import DataHandler
 import abr_analyze.data_processor as proc
 import abr_analyze.data_visualizer as vis
 
-class TrajectoryError():
+
+class TrajectoryError:
     def __init__(self, db_name, time_derivative=0, interpolated_samples=100):
-        '''
+        """
         PARAMETERS
         ----------
         db_name: string
@@ -33,16 +34,17 @@ class TrajectoryError():
             1: velocity
             2: acceleration
             3: jerk
-        '''
+        """
         # instantiate our data processor
         self.dat = DataHandler(db_name)
         self.db_name = db_name
         self.time_derivative = time_derivative
         self.interpolated_samples = interpolated_samples
 
-    def statistical_error(self, save_location, ideal=None, sessions=1, runs=1,
-                          save_data=True, regen=False):
-        '''
+    def statistical_error(
+        self, save_location, ideal=None, sessions=1, runs=1, save_data=True, regen=False
+    ):
+        """
         calls the calculate error function to get the trajectory for all runs
         and sessions specified at the save location and calculates the mean
         error and confidence intervals
@@ -65,20 +67,30 @@ class TrajectoryError():
         regen: boolean, Optional (Default: False)
             True to regenerate data
             False to load data if it exists
-        '''
+        """
         if regen is False:
             exists = self.dat.check_group_exists(
-                '%s/statistical_error_%s'%(save_location, self.time_derivative))
+                "%s/statistical_error_%s" % (save_location, self.time_derivative)
+            )
             if exists:
                 ci_errors = self.dat.load(
-                    parameters=['mean', 'upper_bound', 'lower_bound', 'ee_xyz',
-                                'ideal_trajectory', 'time', 'time_derivative',
-                                'read_location', 'error'],
-                    save_location='%s/statistical_error_%i' % (
-                        save_location, self.time_derivative))
+                    parameters=[
+                        "mean",
+                        "upper_bound",
+                        "lower_bound",
+                        "ee_xyz",
+                        "ideal_trajectory",
+                        "time",
+                        "time_derivative",
+                        "read_location",
+                        "error",
+                    ],
+                    save_location="%s/statistical_error_%i"
+                    % (save_location, self.time_derivative),
+                )
 
                 # still using as boolean, just a python cheatcode
-                exists = len(ci_errors['mean'])
+                exists = len(ci_errors["mean"])
         else:
             exists = False
 
@@ -87,29 +99,31 @@ class TrajectoryError():
             for session in range(sessions):
                 session_error = []
                 for run in range(runs):
-                    print('%.3f processing complete...' %
-                          (100*((run+1)+(session*runs)) / (sessions*runs)),
-                          end='\r')
-                    loc = ('%s/session%03d/run%03d'
-                           % (save_location, session, run))
+                    print(
+                        "%.3f processing complete..."
+                        % (100 * ((run + 1) + (session * runs)) / (sessions * runs)),
+                        end="\r",
+                    )
+                    loc = "%s/session%03d/run%03d" % (save_location, session, run)
                     data = self.calculate_error(save_location=loc, ideal=ideal)
-                    session_error.append(np.sum(data['error']))
+                    session_error.append(np.sum(data["error"]))
                 errors.append(session_error)
 
             ci_errors = proc.get_mean_and_ci(raw_data=errors)
-            ci_errors['time_derivative'] = self.time_derivative
+            ci_errors["time_derivative"] = self.time_derivative
 
             if save_data:
                 self.dat.save(
                     data=ci_errors,
-                    save_location='%s/statistical_error_%i' % (
-                        save_location, self.time_derivative),
-                    overwrite=True)
+                    save_location="%s/statistical_error_%i"
+                    % (save_location, self.time_derivative),
+                    overwrite=True,
+                )
 
         return ci_errors
 
     def calculate_error(self, save_location, ideal=None):
-        '''
+        """
         loads the ee_xyz data from save_location and compares it to ideal. If
         ideal is not passed in, it is assuemed that a filtered path planner is
         saved in save_location under the key 'ideal_trajectory' and will be
@@ -136,26 +150,27 @@ class TrajectoryError():
             relative to
             None: use the saved filter data at save_location
             if string: key of Nx3 data in database to use
-        '''
+        """
         if ideal is None:
-            ideal = 'ideal_trajectory'
-        parameters = ['ee_xyz', 'time', ideal]
+            ideal = "ideal_trajectory"
+        parameters = ["ee_xyz", "time", ideal]
 
         # load and interpolate data
         data = proc.load_and_process(
             db_name=self.db_name,
             save_location=save_location,
             parameters=parameters,
-            interpolated_samples=self.interpolated_samples)
+            interpolated_samples=self.interpolated_samples,
+        )
 
-        if ideal == 'ideal_trajectory':
-            data['ideal_trajectory'] = data['ideal_trajectory'][:, :3]
-        dt = np.sum(data['time']) / len(data['time'])
+        if ideal == "ideal_trajectory":
+            data["ideal_trajectory"] = data["ideal_trajectory"][:, :3]
+        dt = np.sum(data["time"]) / len(data["time"])
 
         # integrate data
         if self.time_derivative > 0:
             # set our keys that are able to be differentiated to avoid errors
-            differentiable_keys = ['ee_xyz', 'ideal_trajectory']
+            differentiable_keys = ["ee_xyz", "ideal_trajectory"]
             if ideal is not None:
                 differentiable_keys.append(ideal)
 
@@ -168,19 +183,46 @@ class TrajectoryError():
                         data[key][:, 1] = np.gradient(data[key][:, 1], dt)
                         data[key][:, 2] = np.gradient(data[key][:, 2], dt)
 
-        data['time_derivative'] = self.time_derivative
-        data['read_location'] = save_location
-        data['error'] = np.linalg.norm((data['ee_xyz'] - data[ideal]), axis=1)
+        data["time_derivative"] = self.time_derivative
+        data["read_location"] = save_location
+        data["error"] = np.linalg.norm((data["ee_xyz"] - data[ideal][:, :3]), axis=1)
 
         return data
 
-    def plot(self, ax, save_location, step=-1, c=None, linestyle='--',
-             label=None, loc=1, title='Trajectory Error to Path Planner'):
+    def plot(
+        self,
+        ax,
+        save_location,
+        step=-1,
+        c=None,
+        linestyle="--",
+        label=None,
+        loc=1,
+        title="Trajectory Error to Path Planner",
+        subtract=None,
+        divide=None,
+    ):
 
         data = self.dat.load(
-            parameters=['mean', 'upper_bound', 'lower_bound'],
-            save_location='%s/statistical_error_%i'%(
-                save_location, self.time_derivative))
+            parameters=["mean", "upper_bound", "lower_bound"],
+            save_location="%s/statistical_error_%i"
+            % (save_location, self.time_derivative),
+        )
+        if subtract is not None:
+            data["mean"] = data["mean"] - subtract
+            data["upper_bound"] = data["upper_bound"] - subtract
+            data["lower_bound"] = data["lower_bound"] - subtract
+        if divide is not None:
+            data["mean"] = data["mean"] / divide
+            data["upper_bound"] = data["upper_bound"] / divide
+            data["lower_bound"] = data["lower_bound"] / divide
+
         vis.plot_mean_and_ci(
-            ax=ax, data=data, c=c, linestyle=linestyle,
-            label=label, loc=loc, title=title)
+            ax=ax,
+            data=data,
+            c=c,
+            linestyle=linestyle,
+            label=label,
+            loc=loc,
+            title=title,
+        )

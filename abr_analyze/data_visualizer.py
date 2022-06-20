@@ -10,8 +10,16 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
 
-def plot_arm(ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
-             joint_color='k', arm_color='k', title=None):
+def plot_arm(
+    ax,
+    joints_xyz,
+    links_xyz,
+    ee_xyz,
+    link_color="y",
+    joint_color="k",
+    arm_color="k",
+    title=None,
+):
     """
     Accepts joint, end-effector, and link COM cartesian locations, and an
     ax object, returns a stick arm with points at the joints and link COM's
@@ -38,8 +46,9 @@ def plot_arm(ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
 
     if isinstance(ax, list):
         if len(ax) > 1:
-            raise Exception("multi axis plotting is currently not available"
-                            +" for 3d plots")
+            raise Exception(
+                "multi axis plotting is currently not available" + " for 3d plots"
+            )
         ax = ax[0]
 
     for xyz in joints_xyz:
@@ -63,8 +72,8 @@ def plot_arm(ax, joints_xyz, links_xyz, ee_xyz, link_color='y',
 
     return ax
 
-def plot_2d_data(ax, y, x=None, c='r', linestyle='-', label=None,
-                 loc=1, title=None):
+
+def plot_2d_data(ax, y, x=None, c="r", linestyle="-", label=None, loc=1, title=None):
     """
     Accepts a list of data to plot onto a 2d ax and returns the ax object
 
@@ -87,8 +96,8 @@ def plot_2d_data(ax, y, x=None, c='r', linestyle='-', label=None,
     loc: int, Optional (Default: 1)
         the legend location
     """
-    #TODO: should c and linestyle be accepted as lists?
-    #TODO: check if x and y are supposed to be lists or arrays
+    # TODO: should c and linestyle be accepted as lists?
+    # TODO: check if x and y are supposed to be lists or arrays
     # turn the ax object into a list if it is not already one
     ax = make_list(ax)
     # if we received one ax object, plot everything on it
@@ -104,15 +113,20 @@ def plot_2d_data(ax, y, x=None, c='r', linestyle='-', label=None,
             ax.set_title(title)
     # if a list of ax objects is passed in, plot each dimension onto its
     # own ax
-    #TODO: need to check that ax and y dims match
+    # TODO: need to check that ax and y dims match
     else:
         if label is None:
-            label = ''
+            label = ""
         for ii, a in enumerate(ax):
             if x is None:
-                a.plot(y[:, ii], label='%s %i'%(label, ii))
+                if y.ndim > 2:
+                    a.plot(y[:, ii], label="%s %i" % (label, ii))
+                else:
+                    a.plot(y, label="%s %i" % (label, ii))
+            elif y.ndim > 1:
+                a.plot(x, y[:, ii], label="%s %i" % (label, ii))
             else:
-                a.plot(x, y[:, ii], label='%s %i'%(label, ii))
+                a.plot(x, y[ii], label="%s %i" % (label, ii))
             a.legend(loc=loc)
         if title is not None:
             ax[0].set_title(title)
@@ -120,8 +134,16 @@ def plot_2d_data(ax, y, x=None, c='r', linestyle='-', label=None,
     return ax
 
 
-def plot_3d_data(ax, data, c='tab:purple', linestyle='-',
-                 emphasize_end=True, label=None, loc=1, title=None):
+def plot_3d_data(
+    ax,
+    data,
+    c="tab:purple",
+    linestyle="-",
+    emphasize_end=True,
+    label=None,
+    loc=1,
+    title=None,
+):
     """
     accepts an ax object and an n x 3 array to plot a 3d trajectory and
     returns the data plotted on the ax
@@ -152,12 +174,12 @@ def plot_3d_data(ax, data, c='tab:purple', linestyle='-',
     """
     if isinstance(ax, list):
         if len(ax) > 1:
-            raise Exception(
-                "multi axis plotting not available for 3d plots")
+            raise Exception("multi axis plotting not available for 3d plots")
         ax = ax[0]
 
-    ax.plot(data[:, 0], data[:, 1], data[:, 2],
-            color=c, linestyle=linestyle, label=label)
+    ax.plot(
+        data[:, 0], data[:, 1], data[:, 2], color=c, linestyle=linestyle, label=label
+    )
     if emphasize_end:
         ax.scatter(data[-1, 0], data[-1, 1], data[-1, 2], color=c)
 
@@ -168,8 +190,7 @@ def plot_3d_data(ax, data, c='tab:purple', linestyle='-',
     return ax
 
 
-def plot_mean_and_ci(ax, data, c=None, linestyle='--', label=None,
-                     loc=1, title=None):
+def plot_mean_and_ci(ax, data, c=None, linestyle="--", label=None, loc=1, title=None):
     """
     accepts dict with keys upper_bound, lower_bound, and mean, and plots
     the mean onto the ax object with the upper and lower bounds shaded
@@ -197,15 +218,16 @@ def plot_mean_and_ci(ax, data, c=None, linestyle='--', label=None,
         the legend location
     """
     ax.fill_between(
-        range(np.array(data['mean']).shape[0]), #pylint: disable=E1136
-        data['upper_bound'],
-        data['lower_bound'],
+        range(np.array(data["mean"]).shape[0]),  # pylint: disable=E1136
+        data["upper_bound"],
+        data["lower_bound"],
         color=c,
-        alpha=.5)
-    ax.plot(data['mean'], color=c, label=label, linestyle=linestyle)
+        alpha=0.5,
+    )
+    ax.plot(data["mean"], color=c, label=label, linestyle=linestyle)
     ax.set_title(title)
-    #TODO fix the legend here
-    #ax.legend(loc)
+    # TODO fix the legend here
+    # ax.legend(loc)
     return ax
 
 
@@ -277,10 +299,10 @@ def make_axes_for_3d_plots(ax, colorbar_ax=False):
     # make the subplots in this axis
     divider = make_axes_locatable(ax)
     axes = [ax]
-    axes.append(divider.append_axes('right', size='100%', pad='40%'))
-    axes.append(divider.append_axes('right', size='100%', pad='40%'))
+    axes.append(divider.append_axes("right", size="100%", pad="40%"))
+    axes.append(divider.append_axes("right", size="100%", pad="40%"))
     if colorbar_ax:
-        axes.append(divider.append_axes('right', size='7%', pad='10%'))
+        axes.append(divider.append_axes("right", size="7%", pad="10%"))
 
     return axes
 
@@ -307,9 +329,9 @@ def plot_against_projection_3d(ax, data_project, data_plot):
     axes[1].plot(projected[:, 0], data_plot)
     axes[2].plot(projected[:, 1], data_plot)
 
-    axes[0].update({'title':'XY'})
-    axes[1].update({'title':'XZ'})
-    axes[2].update({'title':'YZ'})
+    axes[0].update({"title": "XY"})
+    axes[1].update({"title": "XZ"})
+    axes[2].update({"title": "YZ"})
 
     return axes
 
@@ -333,20 +355,16 @@ def plot_against_projection_4d(ax, data_project, data_plot):
     projected = project_data(data_project, 3)
     axes = make_axes_for_3d_plots(ax, colorbar_ax=True)
 
-    jet = plt.get_cmap('jet')
-    cNorm = colors.Normalize(
-        vmin=min(data_plot), vmax=max(data_plot))
+    jet = plt.get_cmap("jet")
+    cNorm = colors.Normalize(vmin=min(data_plot), vmax=max(data_plot))
 
-    axes[0].scatter(
-        projected[:, 0], projected[:, 1], c=data_plot, cmap='jet')
-    axes[1].scatter(
-        projected[:, 0], projected[:, 2], c=data_plot, cmap='jet')
-    axes[2].scatter(
-        projected[:, 1], projected[:, 2], c=data_plot, cmap='jet')
+    axes[0].scatter(projected[:, 0], projected[:, 1], c=data_plot, cmap="jet")
+    axes[1].scatter(projected[:, 0], projected[:, 2], c=data_plot, cmap="jet")
+    axes[2].scatter(projected[:, 1], projected[:, 2], c=data_plot, cmap="jet")
     matplotlib.colorbar.ColorbarBase(axes[3], cmap=jet, norm=cNorm)
 
-    axes[0].update({'title':'XY'})
-    axes[1].update({'title':'XZ'})
-    axes[2].update({'title':'YZ'})
+    axes[0].update({"title": "XY"})
+    axes[1].update({"title": "XZ"})
+    axes[2].update({"title": "YZ"})
 
     return axes
