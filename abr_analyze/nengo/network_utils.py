@@ -212,6 +212,7 @@ def proportion_neurons_active_over_time(
     ax=None,
     n_neurons=None,
     n_ensembles=None,
+    label=None
 ):
     """
     Accepts a Nengo network and simulates its response to a given input
@@ -255,15 +256,22 @@ def proportion_neurons_active_over_time(
 
     proportion_neurons_active = n_neurons_active / (n_neurons * n_ensembles)
 
+    if label is None:
+        label = "proportion active"
+
     if ax is not None:
         print("Plotting proportion of active neurons over time...")
-        ax.plot(proportion_neurons_active, label="proportion active")
+        ax.plot(
+            proportion_neurons_active,
+            label=label
+        )
 
         ax.set_title("Proportion of active neurons over time")
         ax.set_ylabel("Proportion Active")
         ax.set_xlabel("Time steps")
         ax.set_ylim(0, 1)
-        plt.legend()
+        # plt.legend()
+        plt.legend(bbox_to_anchor=(1.05, 1.0))
 
     return proportion_neurons_active, pscs
 
@@ -275,6 +283,9 @@ def proportion_time_neurons_active(
     pscs=None,
     synapse=0.005,
     ax=None,
+    n_bins=100,
+    x_lim=[0, 1],
+    label=None,
     **kwargs,
 ):
     """
@@ -315,11 +326,16 @@ def proportion_time_neurons_active(
         n_timesteps_active[ii] = len(np.where(timestep > 1e-2)[0])
     proportion_time_active = n_timesteps_active / pscs.shape[0]
 
+    if label is None:
+        label = "proportion time active"
+
     if ax is not None:
-        plt.hist(proportion_time_active, bins=np.linspace(0, 1, 100))
+        plt.hist(proportion_time_active, bins=np.linspace(0, 1, n_bins), label=label)
         ax.set_ylabel("Number of active neurons")
         ax.set_xlabel("Proportion of Time")
         ax.set_title("Proportion of time neurons are active")
+        ax.set_xlim(x_lim[0], x_lim[1])
+        plt.legend(bbox_to_anchor=(1.05, 1.0))
 
     return proportion_time_active, pscs
 

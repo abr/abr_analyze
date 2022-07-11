@@ -35,10 +35,16 @@ def gen_hash_name(params):
     return hash_name
 
 
-def print_nested(d, indent=0, return_val=False):
+def print_nested(d, indent=0, return_val=False, col=None):
     """
     Pretty printing of nested dictionaries
     """
+    if col is not None:
+        c1 = col
+        c2 = "\033[0m"
+    else:
+        c1 = ''
+        c2 = ''
     if return_val:
         full_print = ""
     for key, value in d.items():
@@ -47,7 +53,7 @@ def print_nested(d, indent=0, return_val=False):
             if return_val:
                 full_print += line
             else:
-                print(line)
+                print(f"{c1}{line}{c2}")
             if return_val:
                 nested_line = print_nested(value, indent + 1, return_val=return_val)
                 full_print += nested_line
@@ -58,7 +64,7 @@ def print_nested(d, indent=0, return_val=False):
             if return_val:
                 full_print += line
             else:
-                print(line)
+                print(f"{c1}{line}{c2}")
 
     if return_val:
         return full_print
