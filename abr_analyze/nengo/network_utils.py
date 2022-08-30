@@ -263,7 +263,7 @@ def proportion_neurons_active_over_time(
         print("Plotting proportion of active neurons over time...")
         ax.plot(
             proportion_neurons_active,
-            label=label
+            label=label,
         )
 
         ax.set_title("Proportion of active neurons over time")
@@ -330,7 +330,7 @@ def proportion_time_neurons_active(
         label = "proportion time active"
 
     if ax is not None:
-        plt.hist(proportion_time_active, bins=np.linspace(0, 1, n_bins), label=label)
+        plt.hist(proportion_time_active, bins=np.linspace(0, 1, n_bins), label=label, alpha=0.5)
         ax.set_ylabel("Number of active neurons")
         ax.set_xlabel("Proportion of Time")
         ax.set_title("Proportion of time neurons are active")

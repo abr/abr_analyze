@@ -116,7 +116,8 @@ def gen_lookup_table(db_name, db_folder):
 #     hash_ids = dat.load(save_location='params')
 
 
-def find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems=None):
+# def find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems=None):
+def find_constant_and_variable_parameters(dat_and_hashes):
     """
     Input a DataHandler object and list of experiment hashes and will
     return a dictionary of constant parameters and a list of keys with
@@ -149,81 +150,88 @@ def find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems
         compared. Leave parameter stems as [''] if there are no
         nested dictionaries.
     """
-    if isinstance(parameter_stems, str):
-        parameter_stems = [parameter_stems]
+    # if isinstance(parameter_stems, str):
+    #     parameter_stems = [parameter_stems]
     # TODO might not need this now that can get nested keys
-    if parameter_stems is None:
-        parameter_stems = [""]
+    # if parameter_stems is None:
+    #     parameter_stems = [""]
 
     final_legend = []
     final_constants = {}
 
-    # for group_name in parameter_stems:
-    for ee, exp_hash in enumerate(saved_exp_hashes):
-        # print(f"ee: {ee}")
-        # keys = dat.get_keys(f"params/{exp_hash}/{group_name}")
-        # track any differing values keys'
-        legend_keys = []
-        if ee == 0:
-            # base_parameters = dat.load(save_location=f"params/{exp_hash}/{group_name}", parameters=keys)
-            base_parameters = dat.load(
-                save_location=f"params/{exp_hash}", recursive=True
-            )
-        else:
-            # new_parameters = dat.load(save_location=f"params/{exp_hash}/{group_name}", parameters=keys)
-            new_parameters = dat.load(
-                save_location=f"params/{exp_hash}", recursive=True
-            )
-            # temporary storage of differing keys to add to legend keys
-            differing_keys = []
-            for key in base_parameters:
-                if isinstance(base_parameters[key], (list, np.ndarray)):
-                    try:
-                        # if (base_parameters[key] != new_parameters[key]).any():
-                        #     differing_keys.append(key)
+    for dd, dat_and_hash in enumerate(dat_and_hashes):
+        dat = dat_and_hash[0]
+        saved_exp_hashes = dat_and_hash[1]
+        print(dat)
+        print(saved_exp_hashes)
+
+        # for group_name in parameter_stems:
+        for ee, exp_hash in enumerate(saved_exp_hashes):
+            # print(f"ee: {ee}")
+            # keys = dat.get_keys(f"params/{exp_hash}/{group_name}")
+            # track any differing values keys'
+            legend_keys = []
+            if ee+dd == 0:
+                # base_parameters = dat.load(save_location=f"params/{exp_hash}/{group_name}", parameters=keys)
+                base_parameters = dat.load(
+                    save_location=f"params/{exp_hash}", recursive=True
+                )
+            else:
+                # new_parameters = dat.load(save_location=f"params/{exp_hash}/{group_name}", parameters=keys)
+                new_parameters = dat.load(
+                    save_location=f"params/{exp_hash}", recursive=True
+                )
+                # temporary storage of differing keys to add to legend keys
+                differing_keys = []
+                for key in base_parameters:
+                    if isinstance(base_parameters[key], (list, np.ndarray)):
+                        try:
+                            # if (base_parameters[key] != new_parameters[key]).any():
+                            #     differing_keys.append(key)
+                            if key not in new_parameters.keys():
+                                differing_keys.append(key)
+                            elif (
+                                np.asarray(base_parameters[key]).shape
+                                != np.asarray(new_parameters[key]).shape
+                            ):
+                                differing_keys.append(key)
+                            elif type(base_parameters[key]) != type(new_parameters[key]):
+                                differing_keys.append(key)
+                            elif (base_parameters[key] != new_parameters[key]).any():
+                                differing_keys.append(key)
+
+                        except AttributeError as e:
+                            print(
+                                f"Got AttributeError on {key} who's value is:\n{base_parameters[key]}"
+                            )
+                            print(f"Or possibly from const params:\n{new_parameters[key]}")
+                            raise e
+
+                    else:
                         if key not in new_parameters.keys():
+                            new_parameters[key] = None
+                        if type(base_parameters[key]) != type(new_parameters[key]):
                             differing_keys.append(key)
-                        elif (
-                            np.asarray(base_parameters[key]).shape
-                            != np.asarray(new_parameters[key]).shape
-                        ):
-                            differing_keys.append(key)
-                        elif type(base_parameters[key]) != type(new_parameters[key]):
-                            differing_keys.append(key)
-                        elif (base_parameters[key] != new_parameters[key]).any():
+                        elif base_parameters[key] != new_parameters[key]:
                             differing_keys.append(key)
 
-                    except AttributeError as e:
-                        print(
-                            f"Got AttributeError on {key} who's value is:\n{base_parameters[key]}"
-                        )
-                        print(f"Or possibly from const params:\n{new_parameters[key]}")
-                        raise e
+                # add missing keys directly to legend keys
+                for key in new_parameters:
+                    if key not in base_parameters.keys():
+                        # legend_keys.append(f"{group_name}/{key}")
+                        legend_keys.append(f"{key}")
 
-                else:
-                    if key not in new_parameters.keys():
-                        new_parameters[key] = None
-                    if type(base_parameters[key]) != type(new_parameters[key]):
-                        differing_keys.append(key)
-                    elif base_parameters[key] != new_parameters[key]:
-                        differing_keys.append(key)
-
-            # add missing keys directly to legend keys
-            for key in new_parameters:
-                if key not in base_parameters.keys():
+                # remove differing keys from base parameters, only leaving common ones
+                for key in differing_keys:
+                    base_parameters.pop(key)
                     # legend_keys.append(f"{group_name}/{key}")
                     legend_keys.append(f"{key}")
-
-            # remove differing keys from base parameters, only leaving common ones
-            for key in differing_keys:
-                base_parameters.pop(key)
-                # legend_keys.append(f"{group_name}/{key}")
-                legend_keys.append(f"{key}")
 
     return base_parameters, legend_keys
 
 
-def find_experiments_that_match_constants(dat, saved_exp_hashes, const_params):
+# def find_experiments_that_match_constants(dat, saved_exp_hashes, const_params):
+def find_experiments_that_match_constants(dat_and_hashes, const_params):
     """
     Input an instantiated DataHandler, a list of experiment hashes to compare,
     and a dictionary of parameters and values.
@@ -238,50 +246,63 @@ def find_experiments_that_match_constants(dat, saved_exp_hashes, const_params):
     const_params: dict
         Dictionary of parameter values used to find experiments that contain them
     """
-    matches = []
-    print(f"{blue}EXP HASHES: {saved_exp_hashes}{endc}")
-    for exp_hash in saved_exp_hashes:
-        data = dat.load(
-            save_location=f"params/{exp_hash}", parameters=const_params.keys()
-        )
-        # count the number of different key: value pairs, if zero save the hash
-        # since looking for experiments with matching parameters
-        num_diff = 0
-        for param_key in const_params.keys():
-            # print("param key: ", param_key)
-            # print(data)
-            if data[param_key] is not None and isinstance(
-                data[param_key], (list, np.ndarray)
-            ):
-                try:
-                    # print(param_key)
-                    if (
-                        np.asarray(data[param_key]).shape
-                        != np.asarray(const_params[param_key]).shape
-                    ):
-                        num_diff += 1
-                    elif (data[param_key] != const_params[param_key]).any():
-                        num_diff += 1
-                except AttributeError as e:
-                    print(
-                        f"{red}Got AttributeError on {param_key} who's value is:\n{data[param_key]}{endc}"
+    dat_and_matches = []
+    # print(f"{blue}EXP HASHES: {saved_exp_hashes}{endc}")
+    # for exp_hash in saved_exp_hashes:
+    for dat_and_hash in dat_and_hashes:
+        dat = dat_and_hash[0]
+        saved_exp_hashes = dat_and_hash[1]
+        # print(f"DAT: {dat}")
+        # print(f"HASH: {saved_exp_hashes}")
+        matches = []
+
+        for exp_hash in saved_exp_hashes:
+            data = dat.load(
+                save_location=f"params/{exp_hash}", parameters=const_params.keys()
+            )
+            # count the number of different key: value pairs, if zero save the hash
+            # since looking for experiments with matching parameters
+            num_diff = 0
+            for param_key in const_params.keys():
+                # print("param key: ", param_key)
+                # print(data)
+                if data[param_key] is not None and isinstance(
+                    data[param_key], (list, np.ndarray)
+                ):
+                    try:
+                        # print(param_key)
+                        if (
+                            np.asarray(data[param_key]).shape
+                            != np.asarray(const_params[param_key]).shape
+                        ):
+                            num_diff += 1
+                        elif (data[param_key] != const_params[param_key]).any():
+                            num_diff += 1
+                    except AttributeError as e:
+                        print(
+                            f"{red}Got AttributeError on {param_key} who's value is:\n{data[param_key]}{endc}"
+                        )
+                        print(
+                            f"{red}Or possibly from const params:\n{const_params[param_key]}{endc}"
+                        )
+                        raise e
+                elif isinstance(data[param_key], dict):
+                    raise NotImplementedError(
+                        f"{red}Currently not able to pass nested dict in as const_params{endc}"
+                        + f"{red}\n To pass in nested dict items, pass the nested keys in{endc} "
+                        + f"{red}separated by as slash '/'{endc}"
                     )
-                    print(
-                        f"{red}Or possibly from const params:\n{const_params[param_key]}{endc}"
-                    )
-                    raise e
-            elif isinstance(data[param_key], dict):
-                raise NotImplementedError(
-                    f"{red}Currently not able to pass nested dict in as const_params{endc}"
-                    + f"{red}\n To pass in nested dict items, pass the nested keys in{endc} "
-                    + f"{red}separated by as slash '/'{endc}"
-                )
-            else:
-                if data[param_key] != const_params[param_key]:
-                    num_diff += 1
-        if num_diff == 0:
-            matches.append(exp_hash)
-    return matches
+                else:
+                    if data[param_key] != const_params[param_key]:
+                        num_diff += 1
+            if num_diff == 0:
+                matches.append(exp_hash)
+        if len(matches) > 0:
+            dat_and_matches.append([dat, matches])
+    # print(f"DAT AND MATCHES: {dat_and_matches}")
+    # if np.asarray(dat_and_matches).ndim == 1:
+    # print(dat_and_matches)
+    return dat_and_matches
 
 
 def get_common_experiments(
@@ -306,28 +327,51 @@ def get_common_experiments(
     """
 
     # Load the hashes of all experiments that have been run for this script
+    # print('dats: ', dat)
+    # print('hashes: ', saved_exp_hashes)
+
+    if not isinstance(dat, (list, np.ndarray)):
+        dat = [dat]
     if saved_exp_hashes is None:
-        saved_exp_hashes = dat.get_keys(f"results/{script_name}")
-        print(
-            f"{blue}{len(saved_exp_hashes)} experiments found with results from {script_name}{endc}"
-        )
+        saved_exp_hashes = [None] * len(dat)
+
+    dat_and_hashes = []
+    count = 0
+    # for db, exp_hashes in zip(dat, saved_exp_hashes):
+    for ee, exp_hashes in enumerate(saved_exp_hashes):
+        if exp_hashes is None:
+            hash_keys =  dat[ee].get_keys(f"results/{script_name}")
+            dat_and_hashes.append([dat[ee], hash_keys])
+            count += len(hash_keys)
+            print(f"{dat[ee].db_loc} has {len(hash_keys)} experiments")
+
+    print(
+        f"{blue}{count} experiments found with results from {script_name}{endc}"
+    )
 
     if const_params is not None:
         # Get all experiment id's that match a set of key value pairs
         print(f"Searching for results with matching parameters to:")
         print_nested(const_params)
-        saved_exp_hashes = find_experiments_that_match_constants(
-            dat, saved_exp_hashes, const_params
+        dat_and_hashes = find_experiments_that_match_constants(
+            dat_and_hashes, const_params
+            # dat, saved_exp_hashes, const_params
         )
+        count = 0
+        # for db, matches in saved_exp_hashes:
+        for dat_and_hash in dat_and_hashes:
+            count += len(dat_and_hash[1])
         print(
-            f"{green}{len(saved_exp_hashes)} experiments found with matching parameters{endc}"
+
+            f"{green}{count} experiments found with matching parameters{endc}"
         )
-        print(f"{green}{saved_exp_hashes}{endc}")
+        # print(f"{green}{saved_exp_hashes}{endc}")
 
     # Get a dictionary of common values and a list of keys for differing values
     # to use in the auto legend
     all_constants, all_variable = find_constant_and_variable_parameters(
-        dat, saved_exp_hashes, parameter_stems=["llp", "data", "general", "ens_args"]
+        # dat, saved_exp_hashes, parameter_stems=["llp", "data", "general", "ens_args"]
+        dat_and_hashes
     )
     if ignore_keys is not None:
         if isinstance(ignore_keys, str):
@@ -337,7 +381,8 @@ def get_common_experiments(
             if key in all_variable:
                 all_variable.remove(key)
 
-    return saved_exp_hashes, all_constants, all_variable
+    # return saved_exp_hashes, all_constants, all_variable
+    return dat_and_hashes, all_constants, all_variable
 
 
 def load_results(
@@ -349,6 +394,7 @@ def load_results(
     const_params=None,
     saved_exp_hashes=None,
     ignore_keys=None,
+    exclude_hashes_with_vals=None
 ):
     """
     Input unique script id that generated results, the values of parameters to
@@ -393,40 +439,66 @@ def load_results(
     #     +" or a dict of constant parameters to find experiments"
     #     +" with matching values"
     # )
+    # if not isinstance(dat, list):
+    #     dat = [dat]
 
-    saved_exp_hashes, all_constants, all_variable = get_common_experiments(
+    # if saved_exp_hashes is not None:
+    # if np.asarray(saved_exp_hashes).ndim == 1:
+    #     saved_exp_hashes = [saved_exp_hashes]
+
+    dat_and_hashes, all_constants, all_variable = get_common_experiments(
         script_name=script_name,
         dat=dat,
         const_params=const_params,
         ignore_keys=ignore_keys,
         saved_exp_hashes=saved_exp_hashes,
     )
+    # print(f"DAT AND HASH: {dat_and_hashes}")
+    # print(f"CONST: {all_constants}")
+    # print(f"VAR: {all_variable}")
 
     results = {}
     results["const_params"] = all_constants
     results["variable_params"] = all_variable
 
-    for mm, match in enumerate(saved_exp_hashes):
-        results[f"{match}"] = {}
-        results[f"{match}"]["results"] = dat.load(
-            save_location=f"results/{script_name}/{match}", parameters=result_keys
-        )
+    for dat_and_hash in dat_and_hashes:
+        dat = dat_and_hash[0]
+        saved_exp_hashes = dat_and_hash[1]
 
-        name_params = dat.load(save_location=f"params/{match}", parameters=all_variable)
+        for mm, match in enumerate(saved_exp_hashes):
+            name_params = dat.load(save_location=f"params/{match}", parameters=all_variable)
 
-        name = "---------"
-        for kk, key in enumerate(all_variable):
-            # if kk > 0 and kk < len(all_variable):
-            #     # name += " | "
-            name += "\n"
-            name += f"{key}={name_params[key]}"
+            skip_hash = False
+            if exclude_hashes_with_vals is not None:
+                for key, val in exclude_hashes_with_vals.items():
+                    if key in all_variable:
+                        if name_params[key] == val:
+                            print(f"{red}Skipping hash <{match}> | {key} matches value {val}{endc}")
+                            skip_hash = True
 
-        results[f"{match}"]["name"] = name
+            if not skip_hash:
+                results[f"{match}"] = {}
+                results[f"{match}"]["results"] = dat.load(
+                    save_location=f"results/{script_name}/{match}", parameters=result_keys
+                )
 
+                name = f"|_________________{dat.db_loc}_________________|"
+                name += f'\n{match}'
+                for kk, key in enumerate(all_variable):
+                    # if kk > 0 and kk < len(all_variable):
+                    #     # name += " | "
+                    name += "\n"
+                    name += f"{key}={name_params[key]}"
+
+                results[f"{match}"]["name"] = name
+                # results[f"{match}"]["db"] = dat.db_loc
+                results[f"{match}"]["db"] = dat
+
+    # print_nested(results)
     return results
 
 
-def gen_parameter_variations(params, variation_dict):
+def gen_parameter_variations(params, variation_dict, verbose=False):
     """
     Input the path to a json file containing the base parameters, and a dictionary of keys
     and a list of variations for the value.
@@ -454,7 +526,8 @@ def gen_parameter_variations(params, variation_dict):
     # do not overwrite the reference to params
     params_copy = copy.deepcopy(params)
 
-    print(f"\nGeneratnig {len(variations)} variations of parameters\n")
+    if verbose:
+        print(f"\nGenerating {len(variations)} variations of parameters\n")
     for vv, var in enumerate(variations):
         for key in var:
             nested_set(params_copy, key.split("/"), var[key])
@@ -462,8 +535,9 @@ def gen_parameter_variations(params, variation_dict):
         hash_name = gen_hash_name(params_copy)
 
         # print(f"Updated json_params by changing {key_list} to {var}\n{json_params}")
-        print(f"hash_name: {hash_name}")
-        print(params_copy)
+        if verbose:
+            print(f"hash_name: {hash_name}")
+            print(params_copy)
         variation_dict[hash_name] = copy.deepcopy(params_copy)
 
     return variation_dict
@@ -480,6 +554,11 @@ def searchable_save(dat, results, params, script_name, overwrite=True):
         data=results,
         overwrite=overwrite,
     )
+    # print('\n\nSAVED RESULTS INSIDE SEARCHABLE SAVE WITH PARAMS:\n\n')
+    # print_nested(params)
+    # print('\n\nLOADED KEY\n\n')
+    # res = dat.load(f"params/{hash_name}", ["general/external_changes/using_sim_pause"])
+    # print(f"===={res['general/external_changes/using_sim_pause']}")
 
 
 def _example():

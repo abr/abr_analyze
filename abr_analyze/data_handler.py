@@ -84,8 +84,12 @@ class DataHandler:
                 # arr = np.array(data,dtype='S'+str(longest_word))
                 #
                 # db[save_loc].create_dataset(key, data=arr, dtype=dtype)
+            elif isinstance(data, bool):
+                dtype = h5py.special_dtype(vlen=str)
+                db[save_loc].create_dataset(key, data='true' if data else 'false', dtype=dtype)
             else:
                 db[save_loc].create_dataset(key, data=data)
+                # print(f"SAVING to {save_loc} with key {key} and data {data}")
         except TypeError as e:
             if isinstance(data, dict):
                 print(
@@ -101,6 +105,7 @@ class DataHandler:
             print(f"{colors.red}{key} has a type of: {type(data)}{colors.endc}")
             print("Entering pdb for live debugging. Type <exit> to close")
             print("NOTE: key is stored in <key> and value is stored in <data>")
+            print(f"ERROR MESSAGE: {e}")
             pdb.set_trace()
             raise e
 
@@ -209,37 +214,43 @@ class DataHandler:
             parameters = self.get_keys(save_location, recursive=recursive)
 
         # otherwise load the keys
-        db = h5py.File(self.db_loc, "a")
-        saved_data = {}
-        for key in parameters:
-            # saved_data[key] = np.array(db.get("%s/%s" % (save_location, key)))
-            tmp = db.get("%s/%s" % (save_location, key))
-            if not self.is_dataset(f"{save_location}/{key}"):
-                tmp = self.load(
-                    # parameters=self.get_keys(f"{save_location}/{key}"),
-                    save_location=f"{save_location}/{key}",
-                    recursive=recursive,
-                )
-            # TODO:
-            # if is a dataset, if recursive load is on then recursively get keys
-            # and append them to parameters. Can append to parameters in loop (tested)
-            # if self.is_dataset(f"{save_location}/{key}"):
-            #     parameters.append(self.get_keys("f{save_location}/{key}", recursive=True))
-            elif tmp.dtype == "bool":
-                tmp = bool(tmp)
-            elif tmp.dtype == "object":
-                tmp = tmp.asstr()[()]
-                if tmp == "None":
-                    tmp = None
-                # if not self.is_dataset(f"{save_location}/{key}"):
-                #     tmp = tmp.asstr()[()]
-                # else:
-                #     print(f'test failed looking for dataset type: {tmp}')
-            else:
-                tmp = np.array(tmp, dtype=tmp.dtype)
-            saved_data[key] = tmp
+        # db = h5py.File(self.db_loc, "a")
+        with h5py.File(self.db_loc, "a") as db:
+            saved_data = {}
+            for key in parameters:
+                # saved_data[key] = np.array(db.get("%s/%s" % (save_location, key)))
+                tmp = db.get("%s/%s" % (save_location, key))
+                if not self.is_dataset(f"{save_location}/{key}"):
+                    # print(f'loading key {key} from loc {save_location} | not dataset')
+                    tmp = self.load(
+                        # parameters=self.get_keys(f"{save_location}/{key}"),
+                        save_location=f"{save_location}/{key}",
+                        recursive=recursive,
+                    )
+                # TODO:
+                # if is a dataset, if recursive load is on then recursively get keys
+                # and append them to parameters. Can append to parameters in loop (tested)
+                # if self.is_dataset(f"{save_location}/{key}"):
+                #     parameters.append(self.get_keys("f{save_location}/{key}", recursive=True))
+                elif tmp.dtype == "object":
+                    tmp = tmp.asstr()[()]
+                    if tmp == "None":
+                        tmp = None
+                    elif tmp == 'true':
+                        tmp = True
+                    elif tmp == 'false':
+                        tmp = False
+                    # if not self.is_dataset(f"{save_location}/{key}"):
+                    #     tmp = tmp.asstr()[()]
+                    # else:
+                    #     print(f'test failed looking for dataset type: {tmp}')
+                else:
+                    tmp = np.array(tmp, dtype=tmp.dtype)
+                saved_data[key] = tmp
+                # print(f"GOT VAL FOR KEY {key} as val {tmp}")
+                # print(saved_data)
 
-        db.close()
+        # db.close()
 
         return saved_data
 
@@ -257,6 +268,7 @@ class DataHandler:
         try:
             db = h5py.File(self.db_loc, "a")
             del db[save_location]
+            db.close()
         except KeyError:
             if self.raise_warnings:
                 warnings.warn("No entry for %s" % save_location)
@@ -279,6 +291,7 @@ class DataHandler:
         db[new_save_location] = db[old_save_location]
         if delete_old:
             del db[old_save_location]
+        db.close()
 
     def is_dataset(self, save_location):
         """
@@ -294,6 +307,7 @@ class DataHandler:
         except KeyError as e:
             # key doesn't exist, return False
             result = False
+        db.close()
         return result
 
     def get_keys(self, save_location, recursive=False):
@@ -435,7 +449,7 @@ class DataHandler:
             whether to create the group passed in if it does not exist
         """
 
-        self.db = h5py.File(self.db_loc, "a")
+        db = h5py.File(self.db_loc, "a")
 
         # first check whether the test passed in exists
         exists = self.check_group_exists(
@@ -447,7 +461,7 @@ class DataHandler:
             run = None
             session = None
             location = "%s/%s/" % (test_group, test_name)
-            self.db.close()
+            db.close()
             return [run, session, location]
 
         # If a session is provided, check if it exists
@@ -465,28 +479,28 @@ class DataHandler:
                 run = None
                 session = None
                 location = "%s/%s/" % (test_group, test_name)
-                self.db.close()
+                db.close()
                 return [run, session, location]
 
         # if not looking for a specific session, check what our highest
         # numbered session is
         elif session is None:
             # get all of the session keys
-            session_keys = list(self.db["%s/%s" % (test_group, test_name)].keys())
+            session_keys = list(db["%s/%s" % (test_group, test_name)].keys())
 
             if session_keys:
                 session = max(session_keys)
 
             elif create:
                 # No session can be found, create it if create is True
-                self.db.create_group("%s/%s/session000" % (test_group, test_name))
+                db.create_group("%s/%s/session000" % (test_group, test_name))
                 session = "session000"
 
             else:
                 run = None
                 session = None
                 location = "%s/%s/" % (test_group, test_name)
-                self.db.close()
+                db.close()
                 return [run, session, location]
 
         if run is not None:
@@ -502,7 +516,7 @@ class DataHandler:
             else:
                 run = None
                 location = "%s/%s/" % (test_group, test_name)
-                self.db.close()
+                db.close()
                 return [run, session, location]
 
         # usually this will be set to None so that we can start from where we
@@ -511,7 +525,7 @@ class DataHandler:
         elif run is None:
             # get all of the run keys
             run_keys = list(
-                self.db["%s/%s/%s" % (test_group, test_name, session)].keys()
+                db["%s/%s/%s" % (test_group, test_name, session)].keys()
             )
 
             if run_keys:
@@ -532,7 +546,7 @@ class DataHandler:
         else:
             location += "%s/" % run
 
-        self.db.close()
+        db.close()
         return [run, session, location]
 
     def save_run_data(
