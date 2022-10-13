@@ -264,8 +264,15 @@ def find_experiments_that_match_constants(dat_and_hashes, const_params):
             # since looking for experiments with matching parameters
             num_diff = 0
             for param_key in const_params.keys():
+                if isinstance(const_params[param_key], dict):
+                    raise NotImplementedError(
+                        f"{red}Currently not able to pass nested dict in as const_params{endc}"
+                        + f"{red}\n To pass in nested dict items, pass the nested keys in{endc} "
+                        + f"{red}separated by as slash '/'{endc}"
+                )
+
                 # print("param key: ", param_key)
-                # print(data)
+                # print(data[param_key])
                 if data[param_key] is not None and isinstance(
                     data[param_key], (list, np.ndarray)
                 ):
@@ -287,11 +294,7 @@ def find_experiments_that_match_constants(dat_and_hashes, const_params):
                         )
                         raise e
                 elif isinstance(data[param_key], dict):
-                    raise NotImplementedError(
-                        f"{red}Currently not able to pass nested dict in as const_params{endc}"
-                        + f"{red}\n To pass in nested dict items, pass the nested keys in{endc} "
-                        + f"{red}separated by as slash '/'{endc}"
-                    )
+                    num_diff += 1
                 else:
                     if data[param_key] != const_params[param_key]:
                         num_diff += 1
