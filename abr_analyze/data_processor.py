@@ -6,6 +6,7 @@ and comparing to an ideal trajectory
 
 import numpy as np
 import scipy.interpolate
+from tqdm import tqdm
 
 from abr_analyze.data_handler import DataHandler
 
@@ -23,7 +24,7 @@ def get_mean_and_ci(raw_data, n=3000, p=0.95):
     data_pts = np.array(raw_data).shape[1]  # pylint: disable=E1136
     print("Mean and CI calculation found %i sets of %i data points" % (sets, data_pts))
     raw_data = np.array(raw_data)
-    for i in range(data_pts):
+    for i in tqdm(range(data_pts)):
         data = raw_data[:, i]
         index = int(n * (1 - p) / 2)
         samples = np.random.choice(data, size=(n, len(data)))

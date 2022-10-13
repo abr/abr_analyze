@@ -23,7 +23,7 @@ setup_requires = [
 ]
 
 install_requires = [
-    "h5py>=3.0",
+    "h5py>=3.5",
     "Pillow>=5.1.0",
     "terminaltables==3.1.0",
     "numpy>=1.16.0",

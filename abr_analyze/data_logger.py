@@ -369,6 +369,10 @@ def get_common_experiments(
 
     # Get a dictionary of common values and a list of keys for differing values
     # to use in the auto legend
+    if len(dat_and_hashes) == 0:
+        print(f"{red}NO EXPERIMENTS FOUND WITH CONSTANT PARAMETERS OF: {const_params}{endc}")
+        raise Exception
+
     all_constants, all_variable = find_constant_and_variable_parameters(
         # dat, saved_exp_hashes, parameter_stems=["llp", "data", "general", "ens_args"]
         dat_and_hashes

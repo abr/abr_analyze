@@ -43,14 +43,17 @@ for val in sys.argv:
         db = val.split("==")[-1]
 
 if db is None:
-    onlyfiles = [f for f in listdir(database_dir) if isfile(join(database_dir, f))]
+    allfiles = [f for f in listdir(database_dir) if isfile(join(database_dir, f))]
     print(
         f"No database passed in, the following are available in the repo database direction: {database_dir}"
     )
-    for ii, fname in enumerate(onlyfiles):
+
+    onlyHF5files = [f for f in allfiles if '.h5' in f]
+
+    for ii, fname in enumerate(onlyHF5files):
         print(f"{ii}) {fname}")
     index = input("Which databse would you like to view?")
-    db = onlyfiles[int(index)].split(".")[0]
+    db = onlyHF5files[int(index)].split(".")[0]
 
 # else:
 #     db = sys.argv[1]
