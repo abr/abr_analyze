@@ -19,6 +19,7 @@ import hashlib
 import json
 import sys
 from itertools import product
+import warnings
 
 import numpy as np
 
@@ -27,6 +28,7 @@ from abr_analyze import DataHandler
 blue = "\033[94m"
 endc = "\033[0m"
 green = "\033[92m"
+yellow = "\u001b[33m"
 red = "\033[91m"
 
 
@@ -344,13 +346,35 @@ def get_common_experiments(
     for ee, exp_hashes in enumerate(saved_exp_hashes):
         if exp_hashes is None:
             hash_keys =  dat[ee].get_keys(f"results/{script_name}")
+            if len(hash_keys) == 1:
+                if hash_keys[0] is None:
+                    warnings.warn(
+                        f"\n{yellow}"
+                        + f"No results for experiment: {script_name}\n"
+                        + f"in database: {dat[ee].db_loc}\n"
+                        + "Available experiments: \n"
+                        + ''.join([f"- {found_name}\n" for found_name in dat[ee].get_keys('results')])
+                        + f"{endc}"
+                    )
+                    hash_keys = None
             dat_and_hashes.append([dat[ee], hash_keys])
-            count += len(hash_keys)
-            print(f"{dat[ee].db_loc} has {len(hash_keys)} experiments")
+            if hash_keys is None:
+                n_hashes = 0
+            else:
+                n_hashes = len(hash_keys)
 
-    print(
+            count += n_hashes
+            print(f"{dat[ee].db_loc} has {n_hashes} experiments")
+
+    if count == 0:
+        print(f"{red}NO EXPERIMENTS FOUND FOR EXPERIMENT {script_name}{endc}")
+        raise Exception
+    else:
+        print(
         f"{blue}{count} experiments found with results from {script_name}{endc}"
     )
+
+
 
     if const_params is not None:
         # Get all experiment id's that match a set of key value pairs
