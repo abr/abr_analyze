@@ -6,6 +6,11 @@ import numpy as np
 
 from abr_analyze.paths import database_dir as abr_database_dir
 
+blue = "\033[94m"
+endc = "\033[0m"
+green = "\033[92m"
+yellow = "\u001b[33m"
+red = "\033[91m"
 
 class DataHandler:
     """
@@ -36,6 +41,14 @@ class DataHandler:
     """
 
     def __init__(self, db_name="abr_analyze", database_dir=None, raise_warnings=False):
+        h5py_version = [int(x) for x in h5py.__version__.split('.')]
+        if h5py_version[0] < 3:
+            print(f"{red}")
+            raise ValueError(
+                f"Update h5py version >= 3.5 otherwise strings do not"
+                + f" properly load: current_version: {h5py.__version__}{endc}"
+            )
+
         self.raise_warnings = raise_warnings
         database_dir = database_dir if database_dir is not None else abr_database_dir
         self.db_loc = f"{database_dir}/{db_name}.h5"
@@ -98,11 +111,9 @@ class DataHandler:
                 )
             import pdb
 
-            from abr_control.utils import colors
-
-            print(f"\n\n\n{colors.red}Error raised on key: {key}{colors.endc}")
-            print(f"{colors.red}{key} has a value of: {data}{colors.endc}")
-            print(f"{colors.red}{key} has a type of: {type(data)}{colors.endc}")
+            print(f"\n\n\n{red}Error raised on key: {key}{endc}")
+            print(f"{red}{key} has a value of: {data}{endc}")
+            print(f"{red}{key} has a type of: {type(data)}{endc}")
             print("Entering pdb for live debugging. Type <exit> to close")
             print("NOTE: key is stored in <key> and value is stored in <data>")
             print(f"ERROR MESSAGE: {e}")

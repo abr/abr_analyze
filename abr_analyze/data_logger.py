@@ -232,6 +232,25 @@ def find_constant_and_variable_parameters(dat_and_hashes):
     return base_parameters, legend_keys
 
 
+def nested_dict_to_abs(dict1, root_key='', abs_dict=None):
+    """
+    Takes in a nested dictionary and recursively updates it
+    to use slash delimited keys to squash the nested dict
+    down to a single layer deep.
+
+    EX: {'a': {'b': 1, 'c': 4}} >> {'a/b': 1, 'a/c': 4}
+    """
+    if abs_dict is None:
+        abs_dict = {}
+    for key in dict1.keys():
+        if isinstance(dict1[key], dict):
+            root_key = '/'.join([root_key, key])
+            abs_dict = nested_dict_to_abs(dict1[key], root_key, abs_dict)
+        else:
+            abs_dict['/'.join([root_key, key])] = dict1[key]
+    return abs_dict
+
+
 # def find_experiments_that_match_constants(dat, saved_exp_hashes, const_params):
 def find_experiments_that_match_constants(dat_and_hashes, const_params):
     """
@@ -251,6 +270,10 @@ def find_experiments_that_match_constants(dat_and_hashes, const_params):
     dat_and_matches = []
     # print(f"{blue}EXP HASHES: {saved_exp_hashes}{endc}")
     # for exp_hash in saved_exp_hashes:
+
+    # convert nested dicts to use slash delimited keys
+    const_params = nested_dict_to_abs(copy.deepcopy(const_params))
+
     for dat_and_hash in dat_and_hashes:
         dat = dat_and_hash[0]
         saved_exp_hashes = dat_and_hash[1]
@@ -346,7 +369,7 @@ def get_common_experiments(
     for ee, exp_hashes in enumerate(saved_exp_hashes):
         if exp_hashes is None:
             hash_keys =  dat[ee].get_keys(f"results/{script_name}")
-            if len(hash_keys) == 1:
+            if len(hash_keys) == 0:
                 if hash_keys[0] is None:
                     warnings.warn(
                         f"\n{yellow}"
@@ -427,6 +450,7 @@ def load_results(
     ignore_keys=None,
     exclude_hashes_with_vals=None
 ):
+    #TODO update to return 3 dicts
     """
     Input unique script id that generated results, the values of parameters to
     hold constant between expriments, and the result keys to load. Returns a
@@ -470,8 +494,8 @@ def load_results(
     #     +" or a dict of constant parameters to find experiments"
     #     +" with matching values"
     # )
-    # if not isinstance(dat, list):
-    #     dat = [dat]
+    if not isinstance(dat, list):
+        dat = [dat]
 
     # if saved_exp_hashes is not None:
     # if np.asarray(saved_exp_hashes).ndim == 1:
@@ -497,7 +521,10 @@ def load_results(
         saved_exp_hashes = dat_and_hash[1]
 
         for mm, match in enumerate(saved_exp_hashes):
-            name_params = dat.load(save_location=f"params/{match}", parameters=all_variable)
+            name_params = dat.load(
+                save_location=f"params/{match}",
+                parameters=all_variable
+            )
 
             skip_hash = False
             if exclude_hashes_with_vals is not None:
@@ -513,7 +540,7 @@ def load_results(
                     save_location=f"results/{script_name}/{match}", parameters=result_keys
                 )
 
-                name = f"|_________________{dat.db_loc}_________________|"
+                name = f"<{dat.db_loc}>"
                 name += f'\n{match}'
                 for kk, key in enumerate(all_variable):
                     # if kk > 0 and kk < len(all_variable):
