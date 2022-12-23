@@ -119,7 +119,7 @@ def gen_lookup_table(db_name, db_folder):
 
 
 # def find_constant_and_variable_parameters(dat, saved_exp_hashes, parameter_stems=None):
-def find_constant_and_variable_parameters(dat_and_hashes):
+def find_constant_and_variable_parameters(dat_and_hashes, verbose=False):
     """
     Input a DataHandler object and list of experiment hashes and will
     return a dictionary of constant parameters and a list of keys with
@@ -164,8 +164,9 @@ def find_constant_and_variable_parameters(dat_and_hashes):
     for dd, dat_and_hash in enumerate(dat_and_hashes):
         dat = dat_and_hash[0]
         saved_exp_hashes = dat_and_hash[1]
-        print(dat)
-        print(saved_exp_hashes)
+        if verbose:
+            print(dat)
+            print(saved_exp_hashes)
 
         # for group_name in parameter_stems:
         for ee, exp_hash in enumerate(saved_exp_hashes):
@@ -334,7 +335,7 @@ def find_experiments_that_match_constants(dat_and_hashes, const_params):
 
 
 def get_common_experiments(
-    script_name, dat, const_params=None, ignore_keys=None, saved_exp_hashes=None
+    script_name, dat, const_params=None, ignore_keys=None, saved_exp_hashes=None, verbose=False
 ):
     """
     Input the script name to load results from and the desired set of constant
@@ -380,29 +381,35 @@ def get_common_experiments(
                         + f"{endc}"
                     )
                     hash_keys = None
-            dat_and_hashes.append([dat[ee], hash_keys])
-            if hash_keys is None:
-                n_hashes = 0
-            else:
-                n_hashes = len(hash_keys)
+        else:
+            hash_keys = exp_hashes
+        dat_and_hashes.append([dat[ee], hash_keys])
 
-            count += n_hashes
+        if hash_keys is None:
+            n_hashes = 0
+        else:
+            n_hashes = len(hash_keys)
+
+        count += n_hashes
+        if verbose:
             print(f"{dat[ee].db_loc} has {n_hashes} experiments")
 
     if count == 0:
         print(f"{red}NO EXPERIMENTS FOUND FOR EXPERIMENT {script_name}{endc}")
         raise Exception
     else:
-        print(
-        f"{blue}{count} experiments found with results from {script_name}{endc}"
-    )
+        if verbose:
+            print(
+                f"{blue}{count} experiments found with results from {script_name}{endc}"
+            )
 
 
 
     if const_params is not None:
         # Get all experiment id's that match a set of key value pairs
-        print(f"Searching for results with matching parameters to:")
-        print_nested(const_params)
+        if verbose:
+            print(f"Searching for results with matching parameters to:")
+            print_nested(const_params)
         dat_and_hashes = find_experiments_that_match_constants(
             dat_and_hashes, const_params
             # dat, saved_exp_hashes, const_params
@@ -411,10 +418,11 @@ def get_common_experiments(
         # for db, matches in saved_exp_hashes:
         for dat_and_hash in dat_and_hashes:
             count += len(dat_and_hash[1])
-        print(
+        if verbose:
+            print(
 
-            f"{green}{count} experiments found with matching parameters{endc}"
-        )
+                f"{green}{count} experiments found with matching parameters{endc}"
+            )
         # print(f"{green}{saved_exp_hashes}{endc}")
 
     # Get a dictionary of common values and a list of keys for differing values
@@ -425,7 +433,7 @@ def get_common_experiments(
 
     all_constants, all_variable = find_constant_and_variable_parameters(
         # dat, saved_exp_hashes, parameter_stems=["llp", "data", "general", "ens_args"]
-        dat_and_hashes
+        dat_and_hashes, verbose=verbose
     )
     if ignore_keys is not None:
         if isinstance(ignore_keys, str):
@@ -441,14 +449,15 @@ def get_common_experiments(
 
 def load_results(
     script_name,
-    result_keys,
     dat,
+    result_keys=None,
     # db_name,
     # db_folder=None,
     const_params=None,
     saved_exp_hashes=None,
     ignore_keys=None,
-    exclude_hashes_with_vals=None
+    exclude_hashes_with_vals=None,
+    verbose=False
 ):
     #TODO update to return 3 dicts
     """
@@ -497,9 +506,14 @@ def load_results(
     if not isinstance(dat, list):
         dat = [dat]
 
-    # if saved_exp_hashes is not None:
-    # if np.asarray(saved_exp_hashes).ndim == 1:
-    #     saved_exp_hashes = [saved_exp_hashes]
+    # in get_common_experiments() we create a dat_and_hashes list in the form
+    # [[database_reference, [list_of_hashes]], ....*n]
+    # so need to have list_of_hashes be 2d
+    # NOTE may have issues if have multiple databases, but don't pass hashed
+    # in in the same order, ie dim0 of hashes if for database in entry 0 of dats
+    if saved_exp_hashes is not None:
+        if np.asarray(saved_exp_hashes).ndim == 1:
+            saved_exp_hashes = [saved_exp_hashes]
 
     dat_and_hashes, all_constants, all_variable = get_common_experiments(
         script_name=script_name,
@@ -507,6 +521,7 @@ def load_results(
         const_params=const_params,
         ignore_keys=ignore_keys,
         saved_exp_hashes=saved_exp_hashes,
+        verbose=verbose
     )
     # print(f"DAT AND HASH: {dat_and_hashes}")
     # print(f"CONST: {all_constants}")
@@ -531,7 +546,8 @@ def load_results(
                 for key, val in exclude_hashes_with_vals.items():
                     if key in all_variable:
                         if name_params[key] == val:
-                            print(f"{red}Skipping hash <{match}> | {key} matches value {val}{endc}")
+                            if verbose:
+                                print(f"{red}Skipping hash <{match}> | {key} matches value {val}{endc}")
                             skip_hash = True
 
             if not skip_hash:
@@ -550,7 +566,7 @@ def load_results(
 
                 results[f"{match}"]["name"] = name
                 # results[f"{match}"]["db"] = dat.db_loc
-                results[f"{match}"]["db"] = dat
+                # results[f"{match}"]["db"] = dat
 
     # print_nested(results)
     return results

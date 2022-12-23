@@ -245,7 +245,18 @@ class DataHandler:
                 #     parameters.append(self.get_keys("f{save_location}/{key}", recursive=True))
                 elif tmp.dtype == "object":
                     tmp = tmp.asstr()[()]
-                    if tmp == "None":
+                    # print(key)
+                    # print(tmp)
+                    # print(type(tmp))
+                    if isinstance(tmp, np.ndarray):
+                        # print("WHAT THE FUCK?")
+                        for ij in tmp:
+                            # print(ij)
+                            # print(type(ij))
+                            # raise Exception
+                            tmp = np.array(tmp, dtype=tmp.dtype)
+                        # print(tmp.dtype())
+                    elif tmp == "None":
                         tmp = None
                     elif tmp == 'true':
                         tmp = True
